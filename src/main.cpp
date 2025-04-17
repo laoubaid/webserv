@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/04/16 19:22:56 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/04/17 12:22:57 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,7 @@ int main()
 		"\r\n" + html;
 	
 	int id = 0;
+
 	while (true) {
 		int n = epoll_wait(epoll_fd, eventQueue, 10, -1); // chang to max_events
 		if (n == -1) {

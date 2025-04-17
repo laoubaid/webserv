@@ -1,0 +1,4 @@
+# Ignore object files & webserv executable
+*.o
+
+webserv
