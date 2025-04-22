@@ -1,29 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Client.hpp                                         :+:      :+:    :+:   */
+/*   ClientSkt.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/04/15 16:06:20 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/04/22 11:18:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#ifndef _CLIENT_HPP_
-#define _CLIENT_HPP_
+#ifndef _CLIENT_SOCKET_HPP_
+#define _CLIENT_SOCKET_HPP_
 
 #include "include.hpp"
+#include "Socket.hpp"
 
 
-class Client
+class ClientSkt : Socket
 {
     private:
-        int fd; 
     public:
-        Client();
-        ~Client();
+        ClientSkt(int clt_fd);
+        ~ClientSkt();
 };
 
 

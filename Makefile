@@ -7,7 +7,7 @@ SRC_DIR = src/
 OBJ_DIR = obj/
 
 # Source files
-SRC = src/main.cpp src/Client.cpp
+SRC = src/main.cpp src/Socket.cpp src/ServerSkt.cpp src/ClientSkt.cpp
 
 OBJ = $(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRC))
 
