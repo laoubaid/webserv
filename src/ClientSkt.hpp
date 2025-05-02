@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/04/22 11:18:07 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/02 19:58:51 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,22 @@
 class ClientSkt : Socket
 {
     private:
+        std::string    request_;
     public:
         ClientSkt(int clt_fd);
         ~ClientSkt();
+        // std::string get_response();
+
+        char *get_request() {
+            return (char *)request_.c_str();
+        }
+        int handle_request(const char *buf);
+        void print_request();
+
+        bool operator<(const ClientSkt &other) const {
+            return this->get_fd() < other.get_fd();
+        }
+
 };
 
 

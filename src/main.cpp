@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/04/22 17:08:44 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/02 20:05:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,16 +86,23 @@ int main(int ac, char **av)
 
 	int recv_count = 0;
 	int flag = 0;
-	while (true) {
-		char buf[1024] {};
+    int buf_size = 32;
+    char buf[buf_size];
+    std::map <int, ClientSkt*> client_sockets;
 
+	while (true) {
+        memset(buf, 0, buf_size); // Clear the buffer before each recv
 		int n = epoll_wait(epoll_fd, eventQueue, 100, -1); // chang to max_events
 		if (n == -1) {
 			close(epoll_fd);
 			socket_related_err(" epoll_wait() failed! ", 1);
 		}
 		for (int i = 0; i < n; i++) {
-			if (eventQueue[i].data.fd == server_fd) {
+			
+            // first the server socket check for new connections
+            ////////////////////////////////////////////////////
+            
+            if (eventQueue[i].data.fd == server_fd) {
 				int client_fd = accept(server_fd, NULL, NULL);
 				if (client_fd == -1)
 					continue;
@@ -103,29 +110,37 @@ int main(int ac, char **av)
 				clt_event.data.fd = client_fd;
 				clt_event.events = EPOLLIN | EPOLLOUT;// | EPOLLET;
 				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
-				std::cout << CONN_CLR <<"\n$ New client connected!" << DEF_CLR << std::endl;
-			} else {
+				std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
+
+
+                client_sockets[client_fd] = new ClientSkt(client_fd);
+			}
+            
+            
+            // the client socket check for data receiving and sending
+            /////////////////////////////////////////////////////////
+
+            else {
 				int client_fd = eventQueue[i].data.fd;
 
 				if (eventQueue[i].events & EPOLLIN) {
-					// std::cout << ">>>>>>>> the client socket file descriptor: " << client_fd << std::endl;
-					int nread = recv(client_fd, buf, 1023, 0);
+					int nread = recv(client_fd, buf, buf_size - 1, 0);
 					if (nread <= 0) {
 						close(client_fd);
 						epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-						std::cout << DISC_CLR << "\n$ Client disconnected!" << DEF_CLR << std::endl;
+						std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN)" << DEF_CLR << std::endl;
 						continue;
 					}
-					flag = 1;
 					buf[nread] = 0;
-					print_request(buf, recv_count);
+                    flag = client_sockets[client_fd]->handle_request(buf);
 					recv_count++;
 				}
+
 				if (eventQueue[i].events & EPOLLOUT && flag == 1) {
 					if (send(client_fd, response.c_str(), response.size(), MSG_NOSIGNAL) == -1) {
 							close(client_fd);
 							epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-							std::cout << DISC_CLR <<"\n$ Client disconnected!" << DEF_CLR << std::endl;
+							std::cout << DISC_CLR <<"\n$ Client disconnected! (epoll OUT)" << DEF_CLR << std::endl;
 							socket_related_err(" send() failed! , connection closed! ", 0);
 					}
 					flag = 0;

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 11:24:34 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/04/22 11:21:55 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/02 17:48:51 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ Socket::~Socket() {
 	close(s_fd_);
 }
 
-int Socket::get_fd() {
+int Socket::get_fd() const {
     return s_fd_;
 }
 

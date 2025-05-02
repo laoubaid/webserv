@@ -1,29 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerSkt.hpp                                      :+:      :+:    :+:   */
+/*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/20 19:01:01 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/02 17:52:34 by laoubaid         ###   ########.fr       */
+/*   Created: 2025/04/24 10:43:25 by laoubaid          #+#    #+#             */
+/*   Updated: 2025/04/24 10:53:08 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef _SERVER_SOCKET_HPP_
-#define _SERVER_SOCKET_HPP_
+#include "HttpRequest.hpp"
 
-#include "include.hpp"
-#include "Socket.hpp"
-
-class ServerSkt : public Socket
+HttpRequest::HttpRequest(/* args */)
 {
-	private:
-	public:
-		ServerSkt(t_conf cfg);
-		~ServerSkt();
+}
 
-};
-
-
-#endif
+HttpRequest::~HttpRequest()
+{
+}
