@@ -1,6 +1,6 @@
 
 # Compiler and flags
-CC = clang++ -g3 #-fsanitize=address
+CC = clang++ -g3 #-std=c++98 #-fsanitize=address
 CFLAGS = #-Wall -Wextra -O2
 
 SRC_DIR = src/
