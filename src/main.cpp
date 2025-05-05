@@ -49,20 +49,57 @@ void print_request(const char *buf, int id) {
 /*
 */
 
+void	init_conf(t_conf *conf) {
+	conf->_domain = AF_INET;
+	conf->_type = SOCK_STREAM | SOCK_NONBLOCK;
+	conf->_protocol = 0;
+	conf->_address.sin_family = conf->_domain;
+	conf->_address.sin_addr.s_addr = INADDR_ANY;
+	conf->_address.sin_port = htons(8080);
+}
+
+int	new_connection(int server_fd, int epoll_fd) {
+	int client_fd = accept(server_fd, NULL, NULL);
+	if (client_fd == -1)
+		return -1;
+	epoll_event clt_event {};
+	clt_event.data.fd = client_fd;
+	clt_event.events = EPOLLIN | EPOLLOUT;// | EPOLLET;
+	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
+	std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
+
+	return client_fd;
+}
+
+// char *recv_data(int client_fd, int epoll_fd) {
+//     char	*buf;
+
+// 	memset(buf, 0, buf_size - 1);
+// 	buf = new
+// 	std::cout << "EPOLLIN event detected!" << std::endl;
+// 	int nread = recv(client_fd, buf, buf_size - 1, 0);
+// 	if (nread <= 0) {
+// 		if (nread == 0)
+// 			std::cout << "Client disconnected! (recv() == 0)" << std::endl;
+// 		else
+// 			perror("recv() failed");
+// 		close(client_fd);
+// 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+// 		std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
+// 		return NULL;
+// 	}
+// 	buf[nread] = 0;
+// 	return buf;
+// }
 
 int main(int ac, char **av)
 {
 	int		 server_fd;
 
 	t_conf	conf;
+
 	
-	conf._domain = AF_INET;
-	conf._type = SOCK_STREAM | SOCK_NONBLOCK;
-	conf._protocol = 0;
-	conf._address.sin_family = conf._domain;
-	conf._address.sin_addr.s_addr = INADDR_ANY;
-	conf._address.sin_port = htons(8080);
-	
+	init_conf(&conf);
 	ServerSkt	svr_skt(conf);
 
 	server_fd = svr_skt.get_fd();
@@ -107,16 +144,9 @@ int main(int ac, char **av)
             ////////////////////////////////////////////////////
             
             if (eventQueue[i].data.fd == server_fd) {
-				int client_fd = accept(server_fd, NULL, NULL);
+				int client_fd = new_connection(server_fd, epoll_fd);
 				if (client_fd == -1)
 					continue;
-				epoll_event clt_event {};
-				clt_event.data.fd = client_fd;
-				clt_event.events = EPOLLIN | EPOLLOUT;// | EPOLLET;
-				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
-				std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
-
-
                 client_sockets[client_fd] = new ClientSkt(client_fd);
 			}
             
@@ -128,6 +158,7 @@ int main(int ac, char **av)
 				int client_fd = eventQueue[i].data.fd;
 
 				if (eventQueue[i].events & EPOLLIN) {
+					// recv_data(client_fd, epoll_fd);
                     std::cout << "EPOLLIN event detected!" << std::endl;
 					int nread = recv(client_fd, buf, buf_size - 1, 0);
 					if (nread <= 0) {
@@ -154,7 +185,6 @@ int main(int ac, char **av)
                             socket_related_err(" send() failed! , connection closed! ", 0);
                     }
                     client_sockets[client_fd]->reset_recv_done();
-					flag = 0;
 				}
 			}
 		}
