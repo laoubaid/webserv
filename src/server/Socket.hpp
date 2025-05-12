@@ -6,14 +6,14 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 11:24:29 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/02 17:47:47 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/12 04:35:05 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef _SOCKET_HPP_
 #define _SOCKET_HPP_
 
-#include "include.hpp"
+#include "../include.hpp"
 
 #define SERVER 1
 #define CLIENT 2

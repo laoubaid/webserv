@@ -3,19 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   httpParsingIncludes.hpp                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/08 14:34:53 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/05/12 04:35:29 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef HTTPPARSINGINCLUDES_HPP
 # define HTTPPARSINGINCLUDES_HPP
 
-# include <iostream>
-# include <vector>
-# include <map>
+# include "../include.hpp"
+
+// # include <iostream>
+// # include <vector>
+// # include <map>
 
 # define ALPHA "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 # define DIGIT "0123456789"

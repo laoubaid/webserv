@@ -6,13 +6,13 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/02 22:23:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/12 04:50:36 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "include.hpp"
-#include "ServerSkt.hpp"
-#include "ClientSkt.hpp"
+#include "server/ServerSkt.hpp"
+#include "server/ClientSkt.hpp"
 
 
 //////////////// delete this later //////////////////
