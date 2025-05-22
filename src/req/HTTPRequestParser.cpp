@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/08 14:41:45 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/05/13 06:00:52 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,7 +138,7 @@ HTTPRequestParser::HTTPRequestParser(std::string httpRequest)
 		std::cout << "\n\n[INVALID HTTP REQUEST]\n\n";
 }
 
-bool	HTTPRequestParser::getParsingCode(void) const
+int	HTTPRequestParser::getParsingCode(void) const
 {
 	return (parsingCode);
 }

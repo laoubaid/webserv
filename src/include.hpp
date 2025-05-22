@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/12 04:35:17 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/13 23:08:43 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,9 +34,11 @@
 #define GRN_CLR "\033[32m"
 #define YLW_CLR "\033[33m"
 #define WHT_CLR "\033[37m"
-
 #define DISC_CLR "\033[37;41m"
 #define CONN_CLR "\033[30;42m"
+
+
+#define HEADER_MAX_SIZE 1024
 
 typedef struct	s_conf
 {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/08 19:04:11 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/05/13 06:00:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class HTTPRequestParser
 	public:
 		HTTPRequestParser(void);
 		HTTPRequestParser(std::string httpRequest);
-		bool	getParsingCode(void) const;
+		int	getParsingCode(void) const;
 		~HTTPRequestParser(void);
 };
 
