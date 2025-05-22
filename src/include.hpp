@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/13 23:08:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/22 10:13:16 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,12 @@
 
 
 #define HEADER_MAX_SIZE 1024
+
+enum recv_state {
+    IDLE = 0,
+    CCLS = 1,
+    PEND = 2
+};
 
 typedef struct	s_conf
 {
