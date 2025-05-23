@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:01 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/12 04:35:05 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/23 19:24:06 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,12 @@
 #include "../include.hpp"
 #include "Socket.hpp"
 
-class ServerSkt : public Socket
+class Server : public Socket
 {
 	private:
 	public:
-		ServerSkt(t_conf cfg);
-		~ServerSkt();
+		Server(t_conf cfg);
+		~Server();
 
 };
 

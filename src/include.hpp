@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/22 10:13:16 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/23 19:22:11 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,8 +42,9 @@
 
 enum recv_state {
     IDLE = 0,
-    CCLS = 1,
-    PEND = 2
+    PEND = 1,
+    RESP = 2,
+    CCLS = 3
 };
 
 typedef struct	s_conf

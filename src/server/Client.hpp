@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ClientSkt.hpp                                      :+:      :+:    :+:   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/22 10:18:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/23 19:23:17 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,25 +18,25 @@
 #include "../include.hpp"
 #include "Socket.hpp"
 
-class ClientSkt : Socket
+class Client : Socket
 {
     private:
         HTTPRequestParser   *request_;
         recv_state          req_stat_;
 
-        std::string         response_;
+        std::string         resbuf_;
 
     public:
-        ClientSkt(int clt_fd);
-        ~ClientSkt();
+        Client(int clt_fd);
+        ~Client();
 
-        int process_recv_data(const char *buf, int len, uint32_t event);
+        int process_recv_data(std::vector <char> buf, uint32_t event);
         // void print_request();
 
         void send_response(uint32_t event);
 
 
-        bool operator<(const ClientSkt &other) const {
+        bool operator<(const Client &other) const {
             return this->get_fd() < other.get_fd();
         }
 

@@ -1,25 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ClientSkt.cpp                                      :+:      :+:    :+:   */
+/*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/22 10:21:11 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/23 19:31:24 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ClientSkt.hpp"
+#include "Client.hpp"
 
-ClientSkt::ClientSkt(int clt_fd) : Socket(clt_fd)
+Client::Client(int clt_fd) : Socket(clt_fd)
 {
     request_ = NULL;
     req_stat_ = IDLE;
-    std::cout << "ClientSkt constracteur called!" << std::endl;
+    std::cout << "Client constracteur called!" << std::endl;
 }
 
-ClientSkt::~ClientSkt()
+Client::~Client()
 {
 }
 
@@ -61,21 +61,34 @@ std::string tmp_response(int code) {
 }
 
 
-int ClientSkt::process_recv_data(const char *buf, int len, uint32_t event) {
-
-    request_ = new HTTPRequestParser(buf);
+int Client::process_recv_data(std::vector <char> buf, uint32_t event) {
+    
+    if (req_stat_ == IDLE) {
+        request_ = new HTTPRequestParser(buf.data()); // len
+    }
+    if (req_stat_ == PEND) {
+        std::cout << "add to body\n";
+        // request_->addtobody(buf, len);
+    }
+    if (req_stat_ == CCLS)
+        delete request_;
+    if (req_stat_ == RESP)
+    {
+        // HTTPResponse()
+        send_response(event);
+    }
 
     // wait for kamal
     
-    response_ = tmp_response(request_->getParsingCode());
+    resbuf_ = tmp_response(request_->getParsingCode());
     send_response(event);
     return 0;
 }
 
-void ClientSkt::send_response(uint32_t event) {
+void Client::send_response(uint32_t event) {
     if (event & EPOLLOUT) {
         std::cout << "EPOLLOUT event is detected!" << std::endl;
-        if (send(this->get_fd(), response_.c_str(), response_.size(), MSG_NOSIGNAL) == -1) {
+        if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) == -1) {
             close(this->get_fd());
             std::cout << DISC_CLR <<"\n$ Client disconnected! (epoll OUT) fd: " << this->get_fd() << DEF_CLR << std::endl;
             socket_related_err(" send() failed! , connection closed! ", 0);
@@ -83,7 +96,7 @@ void ClientSkt::send_response(uint32_t event) {
     }
 }
 
-// void ClientSkt::print_request() {
+// void Client::print_request() {
 //     std::cout << YLW_CLR << ">\tthe client socket FD: " << this->get_fd() << DEF_CLR << std::endl;
 //     std::cout << "---------------------------------------------------------------------------------------" << std::endl;
 //     std::cout << "-------------------------------- THE START OF REQUEST! --------------------------------" << std::endl;

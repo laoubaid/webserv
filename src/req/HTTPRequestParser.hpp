@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/13 06:00:46 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/05/23 18:23:36 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,13 @@ class HTTPRequestParser
 	public:
 		HTTPRequestParser(void);
 		HTTPRequestParser(std::string httpRequest);
+		HTTPRequestParser(std::vector <char> httpRequest);
 		int	getParsingCode(void) const;
 		~HTTPRequestParser(void);
+
+        t_method getMethode(void) {
+            return method;
+        };
 };
 
 
