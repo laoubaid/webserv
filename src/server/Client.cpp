@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/23 19:31:24 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 16:23:13 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,25 +63,25 @@ std::string tmp_response(int code) {
 
 int Client::process_recv_data(std::vector <char> buf, uint32_t event) {
     
-    if (req_stat_ == IDLE) {
-        request_ = new HTTPRequestParser(buf.data()); // len
-    }
-    if (req_stat_ == PEND) {
-        std::cout << "add to body\n";
-        // request_->addtobody(buf, len);
-    }
-    if (req_stat_ == CCLS)
-        delete request_;
-    if (req_stat_ == RESP)
-    {
-        // HTTPResponse()
-        send_response(event);
-    }
+    // if (req_stat_ == IDLE) {
+    //     // request_ = new HTTPRequestParser(Uvec(buf)); // len
+    // }
+    // if (req_stat_ == PEND) {
+    //     std::cout << "add to body\n";
+    //     // request_->addtobody(buf, len);
+    // }
+    // if (req_stat_ == CCLS)
+    //     delete request_;
+    // if (req_stat_ == RESP)
+    // {
+    //     // HTTPResponse()
+    //     send_response(event);
+    // }
 
-    // wait for kamal
+    // // wait for kamal
     
-    resbuf_ = tmp_response(request_->getParsingCode());
-    send_response(event);
+    // resbuf_ = tmp_response(request_->getParsingCode());
+    // send_response(event);
     return 0;
 }
 

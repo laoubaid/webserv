@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   host.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/19 17:25:56 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/06/24 04:13:50 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/28 16:29:50 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../httpParsingIncludes.hpp"
-#include "../HTTPRequestParser.hpp"
+#include "./httpParsingIncludes.hpp"
+#include "./HTTPRequestParser.hpp"
 
 bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
 {

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/23 19:23:17 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 12:21:39 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ class Client : Socket
 {
     private:
         HTTPRequestParser   *request_;
-        recv_state          req_stat_;
+        e_req_state          req_stat_;
 
         std::string         resbuf_;
 
