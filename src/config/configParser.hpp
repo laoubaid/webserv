@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 19:56:12 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 21:52:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,10 @@ class Block {
         std::string argument;
         std::vector<Directive> directives;
         std::vector<Block> blocks;
+        std::string error_message;
 
+        Block() = default;
+        Block(const std::string& n) : name(n) {}
         // You can add helper methods here if needed
 };
 
