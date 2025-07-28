@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/23 18:23:36 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 02:33:21 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,28 +19,53 @@ class HTTPRequestParser
 {
 	private:
 		static std::map<std::string, validatorFunc>	stdFields;
+		static std::vector<std::string>				invalidList;
+
+		
+
+		struct StaticContainersInitializer
+		{
+			StaticContainersInitializer();
+		};
+		static  StaticContainersInitializer	initializer;
 
 		int									parsingCode;
 		t_method							method;
-		std::string							requestTarget;
-		std::string							HTTPVersion;
-		std::map<std::string, std::string>	fields;
-		std::string							body;
-		bool								chunked;
+		std::string							target;
+		std::map<std::string, Uvec>			fields;
+		Uvec								body;
+		t_req_state							req_state;
 
-		void								fieldsInit(void);
-		void								processStartLine(std::string startLine);
-		void								processFields(std::vector<std::string> lines);
+		void								processStartLine(Uvec startLine);
+		void								processFields(std::vector<Uvec> lines);
+		void								addField(std::string key, Uvec value);
+		void								badRequest(std::string err_msg);
+		void								processBody(const Uvec& raw_body);
+		void	processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body);
 	public:
-		HTTPRequestParser(void);
-		HTTPRequestParser(std::string httpRequest);
-		HTTPRequestParser(std::vector <char> httpRequest);
-		int	getParsingCode(void) const;
-		~HTTPRequestParser(void);
+		// vectors for nomalized characters
+		static Uvec	CRLF;
+		static Uvec	DIGIT;
+		static Uvec	ALPHA;
+		static Uvec	HEXDIG;
+		static Uvec	UNRESERVED;
+		static Uvec	SUBDELIMS;
+		static Uvec	TCHAR;
+		static Uvec	VCHAR;
+		static Uvec	OBSTEXT;
 
-        t_method getMethode(void) {
-            return method;
-        };
+		HTTPRequestParser(void);
+		HTTPRequestParser(Uvec httpRequest);
+		~HTTPRequestParser(void);
+		
+		void				addBody(Uvec raw_body);
+		// getters
+		int					getParsingCode(void) const;
+		const t_method&		getMethod(void) const;
+		const std::string&	getTarget(void) const;
+		const Uvec&			getFieldValue(const std::string& key) const;
+		const t_req_state&	getReqState(void) const;
+		const Uvec&			getBody(void) const;
 };
 
 

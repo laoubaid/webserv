@@ -3,117 +3,316 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/13 06:00:52 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 02:57:12 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequestParser.hpp"
 
 std::map<std::string, validatorFunc>	HTTPRequestParser::stdFields;
+std::vector<std::string>				HTTPRequestParser::invalidList;
+Uvec	HTTPRequestParser::DIGIT;
+Uvec	HTTPRequestParser::ALPHA;
+Uvec	HTTPRequestParser::CRLF;
+Uvec	HTTPRequestParser::HEXDIG;
+Uvec	HTTPRequestParser::UNRESERVED;
+Uvec	HTTPRequestParser::SUBDELIMS;
+Uvec	HTTPRequestParser::TCHAR;
+Uvec	HTTPRequestParser::VCHAR;
+Uvec	HTTPRequestParser::OBSTEXT;
 
-void	HTTPRequestParser::fieldsInit(void)
+HTTPRequestParser::StaticContainersInitializer	HTTPRequestParser::initializer;
+
+HTTPRequestParser::StaticContainersInitializer::StaticContainersInitializer(void)
 {
-	stdFields["accept"] = validateAccept;
-	stdFields["accept-charset"] = validateAcceptCharset;
-	stdFields["accept-encoding"] = validateAcceptEncoding;
+	// std::cout << "initializer called\n";
+
+	// initialize standard fields with their appropriate validators
+	stdFields["content-length"] = validateContentLength;
+
+	// invalidList.push_back("host");
+
+	// Assign vectors for nomalized characters (try to make adding vectors better)
+	CRLF = Uvec((const unsigned char*)"\r\n", 2);
+	DIGIT = Uvec((const unsigned char*)"0123456789", 10);
+	ALPHA = Uvec((const unsigned char*)"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 52);
+	HEXDIG = Uvec((const unsigned char*)"ABCDEFabcdef", 12) + DIGIT;
+	UNRESERVED = Uvec((const unsigned char*)"-._~", 4) + DIGIT;
+	UNRESERVED += ALPHA;
+	SUBDELIMS = Uvec((const unsigned char*)"!$&'()*+,;=", 11);
+	TCHAR = Uvec((const unsigned char*)"!#$%&'*+-.^_`|~", 15) + DIGIT;
+	TCHAR += ALPHA;
+	VCHAR = Uvec(0x21, 0x7e);
+	OBSTEXT = Uvec(0x80, 0xff);
 }
 
 HTTPRequestParser::HTTPRequestParser(void)
 {
 }
-
-void	HTTPRequestParser::processStartLine(std::string startLine)
+HTTPRequestParser::~HTTPRequestParser(void)
 {
-	std::vector<std::string>	infos = ft_split(startLine, " ");
+}
+
+void	HTTPRequestParser::badRequest(std::string err_msg)
+{
+	parsingCode = 400;
+	std::cerr << RED_COLOR << "[BAD REQUEST][ERROR CODE 400]: " << err_msg << RESET_COLOR << std::endl;
+}
+
+void	HTTPRequestParser::processStartLine(Uvec startLine)
+{
+	Uvec	sp;
+	sp.push_back(' ');
+	std::vector<Uvec>	infos = ft_split(startLine, sp);
 	
 	if (infos.size() != 3)
-	{
-		parsingCode = 400;
-		return;
-	}
+		return (badRequest("invalid number of words in start line"));
 	// method validity
-	if (infos[0] == "GET")
+	if (infos[0] == Uvec((const unsigned char*)"GET", 3))
 		method = GET;
-	else if (infos[0] == "POST")
+	else if (infos[0] == Uvec((const unsigned char*)"POST", 4))
 		method = POST;
-	else if (infos[0] == "DELETE")
+	else if (infos[0] == Uvec((const unsigned char*)"DELETE", 6))
 		method = DELETE;
 	else
 	{
-		parsingCode = 405;
+		parsingCode = 501;
 		return;
 	}
 	// target validity
-	if (!valid_target(infos[2]))
-		requestTarget = infos[2];
+	if (validateTarget(infos[1]))
+		target = std::string(infos[1].begin(), infos[1].end());
 	else
-	{
-		parsingCode = 400;
-		return;
-	}
+		return (badRequest("invalid target"));
 	// version validity
-	if (infos[2] == "HTTP/1.1")
-		HTTPVersion = "HTTP/1.1";
-	else
-		parsingCode = 400;
+	if (infos[2] != Uvec((const unsigned char*)"HTTP/1.1", 8))
+		return (badRequest("invalid http version"));
 }
 
-void	HTTPRequestParser::processFields(std::vector<std::string> lines)
+void	HTTPRequestParser::addField(std::string key, Uvec value)
 {
-	std::string	key;
-	std::string	value;
-	std::size_t	colon;
-	int			i = 1;
-	// std::map<std::string, valid>::iterator it;
-	fieldsInit();
-	
-	for (; i < lines.size() && lines[i] != ""; i++)
+	std::pair<
+		std::map<std::string, Uvec>::iterator,
+		bool
+	>	result = fields.insert(std::make_pair(key, value));
+
+	if (!result.second)
 	{
-		// std::cout << "here\n";
-		colon = lines[i].find(':');
-		if (colon == std::string::npos)
+		if (std::find(invalidList.begin(), invalidList.end(), key) != invalidList.end())
+			return (badRequest("header field doesn't qualify as a list"));
+		else
 		{
-			parsingCode = 400;
-			return ;
+			Uvec	sep((const unsigned char*)" , ", 3);
+			result.first->second += sep;
+			result.first->second += value;
 		}
-		key = str_tolower(lines[i].substr(0, colon));
-		value = ft_trim(lines[i].substr(colon +1));
+	}
+}
+
+void	HTTPRequestParser::processFields(std::vector<Uvec> lines)
+{
+	
+	
+	for (int i = 1; i < lines.size() && lines[i].size() != 0; i++)
+	{
+		Uvec	key;
+		
+		// t_vec_uc::iterator	colon = std::find(lines[i].begin(), lines[i].end(), ':');
+		Uvec::iterator	colon = lines[i].find(':');
+		if (colon == lines[i].end())
+			return (badRequest("colon not found"));
+		// std::transform(lines[i].begin(), colon, std::back_inserter(key), toLowerChar); // does it work???
+		for (Uvec::iterator it = lines[i].begin(); it != colon; it++)
+		{
+			key.push_back(tolower(*it));
+		}
+		
+		Uvec	value = ft_trim(Uvec(colon +1, lines[i].end()));
 		if (!validateFieldName(key))
-		{
-			parsingCode = 400;
-			return ;
-		}
-		std::map<std::string, validatorFunc>::iterator it = stdFields.find(key);
+			return (badRequest("header field name not valid"));
+		std::string	str_key(key.begin(), key.end());
+		std::map<std::string, validatorFunc>::iterator it = stdFields.find(str_key);
 		if (it == stdFields.end())
 		{
 			if (!validateFieldValue(value))
-			{
-				parsingCode = 400;
-				return ;
-			}
+				return (badRequest("default header field value not valid"));
 		}
 		else if (!it->second(value))
-		{
-			parsingCode = 400;
-			return ;
-		}
-		// should check if the feild already in map to add it as a list or throw error if it doesn't accept multiple lists
-		fields[key] = value;
+			return (badRequest("header field value not valid"));
+		addField(str_key, value);
 	}
-	if (i >= lines.size() -1 || lines[i] != "" || lines[i+1] != "")
-		parsingCode = 400;
 }
 
-HTTPRequestParser::HTTPRequestParser(std::string httpRequest)
+void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body)
 {
-	std::cout << "Precessing request: " << httpRequest << std::endl;
+	std::vector<Uvec>	transfer_encoding_list = ft_split(transfer_encoding, Uvec((const unsigned char *)",", 1));
+	int	chunked = 0;
+	Uvec	chunked_vec = Uvec((const unsigned char *)"chunked", 7);
+	for (std::vector<Uvec>::iterator it = transfer_encoding_list.begin(); it != transfer_encoding_list.end(); it++)
+	{
+		if (ft_trim(*it) == chunked_vec)
+		{
+			chunked = 1;
+			break;
+		}
+	}
+	if (chunked)
+	{
+		try
+		{
+			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
+			body = processed.second;
+			if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
+				req_state = PEND;
+			else
+				req_state = RESP;
+		}
+		catch(const std::exception& e)
+		{
+			parsingCode = 400;
+			req_state = CCLS;
+			throw std::runtime_error("invalid chunked size number");
+		}
+		
+	}
+	else
+	{
+		parsingCode = 400;
+		req_state = CCLS;
+		throw std::runtime_error("body with transfer-encoding but no chunked");
+	}
+}
+
+void	HTTPRequestParser::processBody(const Uvec& raw_body)
+{
+	try
+	{
+		Uvec	transfer_encoding = getFieldValue("transfer-encoding");
+		try
+		{
+			Uvec	content_length = getFieldValue("content-length");
+			// both of them exists (bad)
+			parsingCode = 400;
+			req_state = CCLS;
+			return;
+		}
+		catch(const std::exception& e)
+		{
+			processTransferEncoding(transfer_encoding, raw_body);
+		}
+	}
+	catch(const std::exception& e)
+	{
+		try
+		{
+			// std::cout << "HERE\n";
+			Uvec	content_length = getFieldValue("content-length");
+			std::vector<Uvec>	lengths = ft_split(content_length, Uvec((const unsigned char *)",", 1));
+				Uvec	trimmed_vec = ft_trim(lengths[0]);
+				unsigned long  length;
+				stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), length);
+				for (std::vector<Uvec>::iterator it = lengths.begin() +1; it != lengths.end(); it++)
+				{
+					trimmed_vec = ft_trim(*it);
+					unsigned long	v;
+					stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), v);
+					if (v != length)
+						return (badRequest("content length list has different values"));
+				}
+				fields["content-length"] = trimmed_vec;
+				if (length > raw_body.size())
+					req_state = PEND;
+				else if (length == raw_body.size())
+					req_state = RESP;
+				else
+				{
+					parsingCode = 400;
+					req_state = CCLS;
+					throw std::runtime_error("content-length not valid");
+				}
+				body = raw_body;
+		}
+		catch(const std::exception& e)
+		{
+			parsingCode = 411;
+			throw std::runtime_error("body with no content-length or transfer-encoding");
+		}
+	}
+}
+
+void	HTTPRequestParser::addBody(Uvec raw_body)
+{
+	try
+	{
+		Uvec	transfer_encoding = getFieldValue("transfer-encoding");
+		try
+		{
+			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body);
+			body += processed.second;
+			if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
+				req_state = PEND;
+			else
+				req_state = RESP;
+		}
+		catch(const std::exception& e)
+		{
+			parsingCode = 400;
+			req_state = CCLS;
+			throw std::runtime_error("invalid chunked size number");
+		}
+	}
+	catch(const std::exception& e)
+	{
+		try
+		{
+			Uvec	content_length = getFieldValue("content-length");
+			unsigned long  length;
+			stringToUnsignedLong(std::string(content_length.begin(), content_length.end()), length);
+			if (length > raw_body.size())
+				req_state = PEND;
+			else if (length == raw_body.size())
+				req_state = RESP;
+			else
+			{
+				parsingCode = 400;
+				req_state = CCLS;
+				throw std::runtime_error("content-length not valid");
+			}
+			body += raw_body;
+			
+		}
+		catch(const std::exception& e)
+		{
+			parsingCode = 411;
+			throw std::runtime_error("body with no content-length or transfer-encoding");
+		}
+	}
+}
+
+HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
+{
+	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
+	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
 	parsingCode = 200;
-	std::vector<std::string>	lines = ft_split(httpRequest, "\r\n");
+	req_state = IDLE;
 	
-	if (lines.size() < 3)
+	// split with crlfcrlf to get 2 (headers and body)
+	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
+	Uvec::iterator	pos = httpRequest.find(DCRLF);
+
+	if (pos == httpRequest.end())
+	{
+		parsingCode = 400;
+		return ;
+	}
+	Uvec	headers(httpRequest.begin(), pos);
+	Uvec	rawBody(pos+4, httpRequest.end());
+	std::vector<Uvec>	lines = ft_split(headers, CRLF);
+	
+	if (lines.size() < 3) // the least that should be there are three lines (start-line, host header field at least, empty line)
 	{
 		parsingCode = 400;
 		return;
@@ -123,26 +322,53 @@ HTTPRequestParser::HTTPRequestParser(std::string httpRequest)
 		return ;
 
 	// field line parsing:
-		// field-line   = field-name ":" OWS field-value OWS (ows: optional whitespace) (can put as mean spaces as you want) (5. Field Syntax rfc9112)
-		// No whitespace is allowed between the field name and colon (if it happens response status code of 400 (Bad Request)) (5.1. Field Line Parsing rfc9112)
-		// there's some field names that can be repeated (like: Accept, Cache-Control, Connection... can be merged using commas exept cookies with ;)
-			// empl: Accept: text/html\r\nAccept: application/json  => Accept: text/html, application/json
-		// Host field is mandatory "A client MUST send a Host header field in all HTTP/1.1 request messages" "A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value" (rfc9112#name-request-target)
 	processFields(lines);
 
-
+	if (rawBody.size())
+		processBody(rawBody);
 
 	if (parsingCode == 200)
 		std::cout << "\n\n[VALID HTTP REQUEST]\n\n";
 	else
 		std::cout << "\n\n[INVALID HTTP REQUEST]\n\n";
+
+	std::cout << "FINAL HEADER FIELDS\n";
+	for (std::map<std::string, Uvec>::iterator it = fields.begin(); it != fields.end(); it++)
+	{
+		std::cout << "[KEY]: " << (*it).first << " [VALUE]: ";
+		printvec((*it).second, 0);
+	}
+	std::cout << "[MESSAGE BODY]\n";
+	printvec(body, 0);
 }
 
+	// getter functions
 int	HTTPRequestParser::getParsingCode(void) const
 {
 	return (parsingCode);
 }
 
-HTTPRequestParser::~HTTPRequestParser(void)
+const t_method&		HTTPRequestParser::getMethod(void) const
 {
+	return (method);
+}
+
+const std::string&	HTTPRequestParser::getTarget(void) const
+{
+	return (target);
+}
+
+const Uvec&		HTTPRequestParser::getFieldValue(const std::string& key) const
+{
+	return (getValue(fields, key));
+}
+
+const t_req_state&		HTTPRequestParser::getReqState(void) const
+{
+	return (req_state);
+}
+
+const Uvec&			HTTPRequestParser::getBody(void) const
+{
+	return (body);
 }

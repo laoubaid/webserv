@@ -6,118 +6,202 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/05/03 19:07:10 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/28 02:39:30 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequestParser.hpp"
 
 // to distinguish either the spliter is at the end or not, I will add an empty string to the array if it is at the end
-std::vector<std::string>	ft_split(const std::string &str, const std::string &spliter)
+std::vector<Uvec>	ft_split(const Uvec &data, const Uvec &spliter)
 {
-	std::vector<std::string>	str_vec;
-	std::size_t start = 0;
-    std::size_t pos = str.find(spliter);
-
-	while (pos != std::string::npos)
+	std::vector<Uvec>	vec;
+	Uvec::const_iterator	start = data.begin();
+	Uvec::const_iterator	pos = data.find(spliter);
+	while (pos != data.end())
 	{
-		// std::cout << "pos: " << pos << std::endl;
-		// std::cout << "start: " << start << std::endl;
-		// std::cout << "str to push: " << str.substr(start, pos - start) << std::endl;
-		str_vec.push_back(str.substr(start, pos -start));
+		vec.push_back(Uvec(start, pos));
 		start = pos + spliter.size();
-		pos = str.find(spliter, start);
+		pos = data.find(start, data.end(), spliter);
 	}
-	str_vec.push_back(str.substr(start));
-	return (str_vec);
+	vec.push_back(Uvec(start, data.end()));
+	return (vec);
 }
 
-bool	valid_dig(std::string str)
+// t_vec_uc	str_to_vec(const unsigned char *str, std::size_t len)
+// {
+// 	return (t_vec_uc(str, str + len));
+// }
+
+// bool	vec_eq_str(const t_vec_uc &vec, const unsigned char *str, std::size_t len)
+// {
+// 	t_vec_uc	vec_str;
+// 	vec_str.assign(str, str + len);
+// 	return (vec == vec_str);
+// }
+
+// bool	ucharInVec(const t_vec_uc &vec, unsigned char c)
+// {
+// 	return (std::find(vec.begin(), vec.end(), c) != vec.end());
+// }
+
+Uvec	ft_trim(Uvec vec)
 {
-	// std::cout << "check dig: " << str;
-	std::string dig = "0123456789";
-	
-	for (std::size_t i = 0; str[i]; i++)
-	{
-		if (dig.find(str[i]) == std::string::npos)
-			return (false);
-	}
-	return (true);
-}
+	Uvec::iterator	start = vec.begin();
+	Uvec::iterator	end = vec.end();
 
-bool	valid_target(std::string target)
-{
-	int	offset = 1;
-	std::string	hexdig = "0123456789ABCDEFabcdef";
-	std::string	unreserved = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._~";
-	std::string	subdelims = "!$&'()*+,;=";
-	std::string	others = ":@/?";
-
-	if (target[0] != '/')
-		return (false);
-	if (target[1] == '/')
-		return (false);
-	for (; target[offset]; offset++)
-	{
-		if (target[offset] == '%')
-		{
-			offset++;
-			if (hexdig.find(target[offset]) == std::string::npos)
-				return (false);
-			offset++;
-			if (hexdig.find(target[offset]) == std::string::npos)
-				return (false);
-			continue ;
-		}
-		if (	unreserved.find(target[offset]) == std::string::npos
-			|| 	subdelims.find(target[offset]) == std::string::npos
-			|| 	others.find(target[offset]) == std::string::npos)
-			return (false);
-	}
-	return (true);
-	// rules:
-	// 	only origin form is valid in our project (because we only working with 3 methods that require only origin form (3.2.1. origin-form rfc9112)) and its rules are:
-	// 	"invalid request-line SHOULD respond with either a 400 (Bad Request) error" (3.2. Request Target rfc9112)
-	// 	starts with /
-	// 	origin-form = absolute-path [ "?" query ] (3.2.1. origin-form rfc9112) [] means optional and "?" means exactly that char, so the query is optional
-	// 		for the absolute path: (all below from (3.3.  Path rfc3986))
-	// 			The path is terminated by the first question mark ("?") or number sign ("#") character, or by the end of the URI 
-	// 			path-absolute   ; begins with "/" but not "//"
-	// 			path-absolute = "/" [ segment-nz *( "/" segment ) ]    (this rule mean the first segment should be just / or /segment/... never starts with // but // can be found in the rest of the path)
-	// 			segment       = *pchar (means zero or more pchars )
-    // 			segment-nz    = 1*pchar (means at least one character)
-	// 			pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-	// 				unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~" (rfc3986#section-2.3)
-	// 				pct-encoded = "%" HEXDIG HEXDIG (The uppercase hexadecimal digits 'A' through 'F' are equivalent to the lowercase digits 'a' through 'f' => means it's case insensitive) (rfc3986#section-2.1)
-	// 				sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "=" (rfc3986#section-2.2)
-	// 		for the query (rfc3986#section-3.4)
-	// 			The query component is indicated by the first question mark ("?") character and terminated by a number sign ("#") character or by the end of the URI
-	// 			 query       = *( pchar / "/" / "?" )     (means the query can be empty or include any number of characters from the pchar set, as well as / and ?) (The asterisk * denotes that the sequence can be of any length, including zero, which means an empty query is syntactically valid)
-	// summary:
-	// 	should start with '/'
-	// 	should not start with "//"
-	// 	all characters should be *( pchar / "/" / "?" ) until the end of the string	
-}
-
-std::string	ft_trim(std::string str)
-{
-	int	start = 0;
-
-	while (str[start] == ' ')
+	while (start != end && (*start == ' ' || *start == '\t'))
 		start++;
-	int	end = str.size() -1;
-	while (str[end] == ' ')
+	while (start != end && (*(end -1) == ' ' || *(end -1) == '\t'))
 		end--;
-	return (str.substr(start, end -start +1));
+	return (Uvec(start, end));
 }
 
-std::string	str_tolower(std::string str)
+unsigned char toLowerChar(unsigned char c)
 {
-	std::string	newStr = "";
+    return static_cast<unsigned char>(std::tolower(static_cast<int>(c)));
+}
 
-	for (size_t i = 0; str[i]; i++)
+// t_vec_uc createRange(unsigned char start, unsigned char end)
+// {
+//     t_vec_uc vec;
+//     vec.reserve(end - start + 1);
+//     for (int i = start; i <= end; ++i)
+// 	{
+//         vec.push_back(static_cast<unsigned char>(i));
+//     }
+//     return (vec);
+// }
+
+bool hexStringToUnsignedLong(const std::string& hexStr, unsigned long& result) {
+    std::stringstream ss;
+    ss << std::hex << hexStr; // Insert hex string into stringstream, set base to hex
+
+    // Attempt to extract the unsigned long
+    ss >> result;
+
+    // Check for errors:
+    // 1. If the entire string was consumed and conversion was successful
+    // 2. If no conversion error flags are set (badbit, failbit)
+    if (!ss.fail() && ss.eof()) {
+        return true;
+    } else {
+        // Conversion failed (e.g., non-hex characters, empty string, overflow)
+        ss.clear(); // Clear error flags if you intend to reuse the stream
+        return false;
+    }
+}
+
+bool stringToUnsignedLong(const std::string& str, unsigned long& result) {
+    std::stringstream ss;
+    ss << str; // Insert hex string into stringstream, set base to hex
+
+    // Attempt to extract the unsigned long
+    ss >> result;
+
+    // Check for errors:
+    // 1. If the entire string was consumed and conversion was successful
+    // 2. If no conversion error flags are set (badbit, failbit)
+    if (!ss.fail() && ss.eof()) {
+        return true;
+    } else {
+        // Conversion failed (e.g., non-hex characters, empty string, overflow)
+        ss.clear(); // Clear error flags if you intend to reuse the stream
+        return false;
+    }
+}
+
+const Uvec&		getValue(const std::map<std::string, Uvec>& map, const std::string& key)
+{
+	std::map<std::string, Uvec>::const_iterator	it = map.find(key);
+
+	if (it == map.end())
+		throw std::out_of_range(key +" not found");
+	return (it->second);
+}
+
+std::pair<unsigned long, Uvec>	process_chunked_body(Uvec data)
+{
+	Uvec::iterator	it = data.find(HTTPRequestParser::CRLF);
+
+	if (it == data.end())
+		throw std::out_of_range("body size not found");
+	Uvec	body_size_vec = Uvec(data.begin(), it);
+	Uvec	body = Uvec(it+2, data.end());
+	if (!validateHexDigit(body_size_vec))
+		throw std::runtime_error("unvalid body size (NaN)");
+	unsigned long	body_size;
+	hexStringToUnsignedLong(std::string(body_size_vec.begin(), body_size_vec.end()), body_size);
+	if (body_size != body.size())
+		throw std::runtime_error("body size doesn't match body received");
+	return (std::pair<unsigned long, Uvec>(body_size, body));
+}
+
+std::string	ft_itos(std::size_t num)
+{
+	std::stringstream	oss;
+
+	oss << num;
+	return (oss.str());
+}
+
+int	ft_hextoi(const std::string& hex)
+{
+	std::istringstream	iss(hex);
+	int num;
+	iss >> std::hex >> num;
+	return (num);
+}
+
+std::string	decode_url(const std::string& url)
+{
+	std::string	result;
+
+	for (std::string::const_iterator it = url.begin(); it != url.end(); it++)
 	{
-		newStr += std::tolower(str[i]);
+		if (*it == '%' && std::isxdigit(*(it+1)) && std::isxdigit(*(it+2)))
+		{
+			it++;
+			if (std::isxdigit(*it) && std::isxdigit(*(it+1)))
+				result += ft_hextoi(std::string(it, it +2));
+			it++;
+		}
+		else
+			result += *it;
 	}
-	return (newStr);
+	return (result);
+}
+
+bool	has_shebang(std::string script_path)
+{
+	std::ifstream	file(script_path);
+
+	if (file.is_open())
+	{
+		char c1, c2;
+		file.get(c1);
+		file.get(c2);
+		if (c1 == '#' && c2 == '!')
+			return (true);
+	}
+	return (false);
+}
+
+char	*ft_strdup(const std::string& src)
+{
+	char	*str = new char[src.size() +1];
+	std::strcpy(str, src.c_str());
+	return (str);
+}
+
+std::string	get_ext(const std::string& path)
+{
+	std::string::const_iterator	it = path.end();
+
+	while (it != path.begin() && *it != '.')
+		it--;
+	if (*it == '.')
+		return (std::string(it+1, path.end()));
+	else
+		return (std::string(""));
 }
