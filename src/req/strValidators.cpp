@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:53:41 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 02:14:55 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/29 02:15:42 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -267,7 +267,7 @@ bool	validateContentLength(const Uvec &vec)
 
 	while (it != vec.end() && (it == vec.begin() || *it == ','))
 	{
-		if (*it == ',')
+		if (*it == ',' && it != vec.begin())
 			it++;
 		OWSMatch(vec, it);
 		size_t	counter = 0;
@@ -395,39 +395,41 @@ bool	validateContentLength(const Uvec &vec)
 // 	return (tokenListMatch(str));
 // }
 
-// bool	validateTransferEncoding(std::string str)
-// {
-// 	std::size_t	pos = 0;
+bool	validateTransferEncoding(const Uvec &vec)
+{
+	Uvec::const_iterator	it = vec.begin();
 
-// 	while (str[pos] && (pos == 0 || str[pos] == ','))
-// 	{
-// 		if (str[pos] == ',')
-// 			pos++;
-// 		OWSMatch(str, pos);
-// 		if (!transferCodingMatch(str, pos))
-// 			return (false);
-// 		OWSMatch(str, pos);
-// 	}
-// 	if (str[pos])
-// 		return (false);
-// 	return (true);
-// }
+	while (it != vec.end() && (it == vec.begin() || *it == ','))
+	{
+		if (*it == ',' && it != vec.begin())
+			it++;
+		OWSMatch(vec, it);
+		// if transfercodingmatch false (return false)
+		if (!transferCodingMatch(vec, it))
+			return (false);
+		OWSMatch(vec, it);
+	}
+	// vec.print();
+	if (it != vec.end() || it == vec.begin())
+		return (false);
+	return (true);
+}
 
-// bool	validateHost(std::string str)
-// {
-// 	std::size_t	pos = 0;
+bool	validateHost(const Uvec &vec)
+{
+	Uvec::const_iterator	it = vec.begin();
 
-// 	if (!hostMatch(str, pos))
-// 		return (false);
-// 	if (str[pos] == ':')
-// 	{
-// 		pos++;
-// 		portMatch(str, pos);
-// 	}
-// 	if (str[pos])
-// 		return (false);
-// 	return (true);
-// }
+	if (!hostMatch(vec, it))
+		return (false);
+	if (it != vec.end() && *it == ':')
+	{
+		it++;
+		portMatch(vec, it);
+	}
+	if (it != vec.end())
+		return (false);
+	return (true);
+}
 
 //to be deleted
 bool	testIPv6address(const Uvec &vec)

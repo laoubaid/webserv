@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   host.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/19 17:25:56 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 16:29:50 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/29 02:42:09 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./httpParsingIncludes.hpp"
-#include "./HTTPRequestParser.hpp"
+#include "httpParsingIncludes.hpp"
+#include "HTTPRequestParser.hpp"
 
 bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
 {
@@ -22,8 +22,9 @@ bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
 	if (i == 0 || i > 3)
 		return (false);
 	int	num = std::atoi(std::string(it, it +i).c_str());
-	if (num > 255)
+	if ((num <= 9 && i > 1) || (num <= 99 && i > 2) || num > 255)
 		return (false);
+	// std::cout << "num: " << num << ", and " << (num > 255) << std::endl;
 	it += i;
 	return (true);
 }
@@ -33,7 +34,10 @@ bool	IPv4addressMatch(const Uvec &vec, Uvec::const_iterator &it)
 	Uvec::const_iterator	i = it;
 
 	if (!decOctetMatch(vec, i))
+	{
+		// std::cout << "invalid octet\n";
 		return (false);
+	}
 	for (int j = 0; j < 3; j++)
 	{
 		if (i == vec.end() || *i != '.')
@@ -182,7 +186,9 @@ bool	IPvFutureMatch(const Uvec &vec, Uvec::const_iterator &it)
 	Uvec::const_iterator	i = it;
 	int							j = 0;
 	
-	if (i != vec.end() && *i != 'v' && *i != 'V')
+	// vec.print();
+	// std::cout << "size: "<< vec.size() << ", compaire: " << (vec.end() - i) << " here\n";
+	if (i == vec.end() || (*i != 'v' && *i != 'V'))
 		return (false);
 	i++;
 	while (i != vec.end() && HTTPRequestParser::HEXDIG.has(*i))
@@ -214,12 +220,12 @@ bool	IPLiteralMatch(const Uvec &vec, Uvec::const_iterator &it)
 {
 	Uvec::const_iterator	i = it;
 
-	if (i != vec.end() && *i != '[')
+	if (i == vec.end() || *i != '[')
 		return (false);
 	i++;
 	if (!IPvFutureMatch(vec, i) && !IPv6addressMatch(vec, i))
 		return (false);
-	if (i != vec.end() && *i != ']')
+	if (i == vec.end() || *i != ']')
 		return (false);
 	it = i +1;
 	return (true);
@@ -235,6 +241,7 @@ bool	regNameMatch(const Uvec &vec, Uvec::const_iterator &it)
 			i++;
 		else if (!pctEncodedMatch(vec, i))
 			break ;
+		// std::cout << "some checked out\n";
 	}
 	it = i;
 	return (true);

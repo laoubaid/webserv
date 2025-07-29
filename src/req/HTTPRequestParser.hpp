@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 02:33:21 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/29 00:35:46 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,8 @@ class HTTPRequestParser
 		static Uvec	TCHAR;
 		static Uvec	VCHAR;
 		static Uvec	OBSTEXT;
+		static Uvec	QDTEXT;
+		static Uvec	QPAIR;
 
 		HTTPRequestParser(void);
 		HTTPRequestParser(Uvec httpRequest);
@@ -63,7 +65,8 @@ class HTTPRequestParser
 		int					getParsingCode(void) const;
 		const t_method&		getMethod(void) const;
 		const std::string&	getTarget(void) const;
-		const Uvec&			getFieldValue(const std::string& key) const;
+		const std::map<std::string, Uvec>&	getFields(void) const;
+		bool				getFieldValue(const std::string& key, Uvec& value) const;
 		const t_req_state&	getReqState(void) const;
 		const Uvec&			getBody(void) const;
 };

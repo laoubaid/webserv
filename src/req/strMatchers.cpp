@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:38:37 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/11 21:39:42 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/29 01:01:22 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,13 @@ bool	pctEncodedMatch(const Uvec &vec, Uvec::const_iterator &it)
 {
 	Uvec::const_iterator	i = it;
 
-	if (i != vec.end() && *i != '%')
+	if (i == vec.end() || *i != '%')
 		return (false);
 	i++;
-	if (i != vec.end() && !HTTPRequestParser::HEXDIG.has(*i))
+	if (i == vec.end() || !HTTPRequestParser::HEXDIG.has(*i))
 		return (false);
 	i++;
-	if (i != vec.end() && !HTTPRequestParser::HEXDIG.has(*i))
+	if (i == vec.end() || !HTTPRequestParser::HEXDIG.has(*i))
 		return (false);
 	it = i +1;
 	return (true);
@@ -98,35 +98,33 @@ bool	tokenMatch(const Uvec &vec, Uvec::const_iterator &it)
 	return (true);
 }
 
-// bool	quotedStringMatch(std::string str, size_t &pos)
-// {
-// 	std::string	qdtext = QDTEXT;
-// 	std::string	qpair = QPAIR;
-// 	size_t	i = pos;
+bool	quotedStringMatch(const Uvec &vec, Uvec::const_iterator &it)
+{
+	Uvec::const_iterator	i = it;
 
-// 	if (str[i] != '"')
-// 		return (false);
-// 	i++;
-// 	while (str[i] && str[i] != '"')
-// 	{
-// 		if (str[i] == '\\')
-// 		{
-// 			i++;
-// 			if (qpair.find(str[i]) == std::string::npos)
-// 				return (false);
-// 		}
-// 		else
-// 		{
-// 			if (qdtext.find(str[i]) == std::string::npos)
-// 				return (false);
-// 		}
-// 		i++;
-// 	}
-// 	if (str[i] != '"')
-// 		return (false);
-// 	pos = i +1;
-// 	return (true);
-// }
+	if (i == vec.end() || *i != '"')
+		return (false);
+	i++;
+	while (i != vec.end() && *i != '"')
+	{
+		if (*i == '\\')
+		{
+			i++;
+			if (i == vec.end() || !HTTPRequestParser::QPAIR.has(*i))
+				return (false);
+		}
+		else
+		{
+			if (i == vec.end() || !HTTPRequestParser::QDTEXT.has(*i))
+				return (false);
+		}
+		i++;
+	}
+	if (i == vec.end() || *i != '"')
+		return (false);
+	it = i +1;
+	return (true);
+}
 
 // bool	qvalueMatch(std::string str, size_t &pos)
 // {
@@ -294,31 +292,31 @@ bool	tokenMatch(const Uvec &vec, Uvec::const_iterator &it)
 // 	return (true);
 // }
 
-// bool	transferCodingMatch(std::string str, size_t &pos)
-// {
-// 	size_t	i = pos;
+bool	transferCodingMatch(const Uvec &vec, Uvec::const_iterator &it)
+{
+	Uvec::const_iterator	i = it;
 
-// 	if (!tokenMatch(str, i))
-// 		return (false);
-// 	OWSMatch(str, i);
-// 	while (str[i] == ';')
-// 	{
-// 		i++;
-// 		OWSMatch(str, i);
-// 		if (!tokenMatch(str, i))
-// 			return (false);
-// 		OWSMatch(str, i);
-// 		if (str[i] != '=')
-// 			return (false);
-// 		i++;
-// 		OWSMatch(str, i);
-// 		if (!quotedStringMatch(str, i) && !tokenMatch(str, i))
-// 			return (false);
-// 		OWSMatch(str, i);
-// 	}
-// 	pos = i;
-// 	return (true);
-// }
+	if (!tokenMatch(vec, i))
+		return (false);
+	OWSMatch(vec, i);
+	while (i != vec.end() && *i == ';')
+	{
+		i++;
+		OWSMatch(vec, i);
+		if (!tokenMatch(vec, i))
+			return (false);
+		OWSMatch(vec, i);
+		if (i == vec.end() || *i != '=')
+			return (false);
+		i++;
+		OWSMatch(vec, i);
+		if (!quotedStringMatch(vec, i) && !tokenMatch(vec, i))
+			return (false);
+		OWSMatch(vec, i);
+	}
+	it = i;
+	return (true);
+}
 
 // bool	tokenListMatch(std::string str)
 // {
