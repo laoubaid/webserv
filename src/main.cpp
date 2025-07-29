@@ -6,13 +6,14 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 16:22:57 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 19:51:14 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "include.hpp"
 #include "server/Server.hpp"
 #include "server/Client.hpp"
+#include "config/configParser.hpp"
 
 void	init_conf(t_conf *conf) {
 	conf->_domain = AF_INET;
@@ -50,7 +51,13 @@ int main(int ac, char **av)
 
 	t_conf	conf;
 
-	
+	if (ac != 2)
+		return 1; // more details
+
+	get_config(av[1]);
+
+	return 1;
+
 	init_conf(&conf);
 	Server	svr_skt(conf);
 
