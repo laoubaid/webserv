@@ -6,11 +6,13 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 22:30:58 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 22:35:20 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "configParser.hpp"
+
+Block   parser(std::ifstream &filename, std::vector<std::string> args);
 
 Block syntax_error(const std::string& message, const std::string& name) {
     std::cerr << "\033[31mwebserv: (syntax error) \033[0m";
@@ -90,9 +92,9 @@ Block parser(std::ifstream &config, std::vector<std::string> args) {
                 return block;
             }
             else if ( line[i] == '#' ) {
-                while (i < len && line[i] != '\n') { i++; }
-            } else if (i >= len && !buff.empty()) {
-                return syntax_error("unexpected end of line", block.name);
+                while (i < len) { i++; }
+            // } else if (i >= len && !buff.empty()) {
+            //     return syntax_error("unexpected end of line", block.name);
             } else { buff += line[i]; }
             i++;
             if (i >= len && !buff.empty()) {

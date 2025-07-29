@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 21:52:55 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/07/28 22:33:03 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,6 @@ class Block {
         // You can add helper methods here if needed
 };
 
-Block   parser(std::ifstream &filename, std::vector<std::string> args);
 void    get_config(std::string filename);
 
 
