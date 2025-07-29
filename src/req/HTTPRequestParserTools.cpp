@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 02:39:30 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/28 13:08:06 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,10 +128,14 @@ std::pair<unsigned long, Uvec>	process_chunked_body(Uvec data)
 		throw std::out_of_range("body size not found");
 	Uvec	body_size_vec = Uvec(data.begin(), it);
 	Uvec	body = Uvec(it+2, data.end());
+	if (body.size() < 2 || Uvec(body.end() -2, body.end()) != HTTPRequestParser::CRLF)
+		throw std::runtime_error("unvalid body");
+	body = Uvec(body.begin(), body.end() -2);
 	if (!validateHexDigit(body_size_vec))
 		throw std::runtime_error("unvalid body size (NaN)");
 	unsigned long	body_size;
 	hexStringToUnsignedLong(std::string(body_size_vec.begin(), body_size_vec.end()), body_size);
+	// std::cout << "body size: " << body.size() << ", num: " << body_size << std::endl;
 	if (body_size != body.size())
 		throw std::runtime_error("body size doesn't match body received");
 	return (std::pair<unsigned long, Uvec>(body_size, body));

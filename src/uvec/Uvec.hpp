@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 22:40:11 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/06/24 03:16:11 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/28 17:05:56 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ class Uvec
 		const_iterator	find(const_iterator begin, const_iterator end, const Uvec &other) const;
 
 		// to be deleted
-		void	print(void);
+		void	print(void) const;
 };
 
 

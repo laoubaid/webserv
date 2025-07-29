@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/24 22:28:58 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/28 12:57:32 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,9 @@ Cgi::~Cgi(void)
 
 std::string	get_auth_type(const HTTPRequestParser& req)
 {
-	try
+	Uvec	auth_value;
+	if (req.getFieldValue("authorization", auth_value))
 	{
-		Uvec	auth_value = req.getFieldValue("authorization");
-
 		Uvec::iterator	it = auth_value.begin();
 
 		for (Uvec::iterator it = auth_value.begin(); it != auth_value.end(); it++)
@@ -49,24 +48,14 @@ std::string	get_auth_type(const HTTPRequestParser& req)
 		}
 		return (std::string(""));
 	}
-	catch(const std::exception& e)
-	{
-		return (std::string(""));
-	}
+	return (std::string(""));
 }
 
 void	set_content_type(const HTTPRequestParser& req, std::vector<std::string>& env_vec)
 {
-	try
-	{
-		Uvec	content_type_value = req.getFieldValue("content-type");
-
+	Uvec	content_type_value;
+	if (req.getFieldValue("content-type", content_type_value))
 		env_vec.push_back(std::string("CONTENT_TYPE=") + std::string(content_type_value.begin(), content_type_value.end()));
-	}
-	catch(const std::exception& e)
-	{
-		return;
-	}
 }
 
 std::string	get_path_info(const std::string& target)
@@ -108,19 +97,15 @@ std::string	get_script_name(const std::string& target)
 
 std::string	get_server_name(const HTTPRequestParser& req)
 {
-	try
+	Uvec	host;
+	if (req.getFieldValue("host", host))
 	{
-		Uvec	host = req.getFieldValue("host");
-
 		Uvec::iterator	it = host.begin();
 		while (it != host.end() && *it != ':')
 			it++;
 		return (std::string(host.begin(), it));
 	}
-	catch(const std::exception& e)
-	{
-		return (std::string(""));
-	}
+	return (std::string(""));
 }
 
 void	Cgi::set_env(const HTTPRequestParser& req)

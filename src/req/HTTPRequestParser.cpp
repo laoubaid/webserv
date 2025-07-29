@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 02:57:12 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/29 01:13:41 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ Uvec	HTTPRequestParser::SUBDELIMS;
 Uvec	HTTPRequestParser::TCHAR;
 Uvec	HTTPRequestParser::VCHAR;
 Uvec	HTTPRequestParser::OBSTEXT;
+Uvec	HTTPRequestParser::QDTEXT;
+Uvec	HTTPRequestParser::QPAIR;
 
 HTTPRequestParser::StaticContainersInitializer	HTTPRequestParser::initializer;
 
@@ -32,8 +34,10 @@ HTTPRequestParser::StaticContainersInitializer::StaticContainersInitializer(void
 
 	// initialize standard fields with their appropriate validators
 	stdFields["content-length"] = validateContentLength;
+	stdFields["host"] = validateHost;
+	stdFields["transfer-encoding"] = validateTransferEncoding;
 
-	// invalidList.push_back("host");
+	invalidList.push_back("host");
 
 	// Assign vectors for nomalized characters (try to make adding vectors better)
 	CRLF = Uvec((const unsigned char*)"\r\n", 2);
@@ -47,6 +51,14 @@ HTTPRequestParser::StaticContainersInitializer::StaticContainersInitializer(void
 	TCHAR += ALPHA;
 	VCHAR = Uvec(0x21, 0x7e);
 	OBSTEXT = Uvec(0x80, 0xff);
+	QDTEXT = Uvec((const unsigned char*)"\t !#$%&'()*+,-./:;<=>?@]^`{|}~", 30);
+	QDTEXT += DIGIT;
+	QDTEXT += ALPHA;
+	QDTEXT += OBSTEXT;
+	QPAIR = Uvec((const unsigned char*)"\t !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\x7f", 35);
+	QPAIR += DIGIT;
+	QPAIR += ALPHA;
+	QPAIR += OBSTEXT;
 }
 
 HTTPRequestParser::HTTPRequestParser(void)
@@ -164,7 +176,7 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 		try
 		{
 			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
-			body = processed.second;
+			body += processed.second;
 			if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
 				req_state = PEND;
 			else
@@ -172,6 +184,7 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 		}
 		catch(const std::exception& e)
 		{
+			// std::cerr << "HERE " << e.what() << "\n";
 			parsingCode = 400;
 			req_state = CCLS;
 			throw std::runtime_error("invalid chunked size number");
@@ -188,107 +201,86 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 
 void	HTTPRequestParser::processBody(const Uvec& raw_body)
 {
-	try
+	Uvec	transfer_encoding, content_length;
+	bool	transfer_encoding_found = getFieldValue("transfer-encoding", transfer_encoding);
+	bool	content_length_found = getFieldValue("content-length", content_length);
+
+	if (transfer_encoding_found && content_length_found)
 	{
-		Uvec	transfer_encoding = getFieldValue("transfer-encoding");
-		try
+		parsingCode = 400;
+		req_state = CCLS;
+		throw std::runtime_error("bad request(400): both transfer-encoding and content-length found");
+	}
+	if (transfer_encoding_found)
+	{
+		processTransferEncoding(transfer_encoding, raw_body);
+	}
+	else if (content_length_found)
+	{
+		std::vector<Uvec>	lengths = ft_split(content_length, Uvec((const unsigned char *)",", 1));
+		Uvec	trimmed_vec = ft_trim(lengths[0]);
+		unsigned long  length;
+		stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), length);
+		for (std::vector<Uvec>::iterator it = lengths.begin() +1; it != lengths.end(); it++)
 		{
-			Uvec	content_length = getFieldValue("content-length");
-			// both of them exists (bad)
+			trimmed_vec = ft_trim(*it);
+			unsigned long	v;
+			stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), v);
+			if (v != length)
+				return (badRequest("content length list has different values"));
+		}
+		fields["content-length"] = trimmed_vec;
+
+		std::cerr << "length: " << length << ", body size: " << raw_body.size();
+		if (length > raw_body.size())
+			req_state = PEND;
+		else if (length == raw_body.size())
+			req_state = RESP;
+		else
+		{
 			parsingCode = 400;
 			req_state = CCLS;
-			return;
+			throw std::runtime_error("content-length not valid");
 		}
-		catch(const std::exception& e)
-		{
-			processTransferEncoding(transfer_encoding, raw_body);
-		}
+		body = raw_body;
 	}
-	catch(const std::exception& e)
+	else
 	{
-		try
-		{
-			// std::cout << "HERE\n";
-			Uvec	content_length = getFieldValue("content-length");
-			std::vector<Uvec>	lengths = ft_split(content_length, Uvec((const unsigned char *)",", 1));
-				Uvec	trimmed_vec = ft_trim(lengths[0]);
-				unsigned long  length;
-				stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), length);
-				for (std::vector<Uvec>::iterator it = lengths.begin() +1; it != lengths.end(); it++)
-				{
-					trimmed_vec = ft_trim(*it);
-					unsigned long	v;
-					stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), v);
-					if (v != length)
-						return (badRequest("content length list has different values"));
-				}
-				fields["content-length"] = trimmed_vec;
-				if (length > raw_body.size())
-					req_state = PEND;
-				else if (length == raw_body.size())
-					req_state = RESP;
-				else
-				{
-					parsingCode = 400;
-					req_state = CCLS;
-					throw std::runtime_error("content-length not valid");
-				}
-				body = raw_body;
-		}
-		catch(const std::exception& e)
-		{
-			parsingCode = 411;
-			throw std::runtime_error("body with no content-length or transfer-encoding");
-		}
+		parsingCode = 411;
+		throw std::runtime_error("body with no content-length or transfer-encoding");
 	}
 }
 
 void	HTTPRequestParser::addBody(Uvec raw_body)
 {
-	try
+	Uvec	transfer_encoding, content_length;
+	bool	transfer_encoding_found = getFieldValue("transfer-encoding", transfer_encoding);
+	bool	content_length_found = getFieldValue("content-length", content_length);
+
+	if (transfer_encoding_found)
 	{
-		Uvec	transfer_encoding = getFieldValue("transfer-encoding");
-		try
-		{
-			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body);
-			body += processed.second;
-			if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
-				req_state = PEND;
-			else
-				req_state = RESP;
-		}
-		catch(const std::exception& e)
+		processTransferEncoding(transfer_encoding, raw_body);
+	}
+	else if (content_length_found)
+	{
+		body += raw_body;
+		unsigned long  length;
+		stringToUnsignedLong(std::string(content_length.begin(), content_length.end()), length);
+		if (length > body.size())
+			req_state = PEND;
+		else if (length == body.size())
+			req_state = RESP;
+		else
 		{
 			parsingCode = 400;
 			req_state = CCLS;
-			throw std::runtime_error("invalid chunked size number");
+			throw std::runtime_error("content-length not valid");
 		}
 	}
-	catch(const std::exception& e)
+	else
 	{
-		try
-		{
-			Uvec	content_length = getFieldValue("content-length");
-			unsigned long  length;
-			stringToUnsignedLong(std::string(content_length.begin(), content_length.end()), length);
-			if (length > raw_body.size())
-				req_state = PEND;
-			else if (length == raw_body.size())
-				req_state = RESP;
-			else
-			{
-				parsingCode = 400;
-				req_state = CCLS;
-				throw std::runtime_error("content-length not valid");
-			}
-			body += raw_body;
-			
-		}
-		catch(const std::exception& e)
-		{
-			parsingCode = 411;
-			throw std::runtime_error("body with no content-length or transfer-encoding");
-		}
+		parsingCode = 411;
+		throw std::runtime_error("body with no content-length or transfer-encoding");
 	}
 }
 
@@ -327,19 +319,7 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	if (rawBody.size())
 		processBody(rawBody);
 
-	if (parsingCode == 200)
-		std::cout << "\n\n[VALID HTTP REQUEST]\n\n";
-	else
-		std::cout << "\n\n[INVALID HTTP REQUEST]\n\n";
-
-	std::cout << "FINAL HEADER FIELDS\n";
-	for (std::map<std::string, Uvec>::iterator it = fields.begin(); it != fields.end(); it++)
-	{
-		std::cout << "[KEY]: " << (*it).first << " [VALUE]: ";
-		printvec((*it).second, 0);
-	}
-	std::cout << "[MESSAGE BODY]\n";
-	printvec(body, 0);
+	
 }
 
 	// getter functions
@@ -358,9 +338,22 @@ const std::string&	HTTPRequestParser::getTarget(void) const
 	return (target);
 }
 
-const Uvec&		HTTPRequestParser::getFieldValue(const std::string& key) const
+const std::map<std::string, Uvec>&	HTTPRequestParser::getFields(void) const
 {
-	return (getValue(fields, key));
+	return (fields);
+}
+
+bool		HTTPRequestParser::getFieldValue(const std::string& key, Uvec& value) const
+{
+	try
+	{
+		value = getValue(fields, key);
+		return (true);
+	}
+	catch(const std::exception& e)
+	{
+		return (false);
+	}
 }
 
 const t_req_state&		HTTPRequestParser::getReqState(void) const
