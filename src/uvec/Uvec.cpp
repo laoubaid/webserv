@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 22:41:10 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/11 15:35:27 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/07/28 17:06:07 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,7 +167,7 @@ Uvec::const_iterator	Uvec::find(const_iterator begin, const_iterator end, const 
 }
 
 // to be deleted
-void	Uvec::print(void)
+void	Uvec::print(void) const
 {
 	std::cout << "[ ";
 	for (std::vector<unsigned char>::iterator it = _vec->begin(); it != _vec->end(); it++)
