@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 19:51:14 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/01 20:50:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,9 +54,10 @@ int main(int ac, char **av)
 	if (ac != 2)
 		return 1; // more details
 
-	get_config(av[1]);
+	if (get_config(av[1]).name == "Error")
+		return 1; // if the config file is not found or has errors
 
-	return 1;
+	return 0;
 
 	init_conf(&conf);
 	Server	svr_skt(conf);
@@ -81,7 +82,7 @@ int main(int ac, char **av)
 		socket_related_err(" epoll_ctl() failed! ", 1);
 	}
 
-    int buf_size = 100;
+    const int buf_size = 100;
     std::map <int, Client*> client_sockets;
 
 
