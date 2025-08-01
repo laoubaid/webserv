@@ -6,18 +6,24 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 22:33:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/02 00:00:38 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #ifndef CONFIG_PARSER_HPP
-#define CONFIG_PARSER_HPP
+# define CONFIG_PARSER_HPP
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
+# include <iostream>
+# include <fstream>
+# include <string>
+# include <vector>
+
+
+# define ERR_TXT_BRC "unexpected text before closing brace '}'"
+# define ERR_DIR_BRC "unexpected directive arguments before closing brace '}'"
+# define ERR_BRC_TXT "unexpected text after closing brace '}'"
+
 
 class Directive {
     public:
@@ -31,7 +37,6 @@ class Directive {
                 values.push_back(args[i]);
             }
         }
-        // You can add helper methods here if needed
 };
 
 class Block {
@@ -44,10 +49,10 @@ class Block {
 
         Block() = default;
         Block(const std::string& n) : name(n) {}
-        // You can add helper methods here if needed
+
 };
 
-void    get_config(std::string filename);
+Block    get_config(std::string filename);
 
 
 #endif
