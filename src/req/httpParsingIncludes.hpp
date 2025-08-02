@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/29 01:12:50 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/02 11:41:00 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ typedef enum e_method
 	DELETE
 }	t_method;
 typedef enum e_req_state {
-    IDLE,
     PEND,
     RESP,
     CCLS
