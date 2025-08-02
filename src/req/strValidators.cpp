@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   strValidators.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:53:41 by kez-zoub          #+#    #+#             */
 /*   Updated: 2025/07/29 02:15:42 by kez-zoub         ###   ########.fr       */

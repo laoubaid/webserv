@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/29 01:13:41 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/02 12:17:48 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,11 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 	}
 	if (chunked)
 	{
+		if (!raw_body.size())
+		{
+			req_state = PEND;
+			return;
+		}
 		try
 		{
 			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
@@ -189,7 +194,6 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 			req_state = CCLS;
 			throw std::runtime_error("invalid chunked size number");
 		}
-		
 	}
 	else
 	{
@@ -246,8 +250,13 @@ void	HTTPRequestParser::processBody(const Uvec& raw_body)
 	}
 	else
 	{
-		parsingCode = 411;
-		throw std::runtime_error("body with no content-length or transfer-encoding");
+		if (!raw_body.size())
+			req_state = RESP;
+		else
+		{
+			parsingCode = 411;
+			throw std::runtime_error("body with no content-length or transfer-encoding");
+		}
 	}
 }
 
@@ -289,7 +298,6 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
 	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
 	parsingCode = 200;
-	req_state = IDLE;
 	
 	// split with crlfcrlf to get 2 (headers and body)
 	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
@@ -302,11 +310,23 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	}
 	Uvec	headers(httpRequest.begin(), pos);
 	Uvec	rawBody(pos+4, httpRequest.end());
+
+	// std::cout << "headers: ";
+	// headers.print();
+	// std::cout << "rawBody: ";
+	// rawBody.print();
 	std::vector<Uvec>	lines = ft_split(headers, CRLF);
 	
-	if (lines.size() < 3) // the least that should be there are three lines (start-line, host header field at least, empty line)
+	// for (std::vector<Uvec>::iterator it = lines.begin(); it < lines.end(); it++)
+	// {
+	// 	std::cout << "vec: ";
+	// 	(*it).print();
+	// }
+	
+	if (lines.size() < 2) // the least that should be there are three lines (start-line, host header field at least, empty line)
 	{
 		parsingCode = 400;
+		// std::cout << "HERE\n";
 		return;
 	}
 	processStartLine(lines[0]);
@@ -316,10 +336,10 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	// field line parsing:
 	processFields(lines);
 
-	if (rawBody.size())
-		processBody(rawBody);
+	// std::cout << "rawBody: ";
+	// rawBody.print();
 
-	
+	processBody(rawBody);
 }
 
 	// getter functions
