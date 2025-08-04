@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/04 16:10:18 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/04 19:23:28 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,11 @@
 
 # include "../include.hpp"
 # include "../req/HTTPRequestParser.hpp"
+
+# include <sys/stat.h>
+# include <sys/types.h>
+// # include <sys/syscall.h>
+# include <dirent.h>
 
 // create a static class HTTPResponse, so i dont need to create an instance of it
 // but i can use its methods to generate responses based on the status code
