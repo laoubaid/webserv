@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/02 00:14:10 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/02 18:53:41 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@
 
 
 
-Block   parser(std::ifstream &config, std::vector<std::string> args, int identation = 0);
+Block   parser(std::ifstream &config, std::vector<std::string> args, int indentation = 0);
 
 Block syntax_error(const std::string& message, const std::string& name) {
     std::cerr << "\033[31mwebserv: (syntax error) \033[0m";
@@ -101,7 +101,7 @@ int process_block(std::string& buff, std::vector<std::string>& args, Block& bloc
     return 0;
 }
 
-Block process_line(std::ifstream &config, const std::string& line, Block& block, int &identation) {
+Block process_line(std::ifstream &config, const std::string& line, Block& block, int &indentation) {
     int i = 0;
     int len = line.length();
     std::string buff;
@@ -123,7 +123,7 @@ Block process_line(std::ifstream &config, const std::string& line, Block& block,
             }
         }
         else if ( line[i] == '{'){
-            if (process_block(buff, new_args, block, identation, config))
+            if (process_block(buff, new_args, block, indentation, config))
                 return Block("Error");
         }
         else if ( line[i] == '}' ) {
@@ -150,7 +150,7 @@ Block process_line(std::ifstream &config, const std::string& line, Block& block,
 }
 
 
-Block parser(std::ifstream &config, std::vector<std::string> args, int identation) {
+Block parser(std::ifstream &config, std::vector<std::string> args, int indentation) {
     Block block;
     if (args.empty())
         return syntax_error("Empty args vector", "Internal Error");
@@ -166,13 +166,13 @@ Block parser(std::ifstream &config, std::vector<std::string> args, int identatio
             continue; // skip empty lines and comments
         }
 
-        if (check_indentation(line, identation) == false) {
-            std::cout << "line: [" << line << "]" << identation << std::endl;
-            return syntax_error("Malformed identation", block.name);
+        if (check_indentation(line, indentation) == false) {
+            std::cout << "line: [" << line << "]" << indentation << std::endl;
+            return syntax_error("Malformed indentation", block.name);
         }
         
         // std::cout << "[" << block.name << "] is about to process line: " << line << std::endl;
-        Block tmp_block = process_line(config, line, block, identation);
+        Block tmp_block = process_line(config, line, block, indentation);
         // std::cout << "[" << block.name << "] is DONE processing line: " << line << std::endl;
         
         // std::cout << "-- block name after processing line: " << tmp_block.name << std::endl;
@@ -181,9 +181,9 @@ Block parser(std::ifstream &config, std::vector<std::string> args, int identatio
         }
     }
 
-    identation++;
+    indentation++;
     // std::cout << "-- Finished parsing block: " << block.name << std::endl;
-    if (block.name != "root" && identation == 0) {
+    if (block.name != "root" && indentation == 0) {
         return syntax_error("missing closing brace '}' at the end of the file", block.name);
     }
 

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/01 20:50:25 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/03 19:30:49 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,8 @@ int	new_connection(int server_fd, int epoll_fd) {
 	int client_fd = accept(server_fd, NULL, NULL);
 	if (client_fd == -1)
 		return -1;
-	epoll_event clt_event {};
+	struct epoll_event clt_event;
+	memset(&clt_event, 0, sizeof(clt_event));
 	clt_event.data.fd = client_fd;
 	clt_event.events = EPOLLIN | EPOLLOUT;// | EPOLLET;
 	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
@@ -56,8 +57,8 @@ int main(int ac, char **av)
 
 	if (get_config(av[1]).name == "Error")
 		return 1; // if the config file is not found or has errors
-
-	return 0;
+	std::cout << "\033[32mConfiguration file parsed successfully!\033[0m" << std::endl;
+	std::cout << "\n\nStarting server..." << std::endl;
 
 	init_conf(&conf);
 	Server	svr_skt(conf);
@@ -71,7 +72,8 @@ int main(int ac, char **av)
 	if (epoll_fd == -1)
 		socket_related_err(" epoll_create1() failed! ", 1);
 
-	epoll_event svr_event {}; // init all struct member to 0
+	struct epoll_event svr_event;
+	memset(&svr_event, 0, sizeof(svr_event)); // init all struct member to 0
 	epoll_event eventQueue[100]; // change to [MAX_EVENTS] later
 
 	svr_event.data.fd = server_fd;
@@ -82,7 +84,8 @@ int main(int ac, char **av)
 		socket_related_err(" epoll_ctl() failed! ", 1);
 	}
 
-    const int buf_size = 100;
+
+    const int buf_size = 4096;
     std::map <int, Client*> client_sockets;
 
 
@@ -112,16 +115,15 @@ int main(int ac, char **av)
 
             else {
 				int client_fd = eventQueue[i].data.fd;
-                char buf[buf_size];
+                unsigned char buf[buf_size];
                 std::vector <char> vec_buf;
 
                 memset(buf, 0, buf_size); // Clear the buffer before each recv
 
 				if (eventQueue[i].events & EPOLLIN) {
-                    // std::cout << "EPOLLIN event detected!" << std::endl;
+                    std::cout << "EPOLLIN event detected!" << std::endl;
 					int nread = recv(client_fd, buf, buf_size - 1, 0);
-
-                    vec_buf.assign(buf, buf + nread);
+					Uvec vec_buf(buf, nread); // Convert the buffer to Uvec
 
 					if (nread <= 0) {
                         if (nread == 0)

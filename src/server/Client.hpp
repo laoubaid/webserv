@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/07/28 12:21:39 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/03 19:05:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "../req/HTTPRequestParser.hpp"
 #include "../req/httpParsingIncludes.hpp"
+#include "../resp/HTTPResponse.hpp"
 #include "../include.hpp"
 #include "Socket.hpp"
 
@@ -22,7 +23,7 @@ class Client : Socket
 {
     private:
         HTTPRequestParser   *request_;
-        e_req_state          req_stat_;
+        // t_req_state          req_stat_;
 
         std::string         resbuf_;
 
@@ -30,7 +31,7 @@ class Client : Socket
         Client(int clt_fd);
         ~Client();
 
-        int process_recv_data(std::vector <char> buf, uint32_t event);
+        int process_recv_data(Uvec &vec_buf, uint32_t event);
         // void print_request();
 
         void send_response(uint32_t event);
