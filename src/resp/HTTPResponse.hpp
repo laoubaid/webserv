@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/03 19:35:28 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/04 16:10:18 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@
 class HttpResponse {
     public:
         static std::string generateResponse(HTTPRequestParser &request);
+        static std::string responesForGet(HTTPRequestParser &request);
+        static const std::string& getMimeType(const std::string& ext);
 };
 
 #endif
