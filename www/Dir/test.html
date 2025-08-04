@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cool Test HTML</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f2027, #2c5364, #1a2980, #26d0ce);
+            color: #fff;
+            font-family: 'Orbitron', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 3em;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px #26d0ce, 0 0 40px #1a2980;
+            margin-bottom: 0.5em;
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #26d0ce, 0 0 20px #1a2980; }
+            to { text-shadow: 0 0 30px #26d0ce, 0 0 60px #1a2980; }
+        }
+        .card {
+            background: rgba(44, 83, 100, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 2em 3em;
+            text-align: center;
+            max-width: 400px;
+            margin: 1em auto;
+            backdrop-filter: blur(4px);
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 1em;
+            padding: 0.7em 2em;
+            font-size: 1.2em;
+            color: #fff;
+            background: linear-gradient(90deg, #26d0ce, #1a2980);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px 0 #1a2980;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 24px 0 #26d0ce;
+        }
+        .neon-bar {
+            width: 80vw;
+            height: 8px;
+            background: linear-gradient(90deg, #26d0ce, #1a2980, #2c5364);
+            border-radius: 4px;
+            box-shadow: 0 0 20px #26d0ce, 0 0 40px #1a2980;
+            margin: 2em 0;
+            animation: barGlow 3s infinite alternate;
+        }
+        @keyframes barGlow {
+            from { box-shadow: 0 0 10px #26d0ce, 0 0 20px #1a2980; }
+            to { box-shadow: 0 0 30px #26d0ce, 0 0 60px #1a2980; }
+        }
+        footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 1em;
+            color: #b2bec3;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="neon-bar"></div>
+    <h1>Welcome to the Coolest Test HTML!</h1>
+    <div class="card">
+        <p>This is a super cool test HTML file.<br>
+            Enjoy the neon vibes and modern style!</p>
+        <button class="btn" onclick="alert('You clicked the cool button!')">Click Me!</button>
+    </div>
+    <div class="neon-bar"></div>
+    <footer>
+        &copy; 2024 Cool HTML Demo
+    </footer>
+</body>
+</html>
