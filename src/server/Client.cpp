@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/03 19:36:18 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/06 05:03:38 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 Client::Client(int clt_fd) : Socket(clt_fd)
 {
     request_ = NULL;
+    response_ = NULL;
     std::cout << "Client constracteur called!" << std::endl;
 }
 
@@ -22,45 +23,30 @@ Client::~Client()
 {
 }
 
-// std::string tmp_response(int code) {
-//     std::string response_;
-//     if (code == 400) {
-//         std::cout << RED_CLR << "400 Bad Request" << DEF_CLR << std::endl;
-//         response_ = "HTTP/1.1 400 Bad Request\r\n\r\n";
-//     }
-//     else if (code == 200) {
-//         std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
-//         std::string html = "<!DOCTYPE html><html><body><h1>Hello from the WebServer!</h1></body></html>";
-//         response_ = "HTTP/1.1 200 OK\r\n"
-//             "Content-Type: text/html\r\n"
-//             "Content-Length: " + std::to_string(html.size()) + "\r\n"
-//             "Connection: keep-alive\r\n"
-//             "\r\n" + html;
-//     }
-//     else if (code == 413) {
-//         std::cout << RED_CLR << "413 Payload Too Large" << DEF_CLR << std::endl;
-//         std::string html = "<!DOCTYPE html><html><body><h1>413 Payload Too Large</h1></body></html>";
-//         response_ = "HTTP/1.1 413 Payload Too Large\r\n"
-//             "Content-Type: text/html\r\n"
-//             "Content-Length: " + std::to_string(html.size()) + "\r\n"
-//             "Connection: close\r\n"
-//             "\r\n" + html;
-//     }
-//     else {
-//         std::cout << RED_CLR << "500 Internal Server Error" << DEF_CLR << std::endl;
-//         std::string html = "<!DOCTYPE html><html><body><h1>500 Internal Server Error</h1></body></html>";
-//         response_ = "HTTP/1.1 500 Internal Server Error\r\n"
-//             "Content-Type: text/html\r\n"
-//             "Content-Length: " + std::to_string(html.size()) + "\r\n"
-//             "Connection: close\r\n"
-//             "\r\n" + html;
-//     }
 
-//     return response_;
-// }
+int Client::receive(int epoll_fd) {
 
+    int client_fd = this->get_fd();
+    unsigned char buf[4096];
 
-int Client::process_recv_data(Uvec &vec_buf, uint32_t event) {
+    int nread = recv(client_fd, buf, 4096 -1, 0);
+    Uvec vec_buf(buf, nread); // Convert the buffer to Uvec
+
+    if (nread <= 0) {
+        if (nread == 0)
+            std::cout << "Client disconnected! (recv() == 0)" << std::endl;
+        else
+            perror("recv() failed");
+        close(client_fd);
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+        std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
+        return -1;
+    }
+    process_recv_data(vec_buf);
+    return (request_) ? request_->getReqState() : -1;
+}
+
+int Client::process_recv_data(Uvec &vec_buf) { //, uint32_t event) {
     std::cout << "+++ process_recv_data called!" << std::endl;
     if (!request_) {
         std::cout << "-- create new request" << std::endl;
@@ -83,25 +69,23 @@ int Client::process_recv_data(Uvec &vec_buf, uint32_t event) {
         request_ = NULL;
         std::cout << "-- request state: " << request_->getReqState() << std::endl;
     }
-    if (request_ && request_->getReqState() == RESP)
+    if (request_ && request_->getReqState() == RESP )
     {
-        std::cout << "-- Send response\n";
-        // the request is complete, we can send the response now
-        // entering the response main function
+        response_ = new HttpResponse();
+
         resbuf_.clear();
         resbuf_ = HttpResponse::generateResponse(*request_);
-        send_response(event);
+        // send_response(event, 0);
         std::cout << "-- RESP request state: " << request_->getReqState() << std::endl;
-        delete request_;
-        request_ = NULL; // Clean up the request pointer
+        // delete request_;
+        // request_ = NULL; // Clean up the request pointer
     }
-    
-    // resbuf_ = tmp_response(request_->getParsingCode());
-    // send_response(event);
-    return 0;
+
+    return request_->getReqState();
 }
 
-void Client::send_response(uint32_t event) {
+void Client::send_response(uint32_t event, int epoll_fd) {
+    std::cout << "-- Send response" << std::endl;
     if (event & EPOLLOUT) {
         std::cout << "EPOLLOUT event is detected!" << std::endl;
         if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) == -1) {
