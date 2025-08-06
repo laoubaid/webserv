@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/04 16:18:25 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/05 00:38:33 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,3 +85,8 @@ std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
     }
     return response_;
 }
+
+t_resp_state& HttpResponse::getRespState() {
+    return resp_stat_;
+}
+

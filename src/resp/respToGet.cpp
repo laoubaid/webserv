@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/04 23:23:06 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/05 00:31:10 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@
             "Content-Length: 64\r\n\r\n" \
             "<html><body><center><h1>404 Not Found</h1><center></body></html>"
 
-#define OK_200_ "HTTP/1.1 404 Not Found\r\n" \
-            "Connection: close\r\n"
+#define OK_200_ "HTTP/1.1 200 OK\r\n" \
+            "Connection: keep-alive\r\n"
 
 
 
