@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/08 17:39:58 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/09 18:15:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class Client : Socket
     private:
         HTTPRequestParser   *request_;
         HttpResponse        *response_;
-        t_req_state          req_stat_;
+        // t_req_state          req_stat_;
 
         std::string         resbuf_;
         Uvec                vec_buf_;
@@ -37,10 +37,11 @@ class Client : Socket
         int receive(int epoll_fd);
 
         int process_recv_data();//Uvec &vec_buf);//, uint32_t event);
-        // void print_request();
+        void print_whatever(std::string whatever);
 
-        void send_response(uint32_t event, int epoll_fd);
-
+        int send_response(int epoll_fd);
+        void set_event(int epoll_fd, uint32_t events);
+        
 
         bool operator<(const Client &other) const {
             return this->get_fd() < other.get_fd();
