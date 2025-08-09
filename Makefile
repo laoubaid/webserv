@@ -55,6 +55,9 @@ re: fclean all
 run: all
 	./webserv test.config
 
+valgrind: all
+	valgrind ./webserv test.config
+
 # Phony targets
 .PHONY: all clean fclean re OBJ_STP
 

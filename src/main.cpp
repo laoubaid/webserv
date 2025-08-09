@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 03:09:00 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/09 18:00:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ int	new_connection(int server_fd, int epoll_fd) {
 	struct epoll_event clt_event;
 	memset(&clt_event, 0, sizeof(clt_event));
 	clt_event.data.fd = client_fd;
-	clt_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	clt_event.events = EPOLLIN | EPOLLET;
 	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
 	std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 
@@ -53,17 +53,6 @@ void setEvent(int epoll_fd, int client_fd, uint32_t event_type) {
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &ev);
 }
 
-void set_event(int epoll_fd, int fd, uint32_t events) {
-    epoll_event ev{};
-    ev.data.fd = fd;
-    ev.events = events;
-
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev) == -1) {
-        perror("epoll_ctl");
-        throw std::runtime_error("Failed to modify epoll event");
-    }
-}
-
 int main(int ac, char **av)
 {
 	int		 server_fd;
@@ -82,7 +71,7 @@ int main(int ac, char **av)
 	Server	svr_skt(conf);
 
 	server_fd = svr_skt.get_fd();
-	set_to_NonBlocking(server_fd);
+	set_to_NonBlocking(server_fd);   // chang this plz its forbidden
 	svr_skt.bind();
 	svr_skt.listen(SOMAXCONN);
 
@@ -139,11 +128,10 @@ int main(int ac, char **av)
 				int client_fd = new_connection(server_fd, epoll_fd);
 				if (client_fd == -1)
 				continue;
-                if (set_to_NonBlocking(client_fd)) // is this allowed
-                    socket_related_err(" fcntl() failed! ", 1); // not clean wth
+                // if (set_to_NonBlocking(client_fd)) // is this allowed
+                //     socket_related_err(" fcntl() failed! ", 1); // not clean wth
 				client_sockets[client_fd] = new Client(client_fd);
 			}
-            
             
 			// the client socket check for data receiving and sending
 			/////////////////////////////////////////////////////////
@@ -157,18 +145,24 @@ int main(int ac, char **av)
 					
 					stat_ = client_sockets[client_fd]->receive(epoll_fd);
 					if (stat_ == PEND) {
-						set_event(epoll_fd, client_fd, EPOLLIN);
+						client_sockets[client_fd]->set_event(epoll_fd, EPOLLIN);
 						// leftovers.push_back(client_sockets[client_fd]);
 						// std::cout << "adding the client into leftovers list" << std::endl;
 					}
 					if (stat_ == RESP)
-						set_event(epoll_fd, client_fd, EPOLLIN | EPOLLET);              // honaaaaa
-					if (stat_ == -1)
+						client_sockets[client_fd]->set_event(epoll_fd, EPOLLIN | EPOLLOUT | EPOLLET);
+					if (stat_ == -1) {
+						delete client_sockets[client_fd];
+						client_sockets.erase(client_fd);
 						continue;
+					}
 				}
-				if (eventQueue[i].events & EPOLLOUT && stat_ == RESP) {
+				if (eventQueue[i].events & EPOLLOUT) {
 					std::cout << "EPOLLOUT event detected!" << std::endl;
-					client_sockets[client_fd]->send_response(eventQueue[i].events, epoll_fd);
+					if (client_sockets[client_fd]->send_response(epoll_fd)) {
+						delete client_sockets[client_fd];
+						client_sockets.erase(client_fd);
+					}
 				}
 			}
 		}
