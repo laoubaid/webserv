@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/05 00:38:33 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/09 01:02:51 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
                     "\r\n" + html;
     } else {
         std::cout << RED_CLR << request.getParsingCode() <<  " Internal Server Error" << DEF_CLR << std::endl;
-        std::string html = "<!DOCTYPE html><html><body><h1>500 Internal Server Error</h1></body></html>";
+        std::string html = "<!DOCTYPE html><html><body><h1>500 Internal Server Error.</h1></body></html>";
         response_ = "HTTP/1.1 500 Internal Server Error\r\n"
                     "Content-Type: text/html\r\n"
                     "Content-Length: " + std::to_string(html.size()) + "\r\n"

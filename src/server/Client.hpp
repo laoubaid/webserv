@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/06 04:48:59 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/08 17:39:58 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include "../include.hpp"
 #include "Socket.hpp"
 
+# define RECV_BUF 4096
+
 class Client : Socket
 {
     private:
@@ -27,13 +29,14 @@ class Client : Socket
         t_req_state          req_stat_;
 
         std::string         resbuf_;
+        Uvec                vec_buf_;
 
     public:
         Client(int clt_fd);
         ~Client();
         int receive(int epoll_fd);
 
-        int process_recv_data(Uvec &vec_buf);//, uint32_t event);
+        int process_recv_data();//Uvec &vec_buf);//, uint32_t event);
         // void print_request();
 
         void send_response(uint32_t event, int epoll_fd);

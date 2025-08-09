@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/06 05:13:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/09 03:09:00 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int	new_connection(int server_fd, int epoll_fd) {
 	std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 
 	return client_fd;
-}
+} 
 
 int set_to_NonBlocking(int client_fd){
     int flags = fcntl(client_fd, F_GETFL, 0);
@@ -53,6 +53,16 @@ void setEvent(int epoll_fd, int client_fd, uint32_t event_type) {
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &ev);
 }
 
+void set_event(int epoll_fd, int fd, uint32_t events) {
+    epoll_event ev{};
+    ev.data.fd = fd;
+    ev.events = events;
+
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev) == -1) {
+        perror("epoll_ctl");
+        throw std::runtime_error("Failed to modify epoll event");
+    }
+}
 
 int main(int ac, char **av)
 {
@@ -93,75 +103,26 @@ int main(int ac, char **av)
 		socket_related_err(" epoll_ctl() failed! ", 1);
 	}
 
-
-    const int buf_size = 4096;
     std::map <int, Client*> client_sockets;  // this needs to exists for each server
-
-
-	// while (true) {
-	// 	int n = epoll_wait(epoll_fd, eventQueue, 100, -1); // chang to max_events
-	// 	if (n == -1) {
-	// 		close(epoll_fd);
-	// 		socket_related_err(" epoll_wait() failed! ", 1);
-	// 	}
-	// 	for (int i = 0; i < n; i++) {
-    //         // first the server socket check for new connections
-    //         ////////////////////////////////////////////////////
-    //         if (eventQueue[i].data.fd == server_fd) {
-	// 			int client_fd = new_connection(server_fd, epoll_fd);
-	// 			if (client_fd == -1)
-	// 				continue;
-    //             if (set_to_NonBlocking(client_fd)) // is this allowed
-    //                 socket_related_err(" fcntl() failed! ", 1); // not clean wth
-    //             client_sockets[client_fd] = new Client(client_fd);
-	// 		}  
-    //         // the client socket check for data receiving and sending
-    //         /////////////////////////////////////////////////////////
-    //         else {
-	// 			int client_fd = eventQueue[i].data.fd;
-    //             unsigned char buf[buf_size];
-    //             memset(buf, 0, buf_size); // Clear the buffer before each recv
-	// 			if (eventQueue[i].events & EPOLLIN) {
-    //                 std::cout << "EPOLLIN event detected!" << std::endl;
-	// 				int nread = recv(client_fd, buf, buf_size - 1, 0);
-	// 				Uvec vec_buf(buf, nread); // Convert the buffer to Uvec
-	// 				if (nread <= 0) {
-    //                     if (nread == 0)
-    //                         std::cout << "Client disconnected! (recv() == 0)" << std::endl;
-    //                     else
-    //                         perror("recv() failed");
-	// 					close(client_fd);
-	// 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-	// 					std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
-	// 					continue;
-	// 				}
-    //                 client_sockets[client_fd]->process_recv_data(vec_buf, eventQueue[i].events);
-	// 				setEvent(epoll_fd, client_fd, EPOLLOUT);
-	// 			}
-	// 			if (eventQueue[i].events & EPOLLOUT) {
-	// 				client_sockets[client_fd]->send_response(eventQueue[i].events, epoll_fd);
-	// 				setEvent(epoll_fd, client_fd, EPOLLIN);
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	std::vector<Client *> leftovers;
 	while (true) {
 		int nevents = 0;
 		// 1. Handle incomplete recv (non-blocking)
 		std::cout << "++++++++++++++++++++++++++++++\n";
-		if (!leftovers.empty()) {
-			for (auto it = leftovers.begin(); it != leftovers.end(); ) {
-				if ((*it)->receive(epoll_fd) == RESP)  // or returns bool
-				it = leftovers.erase(it); // done receiving, remove from leftovers
-				else
-				++it;
-			}
-			nevents = epoll_wait(epoll_fd, eventQueue, 100, 0);  // Don't block, just poll for ready fds
-		} else {
-			nevents = epoll_wait(epoll_fd, eventQueue, 100, -1);  // Block until new events
-		}
+		// if (!leftovers.empty()) {
+		// 	for (auto it = leftovers.begin(); it != leftovers.end(); ) {
+		// 		if ((*it)->receive(epoll_fd) == PEND) { // or returns bool 
+		// 			++it;
+		// 		} else {
+		// 			it = leftovers.erase(it); // done receiving, remove from leftovers
+		// 		}
+		// 	}
+		// 	nevents = epoll_wait(epoll_fd, eventQueue, 100, 0); // Don't block, just poll for ready fds
+		// } else {
+		// 	nevents = epoll_wait(epoll_fd, eventQueue, 100, -1); // Block until new events
+		// }
+		nevents = epoll_wait(epoll_fd, eventQueue, 100, -1);
 		if (nevents < 0) {
 			close(epoll_fd);
 			socket_related_err(" epoll_wait() failed! ", 1);
@@ -188,22 +149,25 @@ int main(int ac, char **av)
 			/////////////////////////////////////////////////////////
 				
 			else {
-				std::cout << "--------------- [ it runs ] ---------------" << std::endl;
 				int client_fd = eventQueue[i].data.fd;
-                unsigned char buf[buf_size];
-                std::vector <char> vec_buf;
-
-                memset(buf, 0, buf_size); // Clear the buffer before each recv
+				int stat_;
 
 				if (eventQueue[i].events & EPOLLIN) {
                     std::cout << "EPOLLIN event detected!" << std::endl;
 					
-					int stat_ = client_sockets[client_fd]->receive(epoll_fd);
-					if (stat_ == PEND)
-						leftovers.push_back(client_sockets[client_fd]);
+					stat_ = client_sockets[client_fd]->receive(epoll_fd);
+					if (stat_ == PEND) {
+						set_event(epoll_fd, client_fd, EPOLLIN);
+						// leftovers.push_back(client_sockets[client_fd]);
+						// std::cout << "adding the client into leftovers list" << std::endl;
+					}
+					if (stat_ == RESP)
+						set_event(epoll_fd, client_fd, EPOLLIN | EPOLLET);              // honaaaaa
+					if (stat_ == -1)
+						continue;
 				}
-				if (eventQueue[i].events & EPOLLOUT) {
-					// std::cout << "EPOLLOUT event detected!" << std::endl;
+				if (eventQueue[i].events & EPOLLOUT && stat_ == RESP) {
+					std::cout << "EPOLLOUT event detected!" << std::endl;
 					client_sockets[client_fd]->send_response(eventQueue[i].events, epoll_fd);
 				}
 			}
@@ -213,28 +177,3 @@ int main(int ac, char **av)
 
 	return 0;
 }
-
-// while (true) {
-// 	if (leftovers.size() != 0) {
-// 		for (int i = 0; i < leftovers.size() ; ++i) {
-// 			levtovers[i].recv();
-// 		}
-// 		nevents = epoll_wait(..., 0);
-// 	} else {
-// 		nevents = epoll_wait(..., -1);
-// 	}
-// 	if (nevents < 0) {
-// 		// epoll_wait failed shutdown the server for internal error
-// 	}
-// 	if (nevents == 0) {
-// 		continue;
-// 	}
-// 	// handle the events as usual
-// 	for (int i = 0; i < nevents; ++i) {
-// 		// if events in server_fd accept new connections
-// 		// else handle the epollin and epollout by recv and send as usual
-// 		if (/* a client didnt finish recving */) {
-// 			leftovers.pushback(client);
-// 		}
-// 	}
-// }
