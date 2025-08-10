@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 19:12:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/10 18:54:08 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,9 +57,10 @@ int Client::receive(int epoll_fd) {
     // std::cout << "DEBUG\t\t\t\t\t\t\t\t\t\tDEBUG" << std::endl;
     Uvec tmp_vec_buf(buf, nread); // Convert the buffer to Uvec
     Uvec delimiter((const unsigned char*)"\r\n\r\n", 4);
+    // delimiter.print();
     vec_buf_ += tmp_vec_buf;
-    print_whatever("test");
-    if (vec_buf_.size() < RECV_BUF && tmp_vec_buf.find(delimiter) == tmp_vec_buf.end()) {
+    // print_whatever("test");
+    if (vec_buf_.size() < RECV_BUF && vec_buf_.find(delimiter) == vec_buf_.end()) {
         return 0;
     }
     process_recv_data();
@@ -73,7 +74,8 @@ int Client::process_recv_data() {
         try {
             request_ = new HTTPRequestParser(vec_buf_);
             std::cout << "|\t|\tIDLE request state: " << request_->getReqState() << std::endl;
-            std::cout << "|\t|\tIDLE request CODE: [" << request_->getParsingCode() << "]" << std::endl;
+            std::cout << "|\t|\tIDLE request CODE: [" << GRN_CLR << request_->getParsingCode()\
+             << DEF_CLR << "]" << std::endl;
             
         } catch (const std::exception &e) {
             std::cerr << "Error creating HTTPRequestParser: " << e.what() << std::endl;

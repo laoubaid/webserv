@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 11:24:29 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 18:11:27 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/10 18:47:06 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,10 @@ class Socket
         int get_fd() const;
 		void bind();
 		void listen(int s__n);
+
+		sockaddr_in get_sockeaddr() const {
+			return s_addr_;
+		}
 		// void socket_related_err(const char *msg, int fd, int should_exit);
 };
 
