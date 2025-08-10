@@ -6,11 +6,28 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/04 16:38:17 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/05 00:31:10 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
+
+#define FORB_403_ "HTTP/1.1 403 FORBIDDEN\r\n" \
+            "Content-Type: text/html\r\n" \
+            "Connection: close\r\n" \
+            "Content-Length: 64\r\n\r\n" \
+            "<html><body><center><h1>403 Forbidden</h1><center></body></html>"
+
+#define NOTF_404_ "HTTP/1.1 404 Not Found\r\n" \
+            "Content-Type: text/html\r\n" \
+            "Connection: close\r\n" \
+            "Content-Length: 64\r\n\r\n" \
+            "<html><body><center><h1>404 Not Found</h1><center></body></html>"
+
+#define OK_200_ "HTTP/1.1 200 OK\r\n" \
+            "Connection: keep-alive\r\n"
+
+
 
 std::string url_decode(const std::string& str) {
     std::string result;
@@ -22,7 +39,7 @@ std::string url_decode(const std::string& str) {
             result += static_cast<char>(std::strtol(hex, nullptr, 16));
             i += 2;
         } else if (str[i] == '+') {
-            result += ' '; // '+' becoms a space just like %20
+            result += ' ';
         } else {
             result += str[i];
         }
@@ -56,28 +73,67 @@ std::string resolve_path(const std::string& str) {
     return result.empty() ? "/" : result;
 }
 
-std::string read_file(const std::string& path) {
-    std::ifstream file(path, std::ios::binary);
+bool read_file(const std::string& path, std::string& content) {
+    std::ifstream file(path.c_str(), std::ios::binary);
     if (!file)
-        throw std::runtime_error("Cannot open file");
-
-    std::string content;
-    while (!file.eof()) {
-        char c;
-        file.get(c);
-        content += c;
-    }
-
-    return content;
+        return false;
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    content = ss.str();
+    return true;
 }
 
 std::string serveStaticContent(const std::string& path) {
-    std::string body = read_file(path);
-    std::string resp_ = "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n"
-                    "Content-Length:  " + std::to_string(body.size()) + "\r\n"
-                    "Connection: keep-alive\r\n"
-                    "\r\n" + body;
+    std::string body;
+    
+    if (read_file(path, body) == false) {
+        return FORB_403_;
+    }
+    std::string resp_;
+    resp_ = OK_200_;
+    resp_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n"
+        "Content-Length: " + std::to_string(body.size()) + "\r\n"
+        "\r\n" + body;
+
+    return resp_;
+}
+
+bool is_directory(const std::string& path) {
+    struct stat s;
+    if (stat(path.c_str(), &s) == 0)
+        return S_ISDIR(s.st_mode);
+    return false;
+}
+
+std::string list_directory(const std::string& path) {
+    std::string resp_;
+    std::string direname;
+    DIR* dir = opendir(path.c_str());
+
+    if (dir == NULL) {
+        return FORB_403_;
+    }
+    size_t idx = path.rfind("/");
+    if (idx != std::string::npos)
+        direname = path.substr(idx + 1);
+    // NOTE the path prints as ./www/dir in the web page shouldnt it be just dir?
+    std::string body = "<!DOCTYPE html><html><head><title>Index of " + direname + \
+    "</title></head><body><h1>Index of " + direname + "</h1><ul>";
+
+    struct dirent *ptr;
+    ptr = readdir(dir);
+    while (ptr) {
+        std::string tmp = std::string(ptr->d_name);
+        if (tmp != "." && tmp != "..")
+            body += "<li><a href=\"" + direname + "/" + tmp + "\">" + tmp + "</a></li>";
+        ptr = readdir(dir);
+    }
+    body += "</ul></body></html>";
+    resp_ = OK_200_;
+    resp_ += "Content-Type: text/html\r\n"
+        "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+
+    closedir(dir);
     return resp_;
 }
 
@@ -88,26 +144,19 @@ std::string process_path(std::string& path) {
         path += "index.html";
     path = "./www" + path;
     std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
+
     if (!access(path.c_str(), F_OK)) {
         if (!access(path.c_str(), R_OK)) {
-            resp_ = serveStaticContent(path);
-        } else {
-            resp_ = "HTTP/1.1 403 FORBIDDEN\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Content-Length:  64\r\n"
-                    "Connection: close\r\n"
-                    "\r\n"
-                    "<html><body><center><h1>403 Forbidden</h1><center></body></html>";
-        }
+            if (is_directory(path)) {
+                resp_ = list_directory(path);
+            } else {
+                resp_ = serveStaticContent(path);
+            }
+        } else
+            resp_ = FORB_403_;
         // this sh!t clearly needs a clean up, you cant just leave those gainet blocks of text in there?
-    } else {
-        resp_ = "HTTP/1.1 404 Not Found\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: 64\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "<html><body><center><h1>404 Not Found</h1><center></body></html>";
-    }
+    } else
+        resp_ = NOTF_404_;
     // note we are starting to read a file using the path from url needs alot more (use EPOLL for read btw!!)
     return resp_;
 }

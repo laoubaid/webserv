@@ -21,7 +21,7 @@ OBJ = $(patsubst src/%.cpp, $(OBJ_DIR)%.o, $(SRC))
 NAME = webserv
 
 # Default target
-all: OBJ_STP $(NAME)
+all: $(OBJ_DIR) $(NAME)
 
 # Link object files to create executable
 $(NAME): $(OBJ)
@@ -29,7 +29,7 @@ $(NAME): $(OBJ)
 
 # Compile source files into object files
 
-OBJ_STP:
+$(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(OBJ_DIR)server
 	mkdir -p $(OBJ_DIR)req
@@ -51,6 +51,15 @@ fclean: clean
 
 re: fclean all
 
+
+run: all
+	./webserv test.config
+
+valgrind: all
+	valgrind ./webserv test.config
+
 # Phony targets
 .PHONY: all clean fclean re OBJ_STP
+
+.SECONDARY: OBJ_STP $(OBJ)
 
