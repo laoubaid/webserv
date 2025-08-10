@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/02 18:53:41 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/08 16:58:06 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,12 +227,12 @@ Block get_config(std::string filename) {
         return Block("Error"); // specify what to do if the file cannot be opened -> most likely exit the program
     }
 
-    std::cout << "\033[32m" << "webserv: fstream::open() \"" << filename << "\" successful" << "\033[0m" << std::endl;
+    // std::cout << "\033[32m" << "webserv: fstream::open() \"" << filename << "\" successful" << "\033[0m" << std::endl;
 
     std::vector<std::string> vector = {"root"};
     Block rootBlock = parser(config, vector);
     config.close();
     std::cout << std::endl;
-    printTree(rootBlock);
+    // printTree(rootBlock);
     return rootBlock; // return the root block
 }

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/03 19:05:07 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/09 18:15:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,23 +19,29 @@
 #include "../include.hpp"
 #include "Socket.hpp"
 
+# define RECV_BUF 4096
+
 class Client : Socket
 {
     private:
         HTTPRequestParser   *request_;
+        HttpResponse        *response_;
         // t_req_state          req_stat_;
 
         std::string         resbuf_;
+        Uvec                vec_buf_;
 
     public:
         Client(int clt_fd);
         ~Client();
+        int receive(int epoll_fd);
 
-        int process_recv_data(Uvec &vec_buf, uint32_t event);
-        // void print_request();
+        int process_recv_data();//Uvec &vec_buf);//, uint32_t event);
+        void print_whatever(std::string whatever);
 
-        void send_response(uint32_t event);
-
+        int send_response(int epoll_fd);
+        void set_event(int epoll_fd, uint32_t events);
+        
 
         bool operator<(const Client &other) const {
             return this->get_fd() < other.get_fd();
