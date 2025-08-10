@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 18:00:25 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/10 18:47:22 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ int main(int ac, char **av)
 	set_to_NonBlocking(server_fd);   // chang this plz its forbidden
 	svr_skt.bind();
 	svr_skt.listen(SOMAXCONN);
+	std::cout << GRN_CLR << "Server is listening on port " << ntohs(svr_skt.get_sockeaddr().sin_port) << DEF_CLR << std::endl;
 
 	
 	int epoll_fd = epoll_create1(0);

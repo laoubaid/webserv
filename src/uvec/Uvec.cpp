@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 22:41:10 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/08 18:12:39 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/10 18:49:53 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,4 +180,5 @@ void	Uvec::print(void) const
 			std::cout << ", ";
 	}
 	std::cout << " ]\n";
+	std::cout << std::dec; // reset to decimal base
 }
