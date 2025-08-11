@@ -6,28 +6,11 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/05 00:31:10 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/11 10:49:09 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
-
-#define FORB_403_ "HTTP/1.1 403 FORBIDDEN\r\n" \
-            "Content-Type: text/html\r\n" \
-            "Connection: close\r\n" \
-            "Content-Length: 64\r\n\r\n" \
-            "<html><body><center><h1>403 Forbidden</h1><center></body></html>"
-
-#define NOTF_404_ "HTTP/1.1 404 Not Found\r\n" \
-            "Content-Type: text/html\r\n" \
-            "Connection: close\r\n" \
-            "Content-Length: 64\r\n\r\n" \
-            "<html><body><center><h1>404 Not Found</h1><center></body></html>"
-
-#define OK_200_ "HTTP/1.1 200 OK\r\n" \
-            "Connection: keep-alive\r\n"
-
-
 
 std::string url_decode(const std::string& str) {
     std::string result;
@@ -154,7 +137,6 @@ std::string process_path(std::string& path) {
             }
         } else
             resp_ = FORB_403_;
-        // this sh!t clearly needs a clean up, you cant just leave those gainet blocks of text in there?
     } else
         resp_ = NOTF_404_;
     // note we are starting to read a file using the path from url needs alot more (use EPOLL for read btw!!)
@@ -169,8 +151,6 @@ std::string HttpResponse::responesForGet(HTTPRequestParser &request) {
     std::string web_root = "./www/";       // get this from config
 
     // this should be implemanted in the httpreq obj creation
-
-    // Directories NEXT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! <<<----
 
     std::string path = url_decode(request.getTarget());
     path = resolve_path(path);
