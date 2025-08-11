@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/10 18:54:08 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/11 18:19:54 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,17 +21,19 @@ Client::Client(int clt_fd) : Socket(clt_fd)
 
 Client::~Client()
 {
+    std::cout << "Client destructor called!" << std::endl;
     delete request_;
     delete response_;
 }
 
 void Client::set_event(int epoll_fd, uint32_t events) {
-    std::cout << "|\t|\tsetting events" << std::endl; 
-    epoll_event ev{};
-    ev.data.fd = get_fd();
-    ev.events = events;
+    // std::cout << "|\t|\tsetting events" << std::endl; 
+    struct epoll_event clt_event;
+    memset(&clt_event, 0, sizeof(clt_event));
+    clt_event.data.fd = get_fd();
+    clt_event.events = events;
 
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, ev.data.fd, &ev) == -1) {
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, clt_event.data.fd, &clt_event) == -1) {
         perror("epoll_ctl");
         throw std::runtime_error("Failed to modify epoll event");
     }
@@ -39,7 +41,7 @@ void Client::set_event(int epoll_fd, uint32_t events) {
 
 int Client::receive(int epoll_fd) {
 
-    std::cout << "|\treceive request" << std::endl;
+    // std::cout << "|\treceive request" << std::endl;
     int client_fd = this->get_fd();
     unsigned char buf[RECV_BUF];
 
@@ -70,12 +72,17 @@ int Client::receive(int epoll_fd) {
 int Client::process_recv_data() {
     std::cout << "process_recv_data called!" << std::endl;
     if (!request_) {
-        std::cout << "|\tcreate new request" << std::endl;
+        // std::cout << "|\tcreate new request" << std::endl;
+        // vec_buf_.print();
         try {
             request_ = new HTTPRequestParser(vec_buf_);
-            std::cout << "|\t|\tIDLE request state: " << request_->getReqState() << std::endl;
-            std::cout << "|\t|\tIDLE request CODE: [" << GRN_CLR << request_->getParsingCode()\
+            // // std::cout << "|\t|\tIDLE request state: " << request_->getReqState() << std::endl;
+            // // std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode()\
              << DEF_CLR << "]" << std::endl;
+            
+            if (request_->getReqState() == PEND) {
+                vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
+            }
             
         } catch (const std::exception &e) {
             std::cerr << "Error creating HTTPRequestParser: " << e.what() << std::endl;
@@ -83,33 +90,35 @@ int Client::process_recv_data() {
         }
     }
     if (request_ && request_->getReqState() == PEND) {
-        std::cout << "|\tadd to body\n";
-        request_->addBody(vec_buf_);
-        std::cout << "|\t|\tPEND request state: " << request_->getReqState() << std::endl;
+        try {
+            // std::cout << "|\tadd to body\n";
+            vec_buf_.print();
+            request_->addBody(vec_buf_);
+            // // std::cout << "|\t|\tPEND request state: " << request_->getReqState() << std::endl;
+        } catch (const std::exception &e) {
+            std::cerr << "Error adding to body: " << e.what() << std::endl;
+            return -1; // Handle error appropriately
+        }
     }
     if (request_ && request_->getReqState() == CCLS) {
-        std::cout << "|\tCCLS request is complete!\n";
+        // std::cout << "|\tCCLS somthing happened close connection!\n";
+        // std::cout << "|\t|\tCCLS request state: " << request_->getReqState() << std::endl;
         delete request_;
         request_ = NULL;
-        std::cout << "|\t|\trequest state: " << request_->getReqState() << std::endl;
     }
     if (request_ && request_->getReqState() == RESP) {
         response_ = new HttpResponse();
 
         resbuf_.clear();
         resbuf_ = HttpResponse::generateResponse(*request_);
-        std::cout << "|\t|\tRESP request state: " << request_->getReqState() << std::endl;
-        
-        // send_response(event, 0);
-        // delete request_;
-        // request_ = NULL; // Clean up the request pointer
+        // std::cout << "|\t|\tRESP request state: " << request_->getReqState() << std::endl;
     }
 
-    return request_->getReqState();
+    return (request_) ? request_->getReqState() : -1;
 }
 
 int Client::send_response(int epoll_fd) {
-    std::cout << "|\tSend response" << std::endl;
+    // std::cout << "|\tSend response" << std::endl;
     // print_whatever("test");
     if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) == -1) {
         std::cout << DISC_CLR <<"\n$ Client disconnected! (epoll OUT) fd: " << this->get_fd() << DEF_CLR << std::endl;
@@ -118,12 +127,13 @@ int Client::send_response(int epoll_fd) {
     }
     set_event(epoll_fd, EPOLLIN | EPOLLET);
     delete request_;
-    vec_buf_ = Uvec((const unsigned char*)"", 0);
+    vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
     request_ = NULL;
     return 0;
 }
 
 void Client::print_whatever(std::string whatever) {
+    std::cout << whatever << std::endl;
     std::cout << YLW_CLR << ">\tthe client socket FD: " << this->get_fd() << DEF_CLR << std::endl;
     std::cout << "---------------------------------------------------------------------------------------" << std::endl;
     std::cout << "-------------------------------- THE START OF whatever! --------------------------------" << std::endl;

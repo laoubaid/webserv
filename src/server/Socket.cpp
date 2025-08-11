@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 11:24:34 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 17:51:24 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/11 14:22:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ Socket::Socket(int clt_fd){
 
 
 Socket::~Socket() {
+	std::cout << "Socket destructor called!" << std::endl;
 	close(s_fd_);
 }
 

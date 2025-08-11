@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 01:02:51 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/11 10:40:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
 
     std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
     if (request.getParsingCode() == 400) {
-        response_ = "HTTP/1.1 400 Bad Request\r\n\r\n";
+        response_ = BADR_400_;
     } else if (request.getParsingCode() == 200) {
         if (request.getMethod() == GET) {
             response_ = HttpResponse::responesForGet(request);
@@ -68,20 +68,10 @@ std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
                         "\r\n" + html;
         }
     } else if (request.getParsingCode() == 413) {
-        std::string html = "<!DOCTYPE html><html><body><h1>413 Payload Too Large</h1></body></html>";
-        response_ = "HTTP/1.1 413 Payload Too Large\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Content-Length: " + std::to_string(html.size()) + "\r\n"
-                    "Connection: close\r\n"
-                    "\r\n" + html;
+        response_ = ELRG_413_;
     } else {
         std::cout << RED_CLR << request.getParsingCode() <<  " Internal Server Error" << DEF_CLR << std::endl;
-        std::string html = "<!DOCTYPE html><html><body><h1>500 Internal Server Error.</h1></body></html>";
-        response_ = "HTTP/1.1 500 Internal Server Error\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Content-Length: " + std::to_string(html.size()) + "\r\n"
-                    "Connection: close\r\n"
-                    "\r\n" + html;
+        response_ = IERR_500_;
     }
     return response_;
 }
