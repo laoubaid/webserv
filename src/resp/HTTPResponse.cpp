@@ -48,15 +48,15 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
     return default_type;
 }
 
-std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
+const std::string HttpResponse::generateResponse() {
     std::string response_;
 
     std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
-    if (request.getParsingCode() == 400) {
+    if (request_->getParsingCode() == 400) {
         response_ = BADR_400_;
-    } else if (request.getParsingCode() == 200) {
-        if (request.getMethod() == GET) {
-            response_ = HttpResponse::responesForGet(request);
+    } else if (request_->getParsingCode() == 200) {
+        if (request_->getMethod() == GET) {
+            response_ = HttpResponse::responesForGet();
         }
         else { // this is for POST and DELETE methods, temporarily of course hhhh
             std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
@@ -67,10 +67,10 @@ std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
                         "Connection: keep-alive\r\n"
                         "\r\n" + html;
         }
-    } else if (request.getParsingCode() == 413) {
+    } else if (request_->getParsingCode() == 413) {
         response_ = ELRG_413_;
     } else {
-        std::cout << RED_CLR << request.getParsingCode() <<  " Internal Server Error" << DEF_CLR << std::endl;
+        std::cout << RED_CLR << request_->getParsingCode() <<  " Internal Server Error" << DEF_CLR << std::endl;
         response_ = IERR_500_;
     }
     return response_;

@@ -107,10 +107,10 @@ int Client::process_recv_data() {
         request_ = NULL;
     }
     if (request_ && request_->getReqState() == RESP) {
-        response_ = new HttpResponse();
+        response_ = new HttpResponse(request_);
 
         resbuf_.clear();
-        resbuf_ = HttpResponse::generateResponse(*request_);
+        resbuf_ = response_->generateResponse();
         // std::cout << "|\t|\tRESP request state: " << request_->getReqState() << std::endl;
     }
 
@@ -125,10 +125,10 @@ int Client::send_response(int epoll_fd) {
         socket_related_err(" send() failed! , connection closed! ", 0);
         return 1;
     }
-    set_event(epoll_fd, EPOLLIN | EPOLLET);
     delete request_;
-    vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
     request_ = NULL;
+    set_event(epoll_fd, EPOLLIN);
+    vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
     return 0;
 }
 
