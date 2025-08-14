@@ -143,7 +143,7 @@ std::string process_path(std::string& path) {
     return resp_;
 }
 
-std::string HttpResponse::responesForGet(HTTPRequestParser &request) {
+const std::string HttpResponse::responesForGet() {
     std::string response_;
 
     // im lost
@@ -152,7 +152,7 @@ std::string HttpResponse::responesForGet(HTTPRequestParser &request) {
 
     // this should be implemanted in the httpreq obj creation
 
-    std::string path = url_decode(request.getTarget());
+    std::string path = url_decode(request_->getTarget());
     path = resolve_path(path);
 
     response_ = process_path(path);

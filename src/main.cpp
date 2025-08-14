@@ -25,15 +25,6 @@ void	init_conf(t_conf *conf) {
 }
 
 int	new_connection(int server_fd, int epoll_fd) {
-	// // to be changed later
-	// sockaddr_in client_addr{};
-	// socklen_t client_len = sizeof(client_addr);
-	// int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
-	// char client_ip[INET_ADDRSTRLEN];
-    // inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
-    // std::cout << "[ACCEPT] Client: " << client_ip << ":" << ntohs(client_addr.sin_port) << "\n";
-
-	// // to be changed later
 
 	int client_fd = accept(server_fd, NULL, NULL);
 	if (client_fd == -1)
@@ -41,7 +32,7 @@ int	new_connection(int server_fd, int epoll_fd) {
 	struct epoll_event clt_event;
 	memset(&clt_event, 0, sizeof(clt_event));
 	clt_event.data.fd = client_fd;
-	clt_event.events = EPOLLIN | EPOLLET;
+	clt_event.events = EPOLLIN;
 	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
 	std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 	return client_fd;
@@ -53,15 +44,6 @@ int set_to_NonBlocking(int client_fd){
         return -1;
     flags |= O_NONBLOCK;
     return (fcntl(client_fd, F_SETFL, flags));
-}
-
-void fuck_this_shit(int client_fd) {
-    linger lin;
-    lin.l_onoff = 1;   // Enable linger option
-    lin.l_linger = 0;  // Timeout 0 = hard reset
-    setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lin, sizeof(lin));
-    shutdown(client_fd, SHUT_RDWR);
-    return;
 }
 
 
@@ -98,7 +80,7 @@ int main(int ac, char **av)
 	epoll_event eventQueue[100]; // change to [MAX_EVENTS] later
 
 	svr_event.data.fd = server_fd;
-	svr_event.events = EPOLLIN | EPOLLET; // We’re interested in readable events (e.g., when a client connects)
+	svr_event.events = EPOLLIN;// | EPOLLET; // We’re interested in readable events (e.g., when a client connects)
 	
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &svr_event) == -1) {
 		close(epoll_fd);
@@ -107,7 +89,7 @@ int main(int ac, char **av)
 
     std::map <int, Client*> client_sockets;  // this needs to exists for each server
 
-	std::vector<Client *> leftovers;
+	std::vector<int> tobekilled;
 	while (true) {
 		int nevents = 0;
 		std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
@@ -131,11 +113,11 @@ int main(int ac, char **av)
             
             if (eventQueue[i].data.fd == server_fd) {
 				int client_fd = new_connection(server_fd, epoll_fd);
-				if (client_fd == -1)
-					continue;
-                // if (set_to_NonBlocking(client_fd)) // is this allowed
-                //     socket_related_err(" fcntl() failed! ", 1); // not clean wth
-				client_sockets[client_fd] = new Client(client_fd);
+				while (client_fd != -1) {
+					client_sockets[client_fd] = new Client(client_fd);
+					client_fd = new_connection(server_fd, epoll_fd);
+				}
+
 			}
             
 			// the client socket check for data receiving and sending
@@ -149,30 +131,31 @@ int main(int ac, char **av)
                     std::cout << "EPOLLIN event detected! " << eventQueue[i].data.fd << std::endl;
 					
 					stat_ = client_sockets[client_fd]->receive(epoll_fd);
-					if (stat_ == PEND) {
+					if (stat_ == PEND)
 						client_sockets[client_fd]->set_event(epoll_fd, EPOLLIN);
-						// leftovers.push_back(client_sockets[client_fd]);
-						// std::cout << "adding the client into leftovers list" << std::endl;
-					}
 					if (stat_ == RESP)
-						client_sockets[client_fd]->set_event(epoll_fd, EPOLLIN | EPOLLOUT | EPOLLET);
+						client_sockets[client_fd]->set_event(epoll_fd, EPOLLIN | EPOLLOUT);
 					if (stat_ == -1) {
-						fuck_this_shit(client_fd);  // fuuuuuck
-						delete client_sockets[client_fd];
-						client_sockets.erase(client_fd);
+						tobekilled.push_back(client_fd);
 						continue;
 					}
 				}
 				if (eventQueue[i].events & EPOLLOUT) {
 					std::cout << "EPOLLOUT event detected! " << eventQueue[i].data.fd << std::endl;
 					if (client_sockets[client_fd]->send_response(epoll_fd)) {
-						fuck_this_shit(client_fd);  // fuuuuuck
-						delete client_sockets[client_fd];
-						client_sockets.erase(client_fd);
+						tobekilled.push_back(client_fd);
+						continue;
 					}
 				}
 			}
+
 		}
+		for (std::vector<int>::iterator it = tobekilled.begin(); it != tobekilled.end(); ++it) {
+			epoll_ctl(epoll_fd, EPOLL_CTL_DEL, *it, NULL);
+			delete client_sockets[*it];
+			client_sockets.erase(*it);
+		}
+		tobekilled.clear();
 	}
 	close(server_fd);
 

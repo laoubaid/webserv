@@ -62,13 +62,18 @@ typedef enum e_resp_state {
 
 class HttpResponse {
     private:
-        t_resp_state resp_stat_;
+        t_resp_state        resp_stat_;
+        std::string         resp_buff_;
+        HTTPRequestParser   *request_;
+        std::fstream        file_;
+
     public:
-        HttpResponse() {
+        HttpResponse(HTTPRequestParser *request) {
             resp_stat_ = STRT;
+            request_ = request;
         }
-        static std::string generateResponse(HTTPRequestParser &request);
-        static std::string responesForGet(HTTPRequestParser &request);
+        const std::string generateResponse();
+        const std::string responesForGet();
         static const std::string& getMimeType(const std::string& ext);
         t_resp_state& getRespState();
 };
