@@ -77,8 +77,7 @@ int Client::process_recv_data() {
         try {
             request_ = new HTTPRequestParser(vec_buf_);
             // // std::cout << "|\t|\tIDLE request state: " << request_->getReqState() << std::endl;
-            // // std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode()\
-             << DEF_CLR << "]" << std::endl;
+            // // std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]" << std::endl;
             
             if (request_->getReqState() == PEND) {
                 vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
