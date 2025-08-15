@@ -15,13 +15,20 @@
 
 #include "../include.hpp"
 #include "Socket.hpp"
+#include "Client.hpp"
 
 class Server : public Socket
 {
 	private:
+		int						epoll_fd_;
 	public:
-		Server(t_conf cfg);
+		std::map <int, Client*>	client_sockets;
+		Server(t_conf cfg, int epfd);
 		~Server();
+
+		int	accept_connections();
+		int	add_to_epoll();
+		int	launch();
 
 };
 

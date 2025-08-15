@@ -38,24 +38,23 @@ int Socket::get_fd() const {
 }
 
 
-void Socket::bind() {
-	if (::bind(s_fd_, (const sockaddr *)&s_addr_, sizeof(s_addr_))) {
-		socket_related_err(" bind() failed! ", 1);
-	}
+int Socket::bind() {
+	if (::bind(s_fd_, (const sockaddr *)&s_addr_, sizeof(s_addr_)))
+		return socket_related_err(" bind() failed! ", 1);
+	return 0;
 }
 
-void Socket::listen(int s__n) {
+int Socket::listen(int s__n) {
     if (::listen(s_fd_, s__n)) {
-        socket_related_err(" listen() failed! ", 1);
+        return socket_related_err(" listen() failed! ", 1);
     }
+	return 0;
 }
 
-void socket_related_err(const char *msg, int should_exit)
+int socket_related_err(const char *msg, int should_exit)
 {
     std::cerr << RED_CLR << "ERROR :" << DEF_CLR; // clean this shit
 	fflush(stderr);
 	perror(msg);
-	if (should_exit) {
-		exit(EXIT_FAILURE); // Use EXIT_FAILURE for standard error exit
-	}
+	return should_exit;
 }
