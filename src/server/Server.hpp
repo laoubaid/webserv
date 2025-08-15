@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerSkt.hpp                                      :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:01 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/05/23 19:24:06 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/15 19:02:08 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,13 @@
 class Server : public Socket
 {
 	private:
-		int						epoll_fd_;
 	public:
 		std::map <int, Client*>	client_sockets;
 		Server(t_conf cfg, int epfd);
 		~Server();
 
-		int	accept_connections();
-		int	add_to_epoll();
+		int	accept_connections(int epfd);
+		int	add_to_epoll(int epfd);
 		int	launch();
 
 };
