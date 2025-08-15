@@ -8,3 +8,5 @@ webserv
 *.sh
 
 www/vids/
+
+vgcore.*

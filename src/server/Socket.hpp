@@ -30,8 +30,8 @@ class Socket
 		~Socket();
 
         int get_fd() const;
-		void bind();
-		void listen(int s__n);
+		int bind();
+		int listen(int s__n);
 
 		sockaddr_in get_sockeaddr() const {
 			return s_addr_;
@@ -39,6 +39,6 @@ class Socket
 		// void socket_related_err(const char *msg, int fd, int should_exit);
 };
 
-void socket_related_err(const char *msg, int should_exit);
+int socket_related_err(const char *msg, int should_exit);
 
 #endif

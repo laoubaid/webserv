@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/02 12:17:48 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/11 18:21:24 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,8 +295,8 @@ void	HTTPRequestParser::addBody(Uvec raw_body)
 
 HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 {
-	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
-	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
+	// std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
+	// std::cout << "____________________________________________________________________________" << std::endl << std::endl;
 	parsingCode = 200;
 	
 	// split with crlfcrlf to get 2 (headers and body)
@@ -322,7 +322,7 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	// 	std::cout << "vec: ";
 	// 	(*it).print();
 	// }
-	
+	req_state = CCLS;
 	if (lines.size() < 2) // the least that should be there are three lines (start-line, host header field at least, empty line)
 	{
 		parsingCode = 400;

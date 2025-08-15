@@ -7,7 +7,7 @@ SRC_DIR = src/*/
 OBJ_DIR = obj/
 
 # Source files
-SRC = src/main.cpp src/server/Socket.cpp \
+SRC = src/main.cpp src/server/Socket.cpp src/server/webServ.cpp \
 		src/server/Server.cpp src/server/Client.cpp \
 		src/req/HTTPRequestParser.cpp src/req/HTTPRequestParserTools.cpp src/req/host.cpp\
 		src/req/strMatchers.cpp src/req/strValidators.cpp src/req/test_fields.cpp \

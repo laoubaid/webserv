@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/09 01:02:51 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/11 10:40:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,15 +48,15 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
     return default_type;
 }
 
-std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
+const std::string HttpResponse::generateResponse() {
     std::string response_;
 
     std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
-    if (request.getParsingCode() == 400) {
-        response_ = "HTTP/1.1 400 Bad Request\r\n\r\n";
-    } else if (request.getParsingCode() == 200) {
-        if (request.getMethod() == GET) {
-            response_ = HttpResponse::responesForGet(request);
+    if (request_->getParsingCode() == 400) {
+        response_ = BADR_400_;
+    } else if (request_->getParsingCode() == 200) {
+        if (request_->getMethod() == GET) {
+            response_ = HttpResponse::responesForGet();
         }
         else { // this is for POST and DELETE methods, temporarily of course hhhh
             std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
@@ -67,21 +67,11 @@ std::string HttpResponse::generateResponse(HTTPRequestParser &request) {
                         "Connection: keep-alive\r\n"
                         "\r\n" + html;
         }
-    } else if (request.getParsingCode() == 413) {
-        std::string html = "<!DOCTYPE html><html><body><h1>413 Payload Too Large</h1></body></html>";
-        response_ = "HTTP/1.1 413 Payload Too Large\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Content-Length: " + std::to_string(html.size()) + "\r\n"
-                    "Connection: close\r\n"
-                    "\r\n" + html;
+    } else if (request_->getParsingCode() == 413) {
+        response_ = ELRG_413_;
     } else {
-        std::cout << RED_CLR << request.getParsingCode() <<  " Internal Server Error" << DEF_CLR << std::endl;
-        std::string html = "<!DOCTYPE html><html><body><h1>500 Internal Server Error.</h1></body></html>";
-        response_ = "HTTP/1.1 500 Internal Server Error\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Content-Length: " + std::to_string(html.size()) + "\r\n"
-                    "Connection: close\r\n"
-                    "\r\n" + html;
+        std::cout << RED_CLR << request_->getParsingCode() <<  " Internal Server Error" << DEF_CLR << std::endl;
+        response_ = IERR_500_;
     }
     return response_;
 }
