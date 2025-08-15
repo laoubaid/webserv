@@ -6,16 +6,15 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 17:41:55 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/15 19:02:49 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(t_conf cfg, int epfd) : Socket(cfg), epoll_fd_(epfd)
+Server::Server(t_conf cfg, int epfd) : Socket(cfg)
 {
     std::cout << "Server constracteur called!" << std::endl;
-	std::cout << "Server epoll fd: " << epoll_fd_ << std::endl;
 
 	int reuse = 1;
 	if (setsockopt(get_fd(), SOL_SOCKET, SO_REUSEADDR, (void *)&reuse, sizeof(reuse)) < 0) {
@@ -28,7 +27,7 @@ Server::~Server()
 {
 }
 
-int Server::accept_connections() {
+int Server::accept_connections(int epoll_fd) {
 	int count = 0;
 	int client_fd = accept(get_fd(), NULL, NULL);
 	while (client_fd != -1) {
@@ -37,7 +36,7 @@ int Server::accept_connections() {
 		memset(&clt_event, 0, sizeof(clt_event));
 		clt_event.data.fd = client_fd;
 		clt_event.events = EPOLLIN;
-		epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_fd, &clt_event);
+		epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
 		std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 
 		client_sockets[client_fd] = new Client(client_fd);
@@ -47,15 +46,15 @@ int Server::accept_connections() {
 	return count;
 }
 
-int	Server::add_to_epoll() {
+int	Server::add_to_epoll(int epoll_fd) {
 	struct epoll_event svr_event;
 	memset(&svr_event, 0, sizeof(svr_event)); // init all struct member to 0
 
 	svr_event.data.fd = get_fd();
 	svr_event.events = EPOLLIN;// | EPOLLET; // We’re interested in readable events (e.g., when a client connects)
 	
-	if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, get_fd(), &svr_event) == -1) {
-		close(epoll_fd_);
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, get_fd(), &svr_event) == -1) {
+		close(epoll_fd);
 		return socket_related_err("Server: epoll_ctl() failed! ", 1);
 	}
 	return 0;

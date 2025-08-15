@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 17:54:34 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/15 19:03:37 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ int webServ::setup_servers() {
     int svfd = svtmp->get_fd();
     srvr_skts_[svfd] = svtmp;
     srvr_skts_[svfd]->launch();
-    srvr_skts_[svfd]->add_to_epoll();
+    srvr_skts_[svfd]->add_to_epoll(epoll_fd_);
 
     // hardcoded second server to test if algo works (looks like its fine for now)
     // t_conf conf2;
@@ -82,7 +82,7 @@ Server* webServ::get_server(int fd) {
 int webServ::handle_connections(int fd) {
     std::map<int, Server *>::iterator it = srvr_skts_.find(fd);
     if (it != srvr_skts_.end()) {
-        return (*it).second->accept_connections();    // it returns the number of accepted clients
+        return (*it).second->accept_connections(epoll_fd_);    // it returns the number of accepted clients
     }
     return 0;
 }
