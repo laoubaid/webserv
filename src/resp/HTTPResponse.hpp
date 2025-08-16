@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/11 10:39:50 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/16 01:04:59 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 # include <sys/types.h>
 // # include <sys/syscall.h>
 # include <dirent.h>
+
+# include <fstream>
 
 # define OK_200_ "HTTP/1.1 200 OK\r\n" \
             "Connection: keep-alive\r\n"
@@ -56,26 +58,34 @@
 
 typedef enum e_resp_state {
     STRT,
-    BODY,
+    LOAD,
     DONE
 }	t_resp_state;
 
 class HttpResponse {
     private:
         t_resp_state        resp_stat_;
-        std::string         resp_buff_;
         HTTPRequestParser   *request_;
         std::fstream        file_;
-
+        std::string         resp_buff_;
+        
     public:
         HttpResponse(HTTPRequestParser *request) {
             resp_stat_ = STRT;
             request_ = request;
         }
-        const std::string generateResponse();
-        const std::string responesForGet();
+        const std::string   generateResponse();
+        void                responesForGet();
+
+        bool    read_file_continu();
+
+        void    process_path(std::string& path);
+        bool    serveStaticContent(const std::string& path);
+        bool    list_directory(const std::string& path);
+
         static const std::string& getMimeType(const std::string& ext);
-        t_resp_state& getRespState();
+        t_resp_state&   getRespState();
+        std::string&    getRespBuff();
 };
 
 #endif
