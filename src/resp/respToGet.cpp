@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/16 01:25:21 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 04:33:41 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,7 @@ std::string resolve_path(const std::string& str) {
     for (size_t i = 0; i < stack.size(); ++i) {
         result += "/" + stack[i];
     }
-
-    // return result.empty() ? ("./www/") : ("./www" + result);
+    std::cout << result << std::endl;
     return result.empty() ? "/" : result;
 }
 
@@ -103,7 +102,7 @@ bool HttpResponse::list_directory(const std::string& path) {
     while (ptr) {
         std::string tmp = std::string(ptr->d_name);
         if (tmp != "." && tmp != "..")
-            body += "<li><a href=\"" + direname + "/" + tmp + "\">" + tmp + "</a></li>";
+            body += "<li><a href=\"/" + direname + "/" + tmp + "\">" + tmp + "</a></li>";
         ptr = readdir(dir);
     }
     body += "</ul></body></html>";
@@ -117,9 +116,12 @@ bool HttpResponse::list_directory(const std::string& path) {
 
 void HttpResponse::process_path(std::string& path) {
 
+    std::string web_root = "./www";       // get this from config  
+    // std::string web_root = "/media/laoubaid/laoubaid/movies/";       // get this from config  
+
     if (path.size() == 1 && path == "/")
         path += "index.html";
-    path = "./www" + path;
+    path = web_root + path;
     std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
 
     if (!access(path.c_str(), F_OK)) {
@@ -143,7 +145,7 @@ bool HttpResponse::read_file_continu() {
         return false;
     }
 
-    char buffer[100000];
+    char buffer[8192];     // change later
     file_.read(buffer, sizeof(buffer));
     resp_buff_ = std::string(buffer, file_.gcount());
     if (file_.eof()) {
@@ -156,7 +158,6 @@ bool HttpResponse::read_file_continu() {
 void HttpResponse::responesForGet() {
     if (resp_stat_ == STRT) {
         // std::cout << "request line : " << request.getMethod() << " " << request.getTarget() << std::endl; 
-        std::string web_root = "./www/";       // get this from config
     
         // this should be implemanted in the httpreq obj creation
     

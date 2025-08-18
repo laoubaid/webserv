@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/16 01:14:56 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 04:26:56 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,13 +54,13 @@ const std::string HttpResponse::generateResponse() {
     std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
     if (request_->getParsingCode() == 400) {
         resp_buff_ = BADR_400_;
+        resp_stat_ = DONE;
     } else if (request_->getParsingCode() == 200) {
         if (request_->getMethod() == GET) {
             responesForGet();
-        }
-        else { // this is for POST and DELETE methods, temporarily of course hhhh
+        } else {  // this is for POST and DELETE methods, temporarily of course hhhh
             std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
-            std::string html = "<!DOCTYPE html><html><body><h1>Hello from the WebServer!</h1></body></html>";
+            std::string html = "<!DOCTYPE html><html><body><h1>Hello from the WebServer!</h1></body></html>\n";
             resp_buff_ = "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/html\r\n"
                         "Content-Length: " + std::to_string(html.size()) + "\r\n"
@@ -69,9 +69,11 @@ const std::string HttpResponse::generateResponse() {
         }
     } else if (request_->getParsingCode() == 413) {
         resp_buff_ = ELRG_413_;
+        resp_stat_ = DONE;
     } else {
         std::cout << RED_CLR << request_->getParsingCode() <<  " Internal Server Error!" << DEF_CLR << std::endl;
         resp_buff_ = IERR_500_;
+        resp_stat_ = DONE;
     }
     return resp_buff_;
 }

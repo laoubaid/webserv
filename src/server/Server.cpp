@@ -6,13 +6,13 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 19:02:49 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 04:30:42 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(t_conf cfg, int epfd) : Socket(cfg)
+Server::Server(t_conf cfg) : Socket(cfg)
 {
     std::cout << "Server constracteur called!" << std::endl;
 

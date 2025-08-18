@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:01 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 19:02:08 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 04:30:47 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ class Server : public Socket
 	private:
 	public:
 		std::map <int, Client*>	client_sockets;
-		Server(t_conf cfg, int epfd);
+		Server(t_conf cfg);
 		~Server();
 
 		int	accept_connections(int epfd);
