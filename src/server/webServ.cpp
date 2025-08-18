@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 19:03:37 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 04:31:11 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ int webServ::setup_servers() {
     t_conf conf;
 
     init_conf(&conf, 8080); // temporary
-    Server *    svtmp = new Server(conf, epoll_fd_);
+    Server *    svtmp = new Server(conf);
     int svfd = svtmp->get_fd();
     srvr_skts_[svfd] = svtmp;
     srvr_skts_[svfd]->launch();
@@ -59,7 +59,7 @@ int webServ::setup_servers() {
     // svfd = svtmp->get_fd();
     // srvr_skts_[svfd] = svtmp;
     // srvr_skts_[svfd]->launch();
-    // srvr_skts_[svfd]->add_to_epoll();
+    // srvr_skts_[svfd]->add_to_epoll(epoll_fd_);
 
     
     return 0;
