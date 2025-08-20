@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 04:30:12 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 17:52:35 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,9 @@
             "Connection: close\r\n\r\n" \
             "<html><body><center><h1>500 Internal Server Error</h1><center></body></html>\n";
 
+// # define FILE_BUFFER_SIZE 4096
+// # define FILE_BUFFER_SIZE 8192
+# define FILE_BUFFER_SIZE 16384
 
 // create a static class HTTPResponse, so i dont need to create an instance of it
 // but i can use its methods to generate responses based on the status code
@@ -76,12 +79,15 @@ class HttpResponse {
         }
         const std::string   generateResponse();
         void                responesForGet();
+        void                responesForDelete();
 
         bool    read_file_continu();
 
         void    process_path(std::string& path);
         bool    serveStaticContent(const std::string& path);
         bool    list_directory(const std::string& path);
+
+        void    delete_file(std::string& path);
 
         static const std::string& getMimeType(const std::string& ext);
         t_resp_state&   getRespState();

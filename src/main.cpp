@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 17:48:41 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/19 22:38:24 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,20 @@
 int main(int ac, char **av)
 {
 
-	webServ WS;
+	// webServ WS;
 
 	if (ac != 2)
 		return 1; // more details
 
-	if (get_config(av[1]).name == "Error")
+	std::cout << "-------------------------------------------------------------------\n";
+	if (get_config(av[1]))
 		return 1; // if the config file is not found or has errors
 	std::cout << "\033[32mConfiguration file parsed successfully!\033[0m" << std::endl;
-	std::cout << "\n\nStarting server..." << std::endl;
-
-	WS.setup_epoll();
-	WS.setup_servers();
-	WS.run();
+	
+	// std::cout << "\n\nStarting server..." << std::endl;
+	// WS.setup_epoll();
+	// WS.setup_servers();
+	// WS.run();
 
 	return 0;
 }

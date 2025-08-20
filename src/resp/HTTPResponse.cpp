@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 04:26:56 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 18:17:31 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,17 +49,22 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
 }
 
 const std::string HttpResponse::generateResponse() {
+    int         status_code = request_->getParsingCode();
 
     resp_buff_.clear();
     std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
-    if (request_->getParsingCode() == 400) {
+    if (status_code == 400) {
         resp_buff_ = BADR_400_;
         resp_stat_ = DONE;
-    } else if (request_->getParsingCode() == 200) {
-        if (request_->getMethod() == GET) {
+    } else if (status_code == 200) {
+        t_method    method = request_->getMethod();
+        if (method == GET) {
             responesForGet();
-        } else {  // this is for POST and DELETE methods, temporarily of course hhhh
-            std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
+        } else if (method == DELETE) {
+            // handle DELETE method
+            responesForDelete();
+        } else {  // this is for POST method, temporarily of course hhhh
+            // std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
             std::string html = "<!DOCTYPE html><html><body><h1>Hello from the WebServer!</h1></body></html>\n";
             resp_buff_ = "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/html\r\n"
@@ -67,11 +72,11 @@ const std::string HttpResponse::generateResponse() {
                         "Connection: keep-alive\r\n"
                         "\r\n" + html;
         }
-    } else if (request_->getParsingCode() == 413) {
+    } else if (status_code == 413) {
         resp_buff_ = ELRG_413_;
         resp_stat_ = DONE;
     } else {
-        std::cout << RED_CLR << request_->getParsingCode() <<  " Internal Server Error!" << DEF_CLR << std::endl;
+        std::cout << RED_CLR << status_code <<  " Internal Server Error!" << DEF_CLR << std::endl;
         resp_buff_ = IERR_500_;
         resp_stat_ = DONE;
     }
