@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/03 19:32:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/19 22:38:39 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # define ERR_TXT_BRC "unexpected text before closing brace '}'"
 # define ERR_DIR_BRC "unexpected directive arguments before closing brace '}'"
 # define ERR_BRC_TXT "unexpected text after closing brace '}'"
+# define ERR_END_LIN "unexpected end of line"
 
 
 class Directive {
@@ -40,19 +41,43 @@ class Directive {
 };
 
 class Block {
+    private:
+        int                     state;
+        std::vector<Block>      blocks;
+        std::vector<Directive>  directives;
     public:
         std::string name;
         std::string argument;
-        std::vector<Directive> directives;
-        std::vector<Block> blocks;
         std::string error_message;
 
-        Block() {};
+        // Block() {};
+        Block() : state(1) {};
         Block(const std::string& n) : name(n) {}
+
+        bool    isopen() {
+            return state;
+        }
+        void    close() {
+            state = 0;
+        }
+        void    add_block(Block& obj) {
+            blocks.push_back(obj);
+        }
+        void    add_direc(Directive obj) {
+            directives.push_back(obj);
+        }
+        Block&    last_block() {
+            return blocks.back();
+        }
+        size_t  blocks_size() {
+            return blocks.size();
+        }
+
+        void printTree(int idt) const;
 
 };
 
-Block    get_config(std::string filename);
+int   get_config(std::string filename);  // void for now
 
 
 #endif

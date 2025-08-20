@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/08 16:58:06 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/19 22:58:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,13 @@
 
 
 
-Block   parser(std::ifstream &config, std::vector<std::string> args, int indentation = 0);
+Block   parser(std::ifstream &config, std::vector<std::string> args);
+
+void rtrim(std::string &s) {
+    while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back()))) {
+        s.pop_back();
+    }
+}
 
 Block syntax_error(const std::string& message, const std::string& name) {
     std::cerr << "\033[31mwebserv: (syntax error) \033[0m";
@@ -63,7 +69,7 @@ bool check_indentation(const std::string& line, int &indent) {
     return indent ? (line.rfind(expected) == 0) : true;
 }
 
-int process_directive(std::string& buff, std::vector<std::string>& new_args, Block& block, int endline) {
+int process_directive(std::string& buff, std::vector<std::string>& new_args, Block& block, std::string& line, int idx) {
     if (!buff.empty()) {
         new_args.push_back(buff);
         buff.clear();
@@ -72,17 +78,17 @@ int process_directive(std::string& buff, std::vector<std::string>& new_args, Blo
         syntax_error("missing directive arguments before semicolon ';'", block.name);
         return 1;
     }
-    if (endline) {
+    while (std::isspace(line[idx])) ++idx;
+    if (idx != line.length() && line[idx] != '#') {
         syntax_error("unwanted text after semicolon ';'", block.name);
         return 1;
     }
-    block.directives.push_back(Directive(new_args));
+    block.add_direc(Directive(new_args));
     new_args.clear();
     return 0;
 }
 
-int process_block(std::string& buff, std::vector<std::string>& args, Block& block, int &idt, std::ifstream &cfg) {
-    // std::cout << "** Processing block: " << block.name << std::endl;
+int process_block(std::string& buff, std::vector<std::string>& args, Block& block, std::ifstream &cfg) {
     if (!buff.empty()) {
         args.push_back(buff);
         buff.clear();
@@ -91,117 +97,104 @@ int process_block(std::string& buff, std::vector<std::string>& args, Block& bloc
         syntax_error("missing block name before opening brace '{'", block.name);
         return 1;
     }
-    Block tmp = parser(cfg, args, idt + 1);
+    // std::cout << "** Processing block: " << args[0] << std::endl;
+    Block tmp = parser(cfg, args);
     if (tmp.name == "Error") {
         return 1;
     }
-    block.blocks.push_back(tmp);
+    block.add_block(tmp);
     args.clear();
     // std::cout << "** Finished processing block: " << block.name << std::endl;
     return 0;
 }
 
-Block process_line(std::ifstream &config, const std::string& line, Block& block, int &indentation) {
+Block process_line(std::ifstream &config, std::string& line, Block& block) {
     int i = 0;
     int len = line.length();
     std::string buff;
     std::vector<std::string> new_args;
 
-    // std::cout << ">> LINE Processing line: [" << line << "]" << std::endl;
+    std::cout << ">> LINE Processing line: '" << line << "'" << std::endl;
     while (i < len) {
-        if (i < len && std::isspace(line[i])) {
-            while (i < len && std::isspace(line[i]))
-                ++i;
-            if (!buff.empty()) {
-                new_args.push_back(buff);
-                buff.clear();
-            }
+        if (std::isspace(line[i]) && !buff.empty()) {
+            new_args.push_back(buff);
+            buff.clear();
         }
-        if ( line[i] == ';') {
-            if (process_directive(buff, new_args, block, line[i + 1])) {
-                return Block("Error");
-            }
+        while (std::isspace(line[i])) ++i;
+        switch (line[i])
+        {
+            case ';':
+                if (process_directive(buff, new_args, block, line, i + 1))
+                    return Block("Error");
+                break;
+            case '{':
+                if (process_block(buff, new_args, block, config))
+                    return Block("Error");
+                break;
+            case '}':
+                block.close();
+                return (!buff.empty()) ? syntax_error(ERR_TXT_BRC, block.name) :
+                    (new_args.size() > 0) ? syntax_error(ERR_DIR_BRC, block.name) :
+                    (i < len - 1) ? syntax_error(ERR_BRC_TXT, block.name) :
+                    block;
+                break;
+            
+            case '#':
+                i = len;
+                break;
+
+            default:
+                buff += line[i];
+                break;
         }
-        else if ( line[i] == '{'){
-            if (process_block(buff, new_args, block, indentation, config))
-                return Block("Error");
-        }
-        else if ( line[i] == '}' ) {
-            return (!buff.empty()) ? syntax_error(ERR_TXT_BRC, block.name) :
-                   (new_args.size() > 0) ? syntax_error(ERR_DIR_BRC, block.name) :
-                   (i < len - 1) ? syntax_error(ERR_BRC_TXT, block.name) :
-                   block;
-        }
-        else if ( line[i] == '#' ) {
-            while (i < len) { i++; }
-        } else { buff += line[i]; }
-        i++;
+        ++i;
         if (i >= len && !buff.empty()) {
-            return syntax_error("unexpected end of line", block.name);
+            return syntax_error(ERR_END_LIN, block.name);
         }
     }
-    // std::cout << "<< LINE returned block name: " << block.name << std::endl;
-
-
-    /* this return linr is to make control the flow of the parser in order to match every block
-     with its parent, NOTE: the creation of Block("test") is a temporary solution */
-    return (block.blocks.empty()) ? Block("test") : block.blocks.back(); // return the last processed block
-    // return block.blocks.back(); // return the last processed block
+    return (!block.blocks_size()) ? Block("test") : block.last_block(); // return the last processed block
 }
 
 
-Block parser(std::ifstream &config, std::vector<std::string> args, int indentation) {
-    Block block;
+Block parser(std::ifstream &config, std::vector<std::string> args) {
     if (args.empty())
         return syntax_error("Empty args vector", "Internal Error");
-
+    
+    Block block;
+    std::string line;
     block.name = args[0];
     block.argument = args.size() > 1 ? args[1] : "";
 
-    // std::cout << "++ Parsing block: [" << block.name << "]" << std::endl;
-    std::string line;
-
+    // std::cout << "++ Parsing block: \t\t\t\t[" << block.name << "]" << std::endl;
     while (std::getline(config, line)) {
-        if (line.empty() || line[0] == '#') {
+        size_t i = 0;
+        rtrim(line);
+        while (std::isspace(line[i])) ++i;
+        if (line.empty() || line[i] == '#' || i == line.length())
             continue; // skip empty lines and comments
-        }
-
-        if (check_indentation(line, indentation) == false) {
-            std::cout << "line: [" << line << "]" << indentation << std::endl;
-            return syntax_error("Malformed indentation", block.name);
-        }
-        
-        // std::cout << "[" << block.name << "] is about to process line: " << line << std::endl;
-        Block tmp_block = process_line(config, line, block, indentation);
-        // std::cout << "[" << block.name << "] is DONE processing line: " << line << std::endl;
-        
-        // std::cout << "-- block name after processing line: " << tmp_block.name << std::endl;
-        if (tmp_block.name == block.name) {
+        Block tmp_block = process_line(config, line, block);
+        if (tmp_block.name == block.name)
             break ;
-        }
+        if (tmp_block.name == "Error")
+            return tmp_block;
     }
-
-    indentation++;
-    // std::cout << "-- Finished parsing block: " << block.name << std::endl;
-    if (block.name != "root" && indentation == 0) {
+    if (block.isopen() && block.name != "root")
         return syntax_error("missing closing brace '}' at the end of the file", block.name);
-    }
-
+    // std::cout << "-- Finished parsing block: " << block.name << std::endl;
     return block;
 }
 
-
-void printTree(const Block& block, int tab = 0) {
-    std::cout << std::string(tab * 4, ' ') << "Block: " << block.name;
-    if (!block.argument.empty()) {
-        std::cout << " Argument: " << block.argument;
+void Block::printTree(int tab) const {
+    std::cout << std::string(tab * 4, ' ') << "Block: " << name;
+    if (!argument.empty()) {
+        std::cout << " Argument: " << argument;
     }
-    if (!block.error_message.empty()) {
-        std::cout << " Error: " << block.error_message;
+    if (!error_message.empty()) {
+        std::cout << " Error: " << error_message;
     }
     std::cout << std::endl;
 
-    for (const auto& directive : block.directives) {
+    for (const auto& directive : directives) {
         std::cout << std::string((tab + 1) * 4, ' ') << "Directive: " << directive.key;
         for (const auto& value : directive.values) {
             std::cout << " Value: " << value;
@@ -209,14 +202,17 @@ void printTree(const Block& block, int tab = 0) {
         std::cout << std::endl;
     }
 
-    for (const auto& subBlock : block.blocks) {
-        // std::cout << "current block:" << block.name << " sub-block: " << subBlock.name << std::endl;
-        printTree(subBlock, tab + 1);
+    for (const auto& subBlock : blocks) {
+        subBlock.printTree(tab + 1);
     }
 
 }
-Block get_config(std::string filename) {
-    // open file and pass it to parser
+
+
+void syntax(Block rootBlock);
+
+int get_config(std::string filename) {
+
     std::ifstream config;
 
     filename = "./src/config/" + filename;
@@ -224,15 +220,19 @@ Block get_config(std::string filename) {
     if (!config.is_open()) {
         std::cerr << "webserv: fstream::open() \"" << filename << "\" failed";
         perror(" ");
-        return Block("Error"); // specify what to do if the file cannot be opened -> most likely exit the program
+        return 1;
+        // return Block("Error"); // specify what to do if the file cannot be opened -> most likely exit the program
     }
-
-    // std::cout << "\033[32m" << "webserv: fstream::open() \"" << filename << "\" successful" << "\033[0m" << std::endl;
 
     std::vector<std::string> vector = {"root"};
     Block rootBlock = parser(config, vector);
     config.close();
     std::cout << std::endl;
-    // printTree(rootBlock);
-    return rootBlock; // return the root block
+    rootBlock.printTree(0);
+
+    syntax(rootBlock);
+
+    
+    return 0;
+    // return rootBlock; // return the root block
 }

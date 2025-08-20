@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   respToGet.cpp                                      :+:      :+:    :+:   */
+/*   process_resp.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 04:33:41 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/18 18:17:08 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ std::string resolve_path(const std::string& str) {
     for (size_t i = 0; i < stack.size(); ++i) {
         result += "/" + stack[i];
     }
-    std::cout << result << std::endl;
+    // std::cout << result << std::endl;
     return result.empty() ? "/" : result;
 }
 
@@ -122,20 +122,21 @@ void HttpResponse::process_path(std::string& path) {
     if (path.size() == 1 && path == "/")
         path += "index.html";
     path = web_root + path;
-    std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
+    // std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
 
     if (!access(path.c_str(), F_OK)) {
         if (!access(path.c_str(), R_OK)) {
             if (is_directory(path)) {
                 list_directory(path);
-                resp_stat_ = DONE;
             } else {
                 serveStaticContent(path);
+                return ;
             }
         } else
             resp_buff_ = FORB_403_;
     } else
         resp_buff_ = NOTF_404_;
+    resp_stat_ = DONE;
     // note we are starting to read a file using the path from url needs alot more (use EPOLL for read btw!!)
 }
 
@@ -145,7 +146,7 @@ bool HttpResponse::read_file_continu() {
         return false;
     }
 
-    char buffer[8192];     // change later
+    char buffer[FILE_BUFFER_SIZE];     // change later
     file_.read(buffer, sizeof(buffer));
     resp_buff_ = std::string(buffer, file_.gcount());
     if (file_.eof()) {
@@ -170,4 +171,43 @@ void HttpResponse::responesForGet() {
         read_file_continu();
     }
 }
+
+void HttpResponse::delete_file(std::string& path) {
+
+    std::string web_root = "./www";       // get this from config  
+    // std::string web_root = "/media/laoubaid/laoubaid/movies/";       // get this from config
+
+    if (path.size() == 1 && path == "/")
+        path += "index.html";
+    path = web_root + path;
+    // std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
+
+    if (!access(path.c_str(), F_OK)) {
+        if (!access(path.c_str(), R_OK)) {
+            if (is_directory(path)) {
+                resp_buff_ = FORB_403_;
+            } else {
+                if (std::remove(path.c_str()) == 0) {
+                    resp_buff_ = OK_200_;
+                    resp_buff_ += "\r\n";
+                } else {
+                    resp_buff_ = FORB_403_;
+                }
+            }
+        } else {
+            resp_buff_ = FORB_403_;
+        }
+    } else {
+        resp_buff_ = NOTF_404_;
+    }
+    resp_stat_ = DONE;
+}
+
+void HttpResponse::responesForDelete() {
+    std::string path = url_decode(request_->getTarget());
+    path = resolve_path(path);
+
+    delete_file(path);
+}
+
 

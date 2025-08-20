@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test DELETE Request</title>
+</head>
+<body>
+  <h1>Test DELETE Request</h1>
+
+  <label for="filePath">File path (relative to server root):</label>
+  <input type="text" id="filePath" placeholder="/upload/file.txt" style="width:300px;">
+  <button id="deleteBtn">Delete</button>
+
+  <p id="result"></p>
+
+  <script>
+    document.getElementById("deleteBtn").addEventListener("click", async () => {
+      const path = document.getElementById("filePath").value;
+      if (!path) {
+        alert("Enter a file path.");
+        return;
+      }
+
+      try {
+        const response = await fetch(path, { method: "DELETE" });
+        const result = document.getElementById("result");
+        result.textContent = `Response: ${response.status} ${response.statusText}`;
+      } catch (err) {
+        alert("Error: " + err);
+      }
+    });
+  </script>
+</body>
+</html>
