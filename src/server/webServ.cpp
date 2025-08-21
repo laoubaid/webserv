@@ -6,23 +6,19 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 04:31:11 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 17:32:08 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webServ.hpp"
 
-void	init_conf(t_conf *conf, int port) {
-	conf->_domain = AF_INET;
-	conf->_type = SOCK_STREAM | SOCK_NONBLOCK;
-	conf->_protocol = 0;
-	conf->_address.sin_family = conf->_domain;
-	conf->_address.sin_addr.s_addr = INADDR_ANY;
-	conf->_address.sin_port = htons(port);
-}
-
 webServ::webServ()
 {
+}
+
+webServ::webServ(std::vector<serverConf>& s_cfgs) {
+    srv_cfgs = s_cfgs;
+    std::cout << "\n\nStarting web server..." << std::endl;
 }
 
 webServ::~webServ()
@@ -37,30 +33,27 @@ webServ::~webServ()
 int webServ::setup_epoll() {
     epoll_fd_ = epoll_create1(0);
 	if (epoll_fd_ == -1)
-		return socket_related_err(" epoll_create1() failed! ", 1);
+        throw std::runtime_error("epoll_create1() failed! ");
     // std::cout << "epoll fd: " << epoll_fd_ << std::endl;
     return 0;
 }
 
 int webServ::setup_servers() {
-    t_conf conf;
-
-    init_conf(&conf, 8080); // temporary
-    Server *    svtmp = new Server(conf);
-    int svfd = svtmp->get_fd();
-    srvr_skts_[svfd] = svtmp;
-    srvr_skts_[svfd]->launch();
-    srvr_skts_[svfd]->add_to_epoll(epoll_fd_);
-
-    // hardcoded second server to test if algo works (looks like its fine for now)
-    // t_conf conf2;
-    // init_conf(&conf2, 9999); // temporary
-    // svtmp = new Server(conf2, epoll_fd_);
-    // svfd = svtmp->get_fd();
-    // srvr_skts_[svfd] = svtmp;
-    // srvr_skts_[svfd]->launch();
-    // srvr_skts_[svfd]->add_to_epoll(epoll_fd_);
-
+    Server *    svtmp;
+    for (size_t i = 0; i < srv_cfgs.size(); ++i) {
+        std::vector<int> ports = srv_cfgs[i].get_ports();
+        for (size_t j = 0; j < ports.size(); ++j) {
+            sockaddr_in tmp = srv_cfgs[i].get_addr(ports[j]);
+            svtmp = new Server(srv_cfgs[i], tmp);
+            int svfd = svtmp->get_fd();
+            srvr_skts_[svfd] = svtmp;
+        }
+    }
+    std::map<int, Server*>::iterator it;
+    for (it = srvr_skts_.begin(); it != srvr_skts_.end(); ++it) {
+        it->second->launch();
+        it->second->add_to_epoll(epoll_fd_);
+    }
     
     return 0;
 }
@@ -123,10 +116,8 @@ int webServ::run() {
 		// 	perror("epoll_wait");
 		// 	exit(EXIT_FAILURE);
 		// }
-		if (nevents < 0) {
-			close(epoll_fd_);
-			return socket_related_err(" epoll_wait() failed! ", 1);
-		}
+		if (nevents < 0)
+            throw std::runtime_error("epoll_wait() failed!");
 		
 		// 2. Handle triggered events
 		for (int i = 0; i < nevents; i++) {

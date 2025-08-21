@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/17 23:05:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 17:34:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,7 @@ int Client::send_response(int epoll_fd) {
     resbuf_ = response_->generateResponse();
     if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) == -1) {
         std::cout << DISC_CLR <<"\n$ Client disconnected! (epoll OUT) fd: " << this->get_fd() << DEF_CLR << std::endl;
-        socket_related_err(" send() failed! , connection closed! ", 0);
+        perror("send() failed!, connection closed ");
         return 1;
     }
     if (response_->getRespState() == DONE) {
