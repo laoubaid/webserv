@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:51 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 17:24:54 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 14:02:44 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define WEBSERV_HPP
 
 # include "../include.hpp"
+# include "../config/serverConf.hpp"
 # include "Server.hpp"
 # include "Client.hpp"
 
@@ -23,11 +24,13 @@ class webServ
 {
     private:
         int                     epoll_fd_;
+        std::vector<serverConf> srv_cfgs;
         std::map <int, Server*> srvr_skts_;
 
         epoll_event             eventQueue[MY_MAX_EVENTS]; // change to [MAX_EVENTS] later
     public:
         webServ();
+        webServ(std::vector<serverConf>& s_cfgs);
         ~webServ();
 
         int setup_epoll();

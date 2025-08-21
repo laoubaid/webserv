@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/19 22:38:39 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 17:21:01 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,14 @@
 # include <fstream>
 # include <string>
 # include <vector>
+# include "../include.hpp"
+# include "serverConf.hpp"
 
 
 # define ERR_TXT_BRC "unexpected text before closing brace '}'"
 # define ERR_DIR_BRC "unexpected directive arguments before closing brace '}'"
 # define ERR_BRC_TXT "unexpected text after closing brace '}'"
 # define ERR_END_LIN "unexpected end of line"
-
 
 class Directive {
     public:
@@ -43,15 +44,19 @@ class Directive {
 class Block {
     private:
         int                     state;
-        std::vector<Block>      blocks;
         std::vector<Directive>  directives;
-    public:
+        std::vector<Block>      blocks;
         std::string name;
-        std::string argument;
         std::string error_message;
+        std::string argument;
+    public:
 
         // Block() {};
         Block() : state(1) {};
+        Block(std::vector<std::string> args) : state(1) {
+            name = args[0];
+            argument = args.size() > 1 ? args[1] : "";
+        }
         Block(const std::string& n) : name(n) {}
 
         bool    isopen() {
@@ -73,11 +78,21 @@ class Block {
             return blocks.size();
         }
 
+        const std::string& get_name() {
+            return name;
+        }
+
+        void process_server(std::vector<serverConf>& servres);
+        void process_location(serverConf& conf);
+
+        std::vector<serverConf> parser();
+        Block syntax_error(const std::string& message);
+
         void printTree(int idt) const;
 
 };
 
-int   get_config(std::string filename);  // void for now
+Block   get_config(std::string filename);
 
 
 #endif

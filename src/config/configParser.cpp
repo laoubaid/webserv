@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parser.cpp                                         :+:      :+:    :+:   */
+/*   configParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/19 22:58:46 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 17:35:43 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@
 
 
 
-Block   parser(std::ifstream &config, std::vector<std::string> args);
+Block   syntax(std::ifstream &config, std::vector<std::string> args);
 
 void rtrim(std::string &s) {
     while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back()))) {
@@ -52,35 +52,25 @@ void rtrim(std::string &s) {
     }
 }
 
-Block syntax_error(const std::string& message, const std::string& name) {
+Block Block::syntax_error(const std::string& message) {
     std::cerr << "\033[31mwebserv: (syntax error) \033[0m";
     std::cerr << message << std::flush << " at block ." << name << std::endl;
 
     return Block("Error");
 }
 
-bool check_indentation(const std::string& line, int &indent) {
-    
-    if (line.find('}') != std::string::npos)
-        --indent; // if the line contains a closing brace, it is valid
-
-    std::string expected(indent * 4, ' ');
-    
-    return indent ? (line.rfind(expected) == 0) : true;
-}
-
-int process_directive(std::string& buff, std::vector<std::string>& new_args, Block& block, std::string& line, int idx) {
+int process_directive(std::string& buff, std::vector<std::string>& new_args, Block& block, std::string& line, size_t idx) {
     if (!buff.empty()) {
         new_args.push_back(buff);
         buff.clear();
     }
     if (new_args.size() < 2) {
-        syntax_error("missing directive arguments before semicolon ';'", block.name);
+        block.syntax_error("missing directive arguments before semicolon ';'");
         return 1;
     }
     while (std::isspace(line[idx])) ++idx;
     if (idx != line.length() && line[idx] != '#') {
-        syntax_error("unwanted text after semicolon ';'", block.name);
+        block.syntax_error("unwanted text after semicolon ';'");
         return 1;
     }
     block.add_direc(Directive(new_args));
@@ -94,17 +84,15 @@ int process_block(std::string& buff, std::vector<std::string>& args, Block& bloc
         buff.clear();
     }
     if (args.empty()) {
-        syntax_error("missing block name before opening brace '{'", block.name);
+        block.syntax_error("missing block name before opening brace '{'");
         return 1;
     }
-    // std::cout << "** Processing block: " << args[0] << std::endl;
-    Block tmp = parser(cfg, args);
-    if (tmp.name == "Error") {
+    Block tmp = syntax(cfg, args);
+    if (tmp.get_name() == "Error") {
         return 1;
     }
     block.add_block(tmp);
     args.clear();
-    // std::cout << "** Finished processing block: " << block.name << std::endl;
     return 0;
 }
 
@@ -114,7 +102,7 @@ Block process_line(std::ifstream &config, std::string& line, Block& block) {
     std::string buff;
     std::vector<std::string> new_args;
 
-    std::cout << ">> LINE Processing line: '" << line << "'" << std::endl;
+    // std::cout << ">> LINE Processing line: '" << line << "'" << std::endl;
     while (i < len) {
         if (std::isspace(line[i]) && !buff.empty()) {
             new_args.push_back(buff);
@@ -133,9 +121,9 @@ Block process_line(std::ifstream &config, std::string& line, Block& block) {
                 break;
             case '}':
                 block.close();
-                return (!buff.empty()) ? syntax_error(ERR_TXT_BRC, block.name) :
-                    (new_args.size() > 0) ? syntax_error(ERR_DIR_BRC, block.name) :
-                    (i < len - 1) ? syntax_error(ERR_BRC_TXT, block.name) :
+                return (!buff.empty()) ? block.syntax_error(ERR_TXT_BRC) :
+                    (new_args.size() > 0) ? block.syntax_error(ERR_DIR_BRC) :
+                    (i < len - 1) ? block.syntax_error(ERR_BRC_TXT) :
                     block;
                 break;
             
@@ -149,40 +137,113 @@ Block process_line(std::ifstream &config, std::string& line, Block& block) {
         }
         ++i;
         if (i >= len && !buff.empty()) {
-            return syntax_error(ERR_END_LIN, block.name);
+            return block.syntax_error(ERR_END_LIN);
         }
     }
-    return (!block.blocks_size()) ? Block("test") : block.last_block(); // return the last processed block
+    return (!block.blocks_size()) ? Block("test") : block.last_block();
 }
 
 
-Block parser(std::ifstream &config, std::vector<std::string> args) {
+Block syntax(std::ifstream &config, std::vector<std::string> args) {
     if (args.empty())
-        return syntax_error("Empty args vector", "Internal Error");
+        return Block("Internal Error").syntax_error("Empty args vector");
     
-    Block block;
+    Block block(args);
     std::string line;
-    block.name = args[0];
-    block.argument = args.size() > 1 ? args[1] : "";
 
-    // std::cout << "++ Parsing block: \t\t\t\t[" << block.name << "]" << std::endl;
     while (std::getline(config, line)) {
         size_t i = 0;
         rtrim(line);
         while (std::isspace(line[i])) ++i;
         if (line.empty() || line[i] == '#' || i == line.length())
-            continue; // skip empty lines and comments
+            continue;
         Block tmp_block = process_line(config, line, block);
-        if (tmp_block.name == block.name)
+        if (tmp_block.get_name() == block.get_name())
             break ;
-        if (tmp_block.name == "Error")
+        if (tmp_block.get_name() == "Error")
             return tmp_block;
     }
-    if (block.isopen() && block.name != "root")
-        return syntax_error("missing closing brace '}' at the end of the file", block.name);
-    // std::cout << "-- Finished parsing block: " << block.name << std::endl;
+    if (block.isopen() && block.get_name() != "root")
+        return block.syntax_error("missing closing brace '}' at the end of the file");
     return block;
 }
+
+void Block::process_location(serverConf& srvr_cfg) {
+    
+    if (argument.empty())
+        throw std::runtime_error("missing location argument!");
+        
+    if (blocks.size())
+        throw std::runtime_error("Blocks not allowed inside location block!");
+    
+    locationConf lct_cfg(argument);
+
+    std::vector<Directive>::iterator it_d;
+    for (it_d = directives.begin(); it_d != directives.end(); ++it_d) {
+        if ((*it_d).key == "methods") {
+            lct_cfg.set_methods((*it_d).values);
+        } else if ((*it_d).key == "return") {
+            lct_cfg.add_redir((*it_d).values);
+        } else if ((*it_d).key == "root") {
+            lct_cfg.set_root((*it_d).values);
+        } else if ((*it_d).key == "index") {
+            lct_cfg.set_index((*it_d).values);
+        } else if ((*it_d).key == "autoindex") {
+            lct_cfg.set_auto_index((*it_d).values);
+        } else if ((*it_d).key == "upload_store") {
+            lct_cfg.set_up_store((*it_d).values);
+        } else {
+            throw std::runtime_error("unknown directive! " + (*it_d).key);
+        }
+    }
+    srvr_cfg.add_location(lct_cfg);
+}
+
+void Block::process_server(std::vector<serverConf>& servres) {
+    serverConf srvr_cfg;
+
+    std::vector<Directive>::iterator it_d;
+    for (it_d = directives.begin(); it_d != directives.end(); ++it_d) {
+        if ((*it_d).key == "listen") {
+            srvr_cfg.add_listen((*it_d).values);
+        } else if ((*it_d).key == "error_page") {
+            srvr_cfg.add_err_page((*it_d).values);
+        } else if ((*it_d).key == "client_max_body_size") {
+            srvr_cfg.set_clt_max_body_size((*it_d).values);
+        } else if ((*it_d).key == "root") {
+            srvr_cfg.set_root((*it_d).values);
+        } else if ((*it_d).key == "index") {
+            srvr_cfg.set_index((*it_d).values);
+        } else {
+            throw std::runtime_error("unknown directive! " + (*it_d).key);
+        }
+    }
+
+    std::vector<Block>::iterator it_b;
+    for (it_b = blocks.begin(); it_b != blocks.end(); ++it_b) {
+        if ((*it_b).name == "location") {
+            (*it_b).process_location(srvr_cfg);
+        } else {
+            throw std::runtime_error("unknown Block! " + (*it_b).name);
+        }
+    }
+    servres.push_back(srvr_cfg);
+}
+
+std::vector<serverConf> Block::parser() {
+    std::vector<serverConf> servers;
+
+    if (directives.size())
+        throw std::runtime_error("directives not allowed on config root!");
+    for (std::vector<Block>::iterator it = blocks.begin(); it != blocks.end(); ++it) {
+        if ((*it).name != "server") {
+            throw std::runtime_error("only server blocks are allowed on config root!");
+        }
+        (*it).process_server(servers);
+    }
+    return servers;
+}
+
 
 void Block::printTree(int tab) const {
     std::cout << std::string(tab * 4, ' ') << "Block: " << name;
@@ -208,31 +269,21 @@ void Block::printTree(int tab) const {
 
 }
 
-
-void syntax(Block rootBlock);
-
-int get_config(std::string filename) {
+Block get_config(std::string filename) {
 
     std::ifstream config;
 
-    filename = "./src/config/" + filename;
+    filename = "./conf/" + filename;  // hardcoded path?
     config.open(filename.c_str());
     if (!config.is_open()) {
-        std::cerr << "webserv: fstream::open() \"" << filename << "\" failed";
-        perror(" ");
-        return 1;
-        // return Block("Error"); // specify what to do if the file cannot be opened -> most likely exit the program
+        throw std::runtime_error("webserv: failed to open config file!");
     }
 
     std::vector<std::string> vector = {"root"};
-    Block rootBlock = parser(config, vector);
+    Block rootBlock = syntax(config, vector);
     config.close();
     std::cout << std::endl;
-    rootBlock.printTree(0);
-
-    syntax(rootBlock);
-
-    
-    return 0;
-    // return rootBlock; // return the root block
+    // rootBlock.printTree(0);
+    return rootBlock;
 }
+

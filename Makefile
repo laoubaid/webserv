@@ -11,7 +11,8 @@ SRC = src/main.cpp src/server/Socket.cpp src/server/webServ.cpp \
 		src/server/Server.cpp src/server/Client.cpp \
 		src/req/HTTPRequestParser.cpp src/req/HTTPRequestParserTools.cpp src/req/host.cpp\
 		src/req/strMatchers.cpp src/req/strValidators.cpp src/req/test_fields.cpp \
-		src/uvec/Uvec.cpp src/config/parser.cpp src/config/syntax.cpp \
+		src/uvec/Uvec.cpp src/config/configParser.cpp \
+		src/config/locationConf.cpp src/config/serverConf.cpp \
 		src/resp/HTTPResponse.cpp src/resp/process_resp.cpp
 
 # OBJ = $(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRC))
