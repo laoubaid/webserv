@@ -1,1 +1,1 @@
-![Diagram](./imgs/class_diagram.png)
+![Diagram](./imgs/uml_class_diagram.png)
