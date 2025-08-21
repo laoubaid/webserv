@@ -7,6 +7,7 @@ webserv
 
 *.sh
 
-www/vids/
+www/large_files/
 
 vgcore.*
+

@@ -6,20 +6,18 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/15 19:02:49 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 17:33:11 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(t_conf cfg, int epfd) : Socket(cfg)
+Server::Server(serverConf cfg, sockaddr_in addr) : Socket(addr), conf(cfg)
 {
     std::cout << "Server constracteur called!" << std::endl;
-
 	int reuse = 1;
 	if (setsockopt(get_fd(), SOL_SOCKET, SO_REUSEADDR, (void *)&reuse, sizeof(reuse)) < 0) {
-		perror("ERROR SO_REUSEADDR:");
-		exit(EXIT_FAILURE);
+		throw std::runtime_error("failed to set socket option to reuse address!");
 	}
 }
 
@@ -54,8 +52,7 @@ int	Server::add_to_epoll(int epoll_fd) {
 	svr_event.events = EPOLLIN;// | EPOLLET; // We’re interested in readable events (e.g., when a client connects)
 	
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, get_fd(), &svr_event) == -1) {
-		close(epoll_fd);
-		return socket_related_err("Server: epoll_ctl() failed! ", 1);
+		throw std::runtime_error("Server: epoll_ctl() failed!");
 	}
 	return 0;
 }

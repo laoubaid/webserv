@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File Upload Test</title>
+</head>
+<body>
+  <h1>Upload a File</h1>
+  <form action="http://localhost:8080/upload" method="POST" enctype="multipart/form-data">
+    <label for="file">Choose a file:</label>
+    <input type="file" id="file" name="myfile"><br><br>
+    
+    <input type="submit" value="Upload">
+  </form>
+</body>
+</html>

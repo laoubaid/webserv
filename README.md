@@ -1,1 +1,1 @@
-![Diagram](UML_SRV.png)
+![Diagram](./imgs/uml_class_diagram.png)

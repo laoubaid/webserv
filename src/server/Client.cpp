@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/11 18:19:54 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/21 17:34:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ void Client::set_event(int epoll_fd, uint32_t events) {
 }
 
 int Client::receive(int epoll_fd) {
-
     // std::cout << "|\treceive request" << std::endl;
     int client_fd = this->get_fd();
     unsigned char buf[RECV_BUF];
@@ -56,12 +55,9 @@ int Client::receive(int epoll_fd) {
         std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
         return -1;
     }
-    // std::cout << "DEBUG\t\t\t\t\t\t\t\t\t\tDEBUG" << std::endl;
     Uvec tmp_vec_buf(buf, nread); // Convert the buffer to Uvec
     Uvec delimiter((const unsigned char*)"\r\n\r\n", 4);
-    // delimiter.print();
     vec_buf_ += tmp_vec_buf;
-    // print_whatever("test");
     if (vec_buf_.size() < RECV_BUF && vec_buf_.find(delimiter) == vec_buf_.end()) {
         return 0;
     }
@@ -73,15 +69,18 @@ int Client::process_recv_data() {
     std::cout << "process_recv_data called!" << std::endl;
     if (!request_) {
         // std::cout << "|\tcreate new request" << std::endl;
-        // vec_buf_.print();
         try {
             request_ = new HTTPRequestParser(vec_buf_);
             // // std::cout << "|\t|\tIDLE request state: " << request_->getReqState() << std::endl;
-            // // std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]" << std::endl;
+            std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]" << std::endl;
             
             if (request_->getReqState() == PEND) {
                 vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
             }
+            // if (request_->getMethod() == POST) {
+            //     // open file after checking permission etc
+
+            // }
             
         } catch (const std::exception &e) {
             std::cerr << "Error creating HTTPRequestParser: " << e.what() << std::endl;
@@ -91,8 +90,14 @@ int Client::process_recv_data() {
     if (request_ && request_->getReqState() == PEND) {
         try {
             // std::cout << "|\tadd to body\n";
-            vec_buf_.print();
+            // vec_buf_.print();
+
+
             request_->addBody(vec_buf_);
+            // append() to the file
+            // clear the body
+            
+            
             // // std::cout << "|\t|\tPEND request state: " << request_->getReqState() << std::endl;
         } catch (const std::exception &e) {
             std::cerr << "Error adding to body: " << e.what() << std::endl;
@@ -100,17 +105,11 @@ int Client::process_recv_data() {
         }
     }
     if (request_ && request_->getReqState() == CCLS) {
-        // std::cout << "|\tCCLS somthing happened close connection!\n";
-        // std::cout << "|\t|\tCCLS request state: " << request_->getReqState() << std::endl;
         delete request_;
         request_ = NULL;
     }
     if (request_ && request_->getReqState() == RESP) {
         response_ = new HttpResponse(request_);
-
-        resbuf_.clear();
-        resbuf_ = response_->generateResponse();
-        // std::cout << "|\t|\tRESP request state: " << request_->getReqState() << std::endl;
     }
 
     return (request_) ? request_->getReqState() : -1;
@@ -119,15 +118,21 @@ int Client::process_recv_data() {
 int Client::send_response(int epoll_fd) {
     // std::cout << "|\tSend response" << std::endl;
     // print_whatever("test");
+    resbuf_.clear();
+    resbuf_ = response_->generateResponse();
     if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) == -1) {
         std::cout << DISC_CLR <<"\n$ Client disconnected! (epoll OUT) fd: " << this->get_fd() << DEF_CLR << std::endl;
-        socket_related_err(" send() failed! , connection closed! ", 0);
+        perror("send() failed!, connection closed ");
         return 1;
     }
-    delete request_;
-    request_ = NULL;
-    set_event(epoll_fd, EPOLLIN);
-    vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
+    if (response_->getRespState() == DONE) {
+        delete request_;
+        request_ = NULL;
+        delete response_;
+        response_ = NULL;
+        set_event(epoll_fd, EPOLLIN);
+        vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
+    }
     return 0;
 }
 
