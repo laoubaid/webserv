@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 17:52:35 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/23 10:25:21 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 # include "../include.hpp"
 # include "../req/HTTPRequestParser.hpp"
+# include "../config/serverConf.hpp"
+// # include "../config/serverConf.hpp"
 
 # include <sys/stat.h>
 # include <sys/types.h>
@@ -71,28 +73,32 @@ class HttpResponse {
         HTTPRequestParser   *request_;
         std::fstream        file_;
         std::string         resp_buff_;
+        const serverConf&   conf_;
         
     public:
-        HttpResponse(HTTPRequestParser *request) {
+        HttpResponse(HTTPRequestParser *request, const serverConf&   conf) : conf_(conf) {
             resp_stat_ = STRT;
             request_ = request;
         }
         const std::string   generateResponse();
-        void                responesForGet();
-        void                responesForDelete();
+        void                responesForGet(const locationConf& location, std::string& path);
+        void                responesForDelete(const locationConf& location, std::string& path);
 
         bool    read_file_continu();
 
-        void    process_path(std::string& path);
+        void    process_path(const locationConf& location, std::string& path);
         bool    serveStaticContent(const std::string& path);
         bool    list_directory(const std::string& path);
-
-        void    delete_file(std::string& path);
 
         static const std::string& getMimeType(const std::string& ext);
         t_resp_state&   getRespState();
         std::string&    getRespBuff();
 };
 
-#endif
+size_t              get_file_size(std::fstream &file);
+bool                is_directory(const std::string& path);
+std::string         url_decode(const std::string& str);
+std::string         resolve_path(const std::string& str);
+const locationConf& identifyie_location(const std::string& str, const serverConf& cfg);
 
+#endif

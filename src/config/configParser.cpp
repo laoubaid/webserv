@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 17:35:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/22 17:00:49 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ Block syntax(std::ifstream &config, std::vector<std::string> args) {
             return tmp_block;
     }
     if (block.isopen() && block.get_name() != "root")
-        return block.syntax_error("missing closing brace '}' at the end of the file");
+        return block.syntax_error("Missing closing brace '}' at the end of the file");
     return block;
 }
 
@@ -176,7 +176,7 @@ void Block::process_location(serverConf& srvr_cfg) {
     if (blocks.size())
         throw std::runtime_error("Blocks not allowed inside location block!");
     
-    locationConf lct_cfg(argument);
+    locationConf lct_cfg(argument, srvr_cfg);
 
     std::vector<Directive>::iterator it_d;
     for (it_d = directives.begin(); it_d != directives.end(); ++it_d) {
@@ -214,10 +214,15 @@ void Block::process_server(std::vector<serverConf>& servres) {
             srvr_cfg.set_root((*it_d).values);
         } else if ((*it_d).key == "index") {
             srvr_cfg.set_index((*it_d).values);
+        } else if ((*it_d).key == "autoindex") {
+            srvr_cfg.set_index((*it_d).values);
+        } else if ((*it_d).key == "return") {  // could be changed to redir
+            srvr_cfg.set_index((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
     }
+    srvr_cfg.set_default();
 
     std::vector<Block>::iterator it_b;
     for (it_b = blocks.begin(); it_b != blocks.end(); ++it_b) {
@@ -230,8 +235,8 @@ void Block::process_server(std::vector<serverConf>& servres) {
     servres.push_back(srvr_cfg);
 }
 
-std::vector<serverConf> Block::parser() {
-    std::vector<serverConf> servers;
+std::vector<serverConf>* Block::parser() {
+    std::vector<serverConf>* servers = new std::vector<serverConf>();
 
     if (directives.size())
         throw std::runtime_error("directives not allowed on config root!");
@@ -239,7 +244,7 @@ std::vector<serverConf> Block::parser() {
         if ((*it).name != "server") {
             throw std::runtime_error("only server blocks are allowed on config root!");
         }
-        (*it).process_server(servers);
+        (*it).process_server(*servers);
     }
     return servers;
 }
@@ -273,7 +278,7 @@ Block get_config(std::string filename) {
 
     std::ifstream config;
 
-    filename = "./conf/" + filename;  // hardcoded path?
+    // filename = "./conf/" + filename;  // hardcoded path?
     config.open(filename.c_str());
     if (!config.is_open()) {
         throw std::runtime_error("webserv: failed to open config file!");
@@ -287,3 +292,8 @@ Block get_config(std::string filename) {
     return rootBlock;
 }
 
+// void set_default_values(std::vector<serverConf>& servers) {
+//     for (size_t i = 0; i < servers.size(); ++i) {
+//         if (servers)
+//     }
+// }

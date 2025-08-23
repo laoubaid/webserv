@@ -6,13 +6,13 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 17:33:11 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/22 11:27:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(serverConf cfg, sockaddr_in addr) : Socket(addr), conf(cfg)
+Server::Server(const serverConf& cfg, sockaddr_in addr) : Socket(addr), conf(cfg)
 {
     std::cout << "Server constracteur called!" << std::endl;
 	int reuse = 1;
@@ -37,7 +37,7 @@ int Server::accept_connections(int epoll_fd) {
 		epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
 		std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 
-		client_sockets[client_fd] = new Client(client_fd);
+		client_sockets[client_fd] = new Client(client_fd, conf);
 
 		client_fd = accept(get_fd(), NULL, NULL);
 	}

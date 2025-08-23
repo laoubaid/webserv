@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 16:49:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/23 12:19:19 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include <sys/epoll.h>
 # include <map>
 # include <vector>
+# include <sstream>
 
 # define DEF_CLR "\033[0m"
 # define BLK_CLR "\033[30m"
@@ -36,6 +37,11 @@
 
 
 # define HEADER_MAX_SIZE 1024
+
+// class locationConf;
+
+// # include "./config/serverConf.hpp"
+// # include "./config/locationConf.hpp"
 
 typedef struct	s_conf
 {
@@ -52,6 +58,5 @@ typedef struct	s_conf2
 {
 	
 }				t_conf2;
-
 
 #endif

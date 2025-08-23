@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 17:32:08 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/22 10:29:09 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ int webServ::run() {
     int nevents = 0;
     while (true) {
 		std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-		nevents = epoll_wait(epoll_fd_, eventQueue, 100, -1);
+		nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, -1);
 		// while ((nevents = epoll_wait(epoll_fd_, eventQueue, MY_MAX_EVENTS, -1)) == -1) {                  // condition for debuging with strace (check man)
 		// 	if (errno == EINTR) continue; // Interrupted by signal, retry
 		// 	perror("epoll_wait");

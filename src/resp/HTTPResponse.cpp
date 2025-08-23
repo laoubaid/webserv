@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 18:17:31 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/23 11:02:23 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,131 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
     return default_type;
 }
 
+bool HttpResponse::serveStaticContent(const std::string& path) {
+    file_.open(path, std::ios::in | std::ios::binary);
+    if (!file_.is_open()) {
+        resp_buff_ = FORB_403_;
+        resp_stat_ = DONE;
+        return false;
+    }
+    resp_buff_ = OK_200_;
+    resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + std::to_string(get_file_size(file_)) + "\r\n\r\n";
+    resp_stat_ = LOAD;
+    return true;
+}
+
+bool HttpResponse::list_directory(const std::string& path) {
+    std::string direname;
+    DIR* dir = opendir(path.c_str());
+
+    resp_buff_.clear();
+    if (dir == NULL) {
+        resp_buff_ = FORB_403_;
+        return false;
+    }
+    size_t idx = path.rfind("/");
+    if (idx != std::string::npos)
+        direname = path.substr(idx + 1);
+
+    std::string body = "<!DOCTYPE html><html><head><title>Index of " + direname + \
+    "</title></head><body><h1>Index of " + direname + "</h1><ul>";
+
+    struct dirent *ptr;
+    ptr = readdir(dir);
+    while (ptr) {
+        std::string tmp = std::string(ptr->d_name);
+        if (tmp != "." && tmp != "..")
+            body += "<li><a href=\"/" + direname + "/" + tmp + "\">" + tmp + "</a></li>";
+        ptr = readdir(dir);
+    }
+    body += "</ul></body></html>";
+    resp_buff_ = OK_200_;
+    resp_buff_ += "Content-Type: text/html\r\n"
+        "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+
+    closedir(dir);
+    return true;
+}
+
+bool HttpResponse::read_file_continu() {
+    // Open the file only once in the class member 
+    if (!file_.is_open() || resp_stat_ == DONE) {
+        return false;
+    }
+
+    char buffer[FILE_BUFFER_SIZE];     // change later
+    file_.read(buffer, sizeof(buffer));
+    resp_buff_ = std::string(buffer, file_.gcount());
+    if (file_.eof()) {
+        resp_stat_ = DONE;
+        file_.close();
+    }
+    return true;
+}
+
+void HttpResponse::process_path(const locationConf& location, std::string& path) {
+    std::string target_path = path;
+    path = location.get_root() + path;
+
+    if (!access(path.c_str(), F_OK)) {
+        if (!access(path.c_str(), R_OK)) {
+            if (is_directory(path)) {
+                // Directory + GET → serve index, else autoindex if on, else 403
+                if (location.is_index()) {
+                    path = target_path + location.get_index();
+                    process_path(location, path);
+                    return ;
+                } else if (location.get_autoindex()) {
+                    list_directory(path);
+                } else {
+                    resp_buff_ = FORB_403_;
+                }
+            } else {
+                serveStaticContent(path);
+                return ;
+            }
+        } else
+            resp_buff_ = FORB_403_;
+    } else
+        resp_buff_ = NOTF_404_;
+    resp_stat_ = DONE;
+}
+
+void HttpResponse::responesForGet(const locationConf& location, std::string& path) {
+    if (resp_stat_ == STRT) {
+        process_path(location, path);
+    } else if (resp_stat_ == LOAD) {
+        read_file_continu();
+    }
+}
+
+void HttpResponse::responesForDelete(const locationConf& location, std::string& path) {
+    // if (path.size() == 1 && path == "/")
+    //     path += "index.html";  // index is hardcoded?
+    path = location.get_root() + path;
+    // std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
+
+    if (!access(path.c_str(), F_OK)) {
+        if (!access(path.c_str(), R_OK)) {
+            if (is_directory(path)) {
+                resp_buff_ = FORB_403_;
+            } else {
+                if (std::remove(path.c_str()) == 0) {
+                    resp_buff_ = OK_200_;
+                    resp_buff_ += "\r\n";
+                } else {
+                    resp_buff_ = FORB_403_;
+                }
+            }
+        } else {
+            resp_buff_ = FORB_403_;
+        }
+    } else {
+        resp_buff_ = NOTF_404_;
+    }
+    resp_stat_ = DONE;
+}
+
 const std::string HttpResponse::generateResponse() {
     int         status_code = request_->getParsingCode();
 
@@ -58,11 +183,13 @@ const std::string HttpResponse::generateResponse() {
         resp_stat_ = DONE;
     } else if (status_code == 200) {
         t_method    method = request_->getMethod();
+        std::string path = url_decode(request_->getTarget());
+        path = resolve_path(path);
+        const locationConf& location = identifyie_location(path, conf_);
         if (method == GET) {
-            responesForGet();
+            responesForGet(location, path);
         } else if (method == DELETE) {
-            // handle DELETE method
-            responesForDelete();
+            responesForDelete(location, path);
         } else {  // this is for POST method, temporarily of course hhhh
             // std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
             std::string html = "<!DOCTYPE html><html><body><h1>Hello from the WebServer!</h1></body></html>\n";
@@ -78,7 +205,7 @@ const std::string HttpResponse::generateResponse() {
     } else {
         std::cout << RED_CLR << status_code <<  " Internal Server Error!" << DEF_CLR << std::endl;
         resp_buff_ = IERR_500_;
-        resp_stat_ = DONE;
+        resp_stat_ = DONE;                      // chang so Done is default in the start and 200ok changes it accordinlly
     }
     return resp_buff_;
 }
