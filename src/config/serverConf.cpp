@@ -6,13 +6,27 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 13:47:34 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/22 18:19:49 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "serverConf.hpp"
 
-serverConf::serverConf(/* args */) {}
+serverConf::serverConf(/* args */) : clt_body_max_size(-1) {
+    clt_body_max_size = 1024 * 1024;
+    autoindex = false;
+    root = "./www";
+    is_indexed = false;
+}
+
+serverConf::serverConf(const serverConf& obj) {
+    clt_body_max_size = obj.clt_body_max_size;
+    root = obj.root;
+    index = obj.index;
+    err_pages = obj.err_pages;
+    listens = obj.listens;
+    locations = obj.locations;
+}
 
 serverConf::~serverConf() {}
 
@@ -102,10 +116,49 @@ void serverConf::set_root(std::vector<std::string>& values) {
 void serverConf::set_index(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid index paramter!");
-    
+    is_indexed = true;
     index = values[0];
 }
 
 void serverConf::add_location(locationConf& lct) {
-    locations.push_back(lct);
+    locations[lct.get_path()] = lct;
+}
+
+void serverConf::add_redir(std::vector<std::string>& values) {
+    if (values.size() != 2)
+        throw std::runtime_error("invalid return paramter!");
+
+    int code = std::atoi(values[0].c_str());
+    if (code < 300 || code > 308)
+        throw std::runtime_error("unknown redirection code!");
+    // redirections are from 300 to 308
+    redirs[code] = values[1];
+}
+
+void serverConf::set_auto_index(std::vector<std::string>& values) {
+    if (values.size() != 1)
+        throw std::runtime_error("invalid autoindex paramter!");
+    
+    if (values[0] == "on")
+        autoindex = true;
+    else if (values[0] == "off")
+        autoindex = false;
+    else
+        throw  std::runtime_error("invalid autoindex paramter!");
+}
+
+void serverConf::set_default() {
+    if (listens.size() == 0) {
+        struct sockaddr_in _address;
+        memset(&_address, 0, sizeof(_address));    // is this allowed as well???
+        _address.sin_family = AF_INET;
+        _address.sin_port = htons(8080);  // convert to network byte order
+        _address.sin_addr.s_addr = htonl(INADDR_ANY);
+        listens[8080] = _address;
+    }
+    if (locations.empty()) {
+        std::string tmp("/");
+        locationConf lct(tmp, *this);
+        add_location(lct);
+    }
 }

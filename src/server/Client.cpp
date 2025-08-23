@@ -6,13 +6,13 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 17:34:25 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/22 18:01:12 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
 
-Client::Client(int clt_fd) : Socket(clt_fd)
+Client::Client(int clt_fd, const serverConf& conf) : Socket(clt_fd), conf_(conf)
 {
     request_ = NULL;
     response_ = NULL;
@@ -66,22 +66,15 @@ int Client::receive(int epoll_fd) {
 }
 
 int Client::process_recv_data() {
-    std::cout << "process_recv_data called!" << std::endl;
+    // std::cout << "process_recv_data called!" << std::endl;
     if (!request_) {
-        // std::cout << "|\tcreate new request" << std::endl;
         try {
             request_ = new HTTPRequestParser(vec_buf_);
-            // // std::cout << "|\t|\tIDLE request state: " << request_->getReqState() << std::endl;
             std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]" << std::endl;
             
             if (request_->getReqState() == PEND) {
                 vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
             }
-            // if (request_->getMethod() == POST) {
-            //     // open file after checking permission etc
-
-            // }
-            
         } catch (const std::exception &e) {
             std::cerr << "Error creating HTTPRequestParser: " << e.what() << std::endl;
             return -1; // Handle error appropriately
@@ -89,16 +82,7 @@ int Client::process_recv_data() {
     }
     if (request_ && request_->getReqState() == PEND) {
         try {
-            // std::cout << "|\tadd to body\n";
-            // vec_buf_.print();
-
-
             request_->addBody(vec_buf_);
-            // append() to the file
-            // clear the body
-            
-            
-            // // std::cout << "|\t|\tPEND request state: " << request_->getReqState() << std::endl;
         } catch (const std::exception &e) {
             std::cerr << "Error adding to body: " << e.what() << std::endl;
             return -1; // Handle error appropriately
@@ -109,12 +93,12 @@ int Client::process_recv_data() {
         request_ = NULL;
     }
     if (request_ && request_->getReqState() == RESP) {
-        response_ = new HttpResponse(request_);
+        response_ = new HttpResponse(request_, conf_);
     }
-
     return (request_) ? request_->getReqState() : -1;
 }
 
+/* send_response function returns 1 in case of error (send failed), 0 otherwise */
 int Client::send_response(int epoll_fd) {
     // std::cout << "|\tSend response" << std::endl;
     // print_whatever("test");
@@ -135,6 +119,7 @@ int Client::send_response(int epoll_fd) {
     }
     return 0;
 }
+
 
 void Client::print_whatever(std::string whatever) {
     std::cout << whatever << std::endl;
