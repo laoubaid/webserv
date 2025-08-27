@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 18:19:49 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/23 18:15:53 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,32 @@ serverConf::serverConf(const serverConf& obj) {
 
 serverConf::~serverConf() {}
 
+uint32_t parse_ipv4(const std::string& ip) {
+    std::vector<int>    parts;
+    std::stringstream   ss(ip);
+    std::string         item;
+
+    if (ip.size() > 15)
+        throw std::runtime_error("Invalid IP: " + ip);
+    while (std::getline(ss, item, '.')) {
+        if (item.empty())
+            throw std::runtime_error("Invalid IP: " + ip);
+        for (size_t i = 0; i < item.size(); ++i) {
+            if (std::isdigit(item[i]) == 0)
+                throw std::runtime_error("Invalid IP: " + ip);
+        }
+        int num = atoi(item.c_str());
+        if (num < 0 || num > 255)
+            throw std::runtime_error("Invalid IP octet: " + ip);
+        parts.push_back(num);
+    }
+
+    if (parts.size() != 4)
+        throw std::runtime_error("Invalid IPv4 format: " + ip);
+
+    return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+}
+
 void serverConf::add_listen(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid listen paramter number!");
@@ -38,19 +64,19 @@ void serverConf::add_listen(std::vector<std::string>& values) {
     if (pos == std::string::npos) {
         throw std::runtime_error("invalid listen paramter " + values[0]);
     }
-
     std::string ip = values[0].substr(0, pos);
     std::string port_str = values[0].substr(pos + 1);
-    int port = std::atoi(port_str.c_str());
 
-    struct sockaddr_in _address;
-    memset(&_address, 0, sizeof(_address));    // is this allowed as well???
-    _address.sin_family = AF_INET;
-    _address.sin_port = htons(port);  // convert to network byte order
-
-    if (inet_pton(AF_INET, ip.c_str(), &_address.sin_addr) <= 0) {   // not alowed function????
-        throw std::runtime_error("invalid listen IP paramter!" + ip);
+    for (size_t i = 0; i < port_str.size(); ++i) {
+        if (std::isdigit(port_str[i]) == 0)
+            throw std::runtime_error("Invalid IP: " + values[0]);
     }
+    int port = std::atoi(port_str.c_str());
+    uint32_t ip_num = parse_ipv4(ip);
+    struct sockaddr_in _address;
+    _address.sin_family = AF_INET;
+    _address.sin_addr.s_addr = htonl(ip_num);
+    _address.sin_port = htons(port);
     listens[port] = _address;
 }
 
@@ -152,7 +178,7 @@ void serverConf::set_default() {
         struct sockaddr_in _address;
         memset(&_address, 0, sizeof(_address));    // is this allowed as well???
         _address.sin_family = AF_INET;
-        _address.sin_port = htons(8080);  // convert to network byte order
+        _address.sin_port = htons(8080);  // default
         _address.sin_addr.s_addr = htonl(INADDR_ANY);
         listens[8080] = _address;
     }

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 17:00:49 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/23 18:05:39 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -291,9 +291,3 @@ Block get_config(std::string filename) {
     // rootBlock.printTree(0);
     return rootBlock;
 }
-
-// void set_default_values(std::vector<serverConf>& servers) {
-//     for (size_t i = 0; i < servers.size(); ++i) {
-//         if (servers)
-//     }
-// }

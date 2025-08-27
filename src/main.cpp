@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 11:01:10 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/23 18:01:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ int main(int ac, char **av)
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
-
 
 	return 0;
 }
