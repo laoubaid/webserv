@@ -88,6 +88,8 @@ stop:
 		echo "$(RED)No PID file found$(RESET)"; \
 	fi
 
+restart: stop run
+
 crun:
 	@clear
 	@$(MAKE) -s run
