@@ -6,11 +6,24 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/23 11:02:23 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/27 11:45:11 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
+
+
+std::map<int, std::string> HttpResponse::err_msgs;
+
+void init_err_msgs() {
+    HttpResponse::err_msgs[200] = OK_200_;
+    HttpResponse::err_msgs[400] = "HTTP/1.1 400 Bad Request\r\n";
+    HttpResponse::err_msgs[403] = "HTTP/1.1 403 Forbidden\r\n";
+    HttpResponse::err_msgs[404] = "HTTP/1.1 404 Not Found\r\n";
+    HttpResponse::err_msgs[413] = "HTTP/1.1 413 Entity Too Large\r\n";
+    HttpResponse::err_msgs[500] = "HTTP/1.1 500 Internal Server Error\r\n";
+    HttpResponse::err_msgs[501] = "HTTP/1.1 501 Not Implemented\r\n";
+}
 
 const std::string& HttpResponse::getMimeType(const std::string& path) {
     static const std::map<std::string, std::string> mime_types = {
@@ -48,14 +61,13 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
     return default_type;
 }
 
-bool HttpResponse::serveStaticContent(const std::string& path) {
+bool HttpResponse::serveStaticContent(const std::string& path, int code) {
     file_.open(path, std::ios::in | std::ios::binary);
     if (!file_.is_open()) {
-        resp_buff_ = FORB_403_;
-        resp_stat_ = DONE;
+        handle_error(403);
         return false;
     }
-    resp_buff_ = OK_200_;
+    resp_buff_ = err_msgs.at(code);
     resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + std::to_string(get_file_size(file_)) + "\r\n\r\n";
     resp_stat_ = LOAD;
     return true;
@@ -67,7 +79,7 @@ bool HttpResponse::list_directory(const std::string& path) {
 
     resp_buff_.clear();
     if (dir == NULL) {
-        resp_buff_ = FORB_403_;
+        handle_error(403);
         return false;
     }
     size_t idx = path.rfind("/");
@@ -91,6 +103,7 @@ bool HttpResponse::list_directory(const std::string& path) {
         "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 
     closedir(dir);
+    resp_stat_ = DONE;
     return true;
 }
 
@@ -110,6 +123,40 @@ bool HttpResponse::read_file_continu() {
     return true;
 }
 
+void    HttpResponse::handle_error(int err_code) {
+    std::string path = conf_.get_err_page(err_code);
+    if (!path.empty()) {
+        path = conf_.get_root() + "/" + path;
+        if (serveStaticContent(path, err_code))
+            return ;
+    }
+    switch (err_code)
+    {
+        case 400:
+            resp_buff_ =  BADR_400_;
+            break;
+        case 403:
+            resp_buff_ =  FORB_403_;
+            break;
+        case 404:
+            resp_buff_ =  NOTF_404_;
+            break;
+        case 413:
+            resp_buff_ =  ELRG_413_;
+            break;
+        case 500:
+            resp_buff_ =  IERR_500_;
+            break;
+        // case 413:
+        //     resp_buff_ =  ELRG_413_;
+        //     break;
+        
+        default:
+            break;
+    }
+    resp_stat_ = DONE;
+}
+
 void HttpResponse::process_path(const locationConf& location, std::string& path) {
     std::string target_path = path;
     path = location.get_root() + path;
@@ -125,17 +172,16 @@ void HttpResponse::process_path(const locationConf& location, std::string& path)
                 } else if (location.get_autoindex()) {
                     list_directory(path);
                 } else {
-                    resp_buff_ = FORB_403_;
+                    handle_error(403);
                 }
             } else {
-                serveStaticContent(path);
+                serveStaticContent(path, 200);
                 return ;
             }
         } else
-            resp_buff_ = FORB_403_;
+            handle_error(403);
     } else
-        resp_buff_ = NOTF_404_;
-    resp_stat_ = DONE;
+        handle_error(404);
 }
 
 void HttpResponse::responesForGet(const locationConf& location, std::string& path) {
@@ -155,22 +201,22 @@ void HttpResponse::responesForDelete(const locationConf& location, std::string& 
     if (!access(path.c_str(), F_OK)) {
         if (!access(path.c_str(), R_OK)) {
             if (is_directory(path)) {
-                resp_buff_ = FORB_403_;
+                handle_error(403);
             } else {
                 if (std::remove(path.c_str()) == 0) {
                     resp_buff_ = OK_200_;
                     resp_buff_ += "\r\n";
+                    resp_stat_ = DONE;
                 } else {
-                    resp_buff_ = FORB_403_;
+                    handle_error(403);
                 }
             }
         } else {
-            resp_buff_ = FORB_403_;
+            handle_error(403);
         }
     } else {
-        resp_buff_ = NOTF_404_;
+        handle_error(404);
     }
-    resp_stat_ = DONE;
 }
 
 const std::string HttpResponse::generateResponse() {

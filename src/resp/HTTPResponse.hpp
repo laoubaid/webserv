@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/23 10:25:21 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/27 11:33:32 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,8 +74,11 @@ class HttpResponse {
         std::fstream        file_;
         std::string         resp_buff_;
         const serverConf&   conf_;
+
         
     public:
+        static std::map<int, std::string> err_msgs;
+    
         HttpResponse(HTTPRequestParser *request, const serverConf&   conf) : conf_(conf) {
             resp_stat_ = STRT;
             request_ = request;
@@ -86,8 +89,10 @@ class HttpResponse {
 
         bool    read_file_continu();
 
+        void    handle_error(int err_code);
+
         void    process_path(const locationConf& location, std::string& path);
-        bool    serveStaticContent(const std::string& path);
+        bool    serveStaticContent(const std::string& path, int code);
         bool    list_directory(const std::string& path);
 
         static const std::string& getMimeType(const std::string& ext);
@@ -100,5 +105,7 @@ bool                is_directory(const std::string& path);
 std::string         url_decode(const std::string& str);
 std::string         resolve_path(const std::string& str);
 const locationConf& identifyie_location(const std::string& str, const serverConf& cfg);
+
+void init_err_msgs();
 
 #endif
