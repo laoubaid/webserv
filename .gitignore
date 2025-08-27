@@ -1,14 +1,11 @@
-# Ignore object files & webserv executable
+# Ignore object files & webserv executable etc
 *.o
-
-webserv
-
+*.sh
+vgcore.*
 .vscode/
 
-*.sh
+webserv
+logs
+.webserv.pid
 
 www/large_files/
-
-vgcore.*
-
-logs
