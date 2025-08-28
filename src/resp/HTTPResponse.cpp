@@ -6,23 +6,37 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/27 11:45:11 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 02:42:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
 
 
-std::map<int, std::string> HttpResponse::err_msgs;
+std::map<int, std::string> HttpResponse::status_lines;
 
-void init_err_msgs() {
-    HttpResponse::err_msgs[200] = OK_200_;
-    HttpResponse::err_msgs[400] = "HTTP/1.1 400 Bad Request\r\n";
-    HttpResponse::err_msgs[403] = "HTTP/1.1 403 Forbidden\r\n";
-    HttpResponse::err_msgs[404] = "HTTP/1.1 404 Not Found\r\n";
-    HttpResponse::err_msgs[413] = "HTTP/1.1 413 Entity Too Large\r\n";
-    HttpResponse::err_msgs[500] = "HTTP/1.1 500 Internal Server Error\r\n";
-    HttpResponse::err_msgs[501] = "HTTP/1.1 501 Not Implemented\r\n";
+void init_status_lines() {
+    HttpResponse::status_lines[200] = OK_200_;
+
+    HttpResponse::status_lines[400] = "HTTP/1.1 400 Bad Request\r\n";
+    HttpResponse::status_lines[401] = "HTTP/1.1 401 Unauthorized\r\n";
+    HttpResponse::status_lines[403] = "HTTP/1.1 403 Forbidden\r\n";
+    HttpResponse::status_lines[404] = "HTTP/1.1 404 Not Found\r\n";
+    HttpResponse::status_lines[405] = "HTTP/1.1 405 Method Not Allowed\r\n";
+    HttpResponse::status_lines[408] = "HTTP/1.1 408 Request Timeout\r\n";
+    HttpResponse::status_lines[413] = "HTTP/1.1 413 Entity Too Large\r\n";
+
+    HttpResponse::status_lines[500] = "HTTP/1.1 500 Internal Server Error\r\n";
+    HttpResponse::status_lines[501] = "HTTP/1.1 501 Not Implemented\r\n";
+    HttpResponse::status_lines[502] = "HTTP/1.1 502 Bad Gateway\r\n";
+    HttpResponse::status_lines[503] = "HTTP/1.1 503 Service Unavailable\r\n";
+    HttpResponse::status_lines[504] = "HTTP/1.1 504 Gateway Timeout\r\n";
+    // the following are redirects not erros change the name or somthing
+    HttpResponse::status_lines[301] = "HTTP/1.1 301 Moved Permanently\r\n";
+    HttpResponse::status_lines[302] = "HTTP/1.1 302 Found\r\n";
+    HttpResponse::status_lines[303] = "HTTP/1.1 303 See Other\r\n";
+    HttpResponse::status_lines[307] = "HTTP/1.1 307 Temporary Redirect\r\n";
+    HttpResponse::status_lines[308] = "HTTP/1.1 308 Permanent Redirect\r\n";
 }
 
 const std::string& HttpResponse::getMimeType(const std::string& path) {
@@ -67,7 +81,7 @@ bool HttpResponse::serveStaticContent(const std::string& path, int code) {
         handle_error(403);
         return false;
     }
-    resp_buff_ = err_msgs.at(code);
+    resp_buff_ = status_lines.at(code);
     resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + std::to_string(get_file_size(file_)) + "\r\n\r\n";
     resp_stat_ = LOAD;
     return true;
@@ -219,19 +233,63 @@ void HttpResponse::responesForDelete(const locationConf& location, std::string& 
     }
 }
 
+const locationConf& HttpResponse::identifyie_location(const std::string& str) {
+    std::stringstream ss(str);
+    std::string part;
+    std::vector<std::string> stack;
+
+    while (std::getline(ss, part, '/')) {
+        if (part.empty())
+            continue;
+        stack.push_back(part);
+    }
+
+    std::string tmp_path;
+    while (stack.size()) {
+        // form the path
+        tmp_path.clear();
+        for (size_t i = 0; i < stack.size(); ++i) {
+            tmp_path += "/" + stack[i];
+        }
+        // check with location
+        if (conf_.is_location(tmp_path)) {
+            return conf_.get_location(tmp_path);
+        } else {
+            if (!stack.empty())
+                stack.pop_back();
+        }
+    }
+    tmp_path = "/";
+    return conf_.get_location(tmp_path);
+}
+
+bool    HttpResponse::check_redirection(const locationConf& cfg) {
+    const std::pair<int, std::string>& redir = cfg.get_redirect();
+    
+    if (redir.first != 0) {
+        resp_buff_ = status_lines.at(redir.first);
+        resp_buff_ += "Location: " + redir.second + "\r\n\r\n";
+        resp_stat_ = DONE;
+        return true;
+    }
+    return false;
+}
+
 const std::string HttpResponse::generateResponse() {
     int         status_code = request_->getParsingCode();
 
     resp_buff_.clear();
     std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
     if (status_code == 400) {
-        resp_buff_ = BADR_400_;
-        resp_stat_ = DONE;
+        handle_error(400);
     } else if (status_code == 200) {
         t_method    method = request_->getMethod();
         std::string path = url_decode(request_->getTarget());
         path = resolve_path(path);
-        const locationConf& location = identifyie_location(path, conf_);
+        const locationConf& location = identifyie_location(path);
+        if (check_redirection(location)) {
+            return resp_buff_;
+        }
         if (method == GET) {
             responesForGet(location, path);
         } else if (method == DELETE) {
@@ -246,12 +304,10 @@ const std::string HttpResponse::generateResponse() {
                         "\r\n" + html;
         }
     } else if (status_code == 413) {
-        resp_buff_ = ELRG_413_;
-        resp_stat_ = DONE;
+        handle_error(413);
     } else {
         std::cout << RED_CLR << status_code <<  " Internal Server Error!" << DEF_CLR << std::endl;
-        resp_buff_ = IERR_500_;
-        resp_stat_ = DONE;                      // chang so Done is default in the start and 200ok changes it accordinlly
+        handle_error(500);
     }
     return resp_buff_;
 }

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/27 11:33:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 00:16:12 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ class HttpResponse {
 
         
     public:
-        static std::map<int, std::string> err_msgs;
+        static std::map<int, std::string> status_lines;
     
         HttpResponse(HTTPRequestParser *request, const serverConf&   conf) : conf_(conf) {
             resp_stat_ = STRT;
@@ -95,6 +95,9 @@ class HttpResponse {
         bool    serveStaticContent(const std::string& path, int code);
         bool    list_directory(const std::string& path);
 
+        const locationConf& identifyie_location(const std::string& str);
+        bool                check_redirection(const locationConf& cfg);
+
         static const std::string& getMimeType(const std::string& ext);
         t_resp_state&   getRespState();
         std::string&    getRespBuff();
@@ -104,8 +107,9 @@ size_t              get_file_size(std::fstream &file);
 bool                is_directory(const std::string& path);
 std::string         url_decode(const std::string& str);
 std::string         resolve_path(const std::string& str);
-const locationConf& identifyie_location(const std::string& str, const serverConf& cfg);
+// const locationConf& identifyie_location(const std::string& str, const serverConf& cfg);
+// bool                check_redirection(const std::string& str, const locationConf& cfg);
 
-void init_err_msgs();
+void init_status_lines();
 
 #endif
