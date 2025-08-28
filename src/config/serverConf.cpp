@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/23 18:15:53 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 16:52:30 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ serverConf::serverConf(/* args */) : clt_body_max_size(-1) {
     autoindex = false;
     root = "./www";
     is_indexed = false;
+    redirect = std::make_pair(0, "");
 }
 
 serverConf::serverConf(const serverConf& obj) {
@@ -26,6 +27,7 @@ serverConf::serverConf(const serverConf& obj) {
     err_pages = obj.err_pages;
     listens = obj.listens;
     locations = obj.locations;
+    redirect = obj.redirect;
 }
 
 serverConf::~serverConf() {}
@@ -150,15 +152,16 @@ void serverConf::add_location(locationConf& lct) {
     locations[lct.get_path()] = lct;
 }
 
-void serverConf::add_redir(std::vector<std::string>& values) {
+void serverConf::set_redirect(std::vector<std::string>& values) {
     if (values.size() != 2)
         throw std::runtime_error("invalid return paramter!");
 
     int code = std::atoi(values[0].c_str());
-    if (code < 300 || code > 308)
+    if (code < 301 || code > 308 || (code > 303 && code < 307))
         throw std::runtime_error("unknown redirection code!");
-    // redirections are from 300 to 308
-    redirs[code] = values[1];
+    // valid redirections 301 302 303 307 308
+    redirect.first = code;
+    redirect.second = values[1];
 }
 
 void serverConf::set_auto_index(std::vector<std::string>& values) {

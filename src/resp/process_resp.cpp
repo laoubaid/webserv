@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/27 23:47:00 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 17:07:40 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,43 +66,3 @@ std::string resolve_path(const std::string& str) {
     }
     return result.empty() ? "/" : result;
 }
-
-// const locationConf& identifyie_location(const std::string& str, const serverConf& cfg) {
-//     std::stringstream ss(str);
-//     std::string part;
-//     std::vector<std::string> stack;
-
-//     while (std::getline(ss, part, '/')) {
-//         if (part.empty())
-//             continue;
-//         stack.push_back(part);
-//     }
-
-//     std::string tmp_path;
-//     while (stack.size()) {
-//         // form the path
-//         tmp_path.clear();
-//         for (size_t i = 0; i < stack.size(); ++i) {
-//             tmp_path += "/" + stack[i];
-//         }
-//         // check with location
-//         if (cfg.is_location(tmp_path)) {
-//             return cfg.get_location(tmp_path);
-//         } else {
-//             if (!stack.empty())
-//                 stack.pop_back();
-//         }
-//     }
-//     tmp_path = "/";
-//     return cfg.get_location(tmp_path);
-// }
-
-// bool check_redirection(const std::string& str, const locationConf& cfg) {
-//     // get path for redirection if exist
-//     const std::pair<int, std::string>& redir = cfg.get_redirect();
-    
-//     // if exist (!= 0 in code) for the response
-//     if (redir.first != 0) {
-//         resp
-//     }
-// }

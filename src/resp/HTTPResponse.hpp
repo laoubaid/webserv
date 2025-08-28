@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 00:16:12 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 17:08:03 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ class HttpResponse {
 size_t              get_file_size(std::fstream &file);
 bool                is_directory(const std::string& path);
 std::string         url_decode(const std::string& str);
-std::string         resolve_path(const std::string& str);
+// std::string         resolve_path(const std::string& str);
 // const locationConf& identifyie_location(const std::string& str, const serverConf& cfg);
 // bool                check_redirection(const std::string& str, const locationConf& cfg);
 
