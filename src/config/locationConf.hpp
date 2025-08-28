@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:41 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/23 10:49:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 16:46:09 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ class locationConf
         std::string                 path;       // error if not set
         unsigned char               methods;    // default GET, POST, DELETE
         bool                        is_methods; // default false
-        std::map<int, std::string>  redirs;     // could not exist fall to server block
+        std::pair<int, std::string> redirect;   // could not exist fall to server block
         bool                        autoindex;  // fall to server block
         std::string                 root;       // fall to server block
         std::string                 index;      // could not exist fall to server block
@@ -43,7 +43,7 @@ class locationConf
         ~locationConf();
 
         void set_methods(std::vector<std::string>& values);
-        void add_redir(std::vector<std::string>& values);
+        void set_redirect(std::vector<std::string>& values);
         void set_root(std::vector<std::string>& values);
         void set_index(std::vector<std::string>& values);
         void set_auto_index(std::vector<std::string>& values);
@@ -68,6 +68,9 @@ class locationConf
         const std::string& get_index() const { 
             return index;
         };
+        const std::pair<int, std::string>& get_redirect() const {
+            return redirect;
+        }
         bool    is_index() const {
             return is_indexed;
         };

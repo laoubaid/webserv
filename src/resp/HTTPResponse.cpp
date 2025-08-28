@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 02:42:55 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 20:40:47 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,6 +253,7 @@ const locationConf& HttpResponse::identifyie_location(const std::string& str) {
         }
         // check with location
         if (conf_.is_location(tmp_path)) {
+            std::cout << "check this [" << tmp_path << "]\n";
             return conf_.get_location(tmp_path);
         } else {
             if (!stack.empty())
@@ -267,6 +268,7 @@ bool    HttpResponse::check_redirection(const locationConf& cfg) {
     const std::pair<int, std::string>& redir = cfg.get_redirect();
     
     if (redir.first != 0) {
+        std::cout << "redirection detected!\n";
         resp_buff_ = status_lines.at(redir.first);
         resp_buff_ += "Location: " + redir.second + "\r\n\r\n";
         resp_stat_ = DONE;

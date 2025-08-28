@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/23 18:05:39 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 16:47:37 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,7 +183,7 @@ void Block::process_location(serverConf& srvr_cfg) {
         if ((*it_d).key == "methods") {
             lct_cfg.set_methods((*it_d).values);
         } else if ((*it_d).key == "return") {
-            lct_cfg.add_redir((*it_d).values);
+            lct_cfg.set_redirect((*it_d).values);
         } else if ((*it_d).key == "root") {
             lct_cfg.set_root((*it_d).values);
         } else if ((*it_d).key == "index") {
@@ -217,7 +217,7 @@ void Block::process_server(std::vector<serverConf>& servres) {
         } else if ((*it_d).key == "autoindex") {
             srvr_cfg.set_index((*it_d).values);
         } else if ((*it_d).key == "return") {  // could be changed to redir
-            srvr_cfg.set_index((*it_d).values);
+            srvr_cfg.set_redirect((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
@@ -286,6 +286,8 @@ Block get_config(std::string filename) {
 
     std::vector<std::string> vector = {"root"};
     Block rootBlock = syntax(config, vector);
+    if (rootBlock.get_name() == "Error")
+        throw std::runtime_error("Error!");
     config.close();
     std::cout << std::endl;
     // rootBlock.printTree(0);

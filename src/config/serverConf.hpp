@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/25 14:24:09 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 16:45:58 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class serverConf
         std::string                         index;              // default could not exist
         bool                                is_indexed;         // default false
         std::map<std::string, locationConf> locations;          // default could not exist
-        std::map<int, std::string>          redirs;             // default could not exist
+        std::pair<int, std::string>         redirect;           // default could not exist
         bool                                autoindex;          // default off
         
     public:
@@ -40,7 +40,7 @@ class serverConf
         void set_root(std::vector<std::string>& values);
         void set_index(std::vector<std::string>& values);
         void add_location(locationConf& lct);
-        void add_redir(std::vector<std::string>& values);
+        void set_redirect(std::vector<std::string>& values);
         void set_auto_index(std::vector<std::string>& values);
         void set_default();
 
@@ -48,17 +48,6 @@ class serverConf
         bool is_autoindex() const { return autoindex; }
         std::string get_index() const { return index; }
         std::string get_root() const { return root; }
-        void copy_redirs(locationConf& location) {
-            std::map<int, std::string>::iterator it;
-            for (it = redirs.begin(); it != redirs.end(); ++it) {
-                std::vector<std::string> tmp;
-                std::stringstream ss;
-                ss << it->first;
-                tmp.push_back(ss.str());
-                tmp.push_back(it->second);
-                location.add_redir(tmp);
-            }
-        }
 
         sockaddr_in&        get_addr(int port) {
             return listens[port];
@@ -79,6 +68,10 @@ class serverConf
                     return true;
             }
             return false;
+        }
+
+        const std::pair<int, std::string>& get_redirect() const {
+            return redirect;
         }
 
         const locationConf& get_location(const std::string& path) const {

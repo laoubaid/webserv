@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/23 12:19:19 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 17:07:59 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,5 +58,7 @@ typedef struct	s_conf2
 {
 	
 }				t_conf2;
+
+std::string         resolve_path(const std::string& str);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 17:41:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 20:20:03 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,10 @@
 locationConf::locationConf(std::string& str, serverConf& cfg) {
     if (str.empty())
         throw std::runtime_error("unvalid location argumnet!");
-    path = str;
+    path = resolve_path(str);
     methods = GET_BIT | POST_BIT | DELETE_BIT;
     autoindex = cfg.is_autoindex();
-    cfg.copy_redirs(*this);
+    redirect = cfg.get_redirect();
     root = cfg.get_root();
     is_upset = false;
     is_indexed = false;
@@ -51,15 +51,16 @@ void locationConf::set_methods(std::vector<std::string>& values) {
     }
 }
 
-void locationConf::add_redir(std::vector<std::string>& values) {
+void locationConf::set_redirect(std::vector<std::string>& values) {
     if (values.size() != 2)
         throw std::runtime_error("invalid return paramter!");
 
     int code = std::atoi(values[0].c_str());
-    if (code < 300 || code > 308)
+    if (code < 301 || code > 308 || (code > 303 && code < 307))
         throw std::runtime_error("unknown redirection code!");
-    // redirections are from 300 to 308
-    redirs[code] = values[1];
+    // valid redirections 301 302 303 307 308
+    redirect.first = code;
+    redirect.second = values[1];
 }
 
 void locationConf::set_root(std::vector<std::string>& values) {
