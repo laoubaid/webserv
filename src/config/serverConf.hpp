@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 16:45:58 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 01:04:48 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,11 @@ class serverConf
         std::map<std::string, locationConf> locations;          // default could not exist
         std::pair<int, std::string>         redirect;           // default could not exist
         bool                                autoindex;          // default off
-        
+
     public:
+
+        std::map<std::string, std::string> redirs;
+
         serverConf(/* args */);
         serverConf(const serverConf& obj);
         ~serverConf();
@@ -48,6 +51,8 @@ class serverConf
         bool is_autoindex() const { return autoindex; }
         std::string get_index() const { return index; }
         std::string get_root() const { return root; }
+
+        const locationConf& identifyie_location(const std::string& str) const ;
 
         sockaddr_in&        get_addr(int port) {
             return listens[port];
@@ -87,6 +92,7 @@ class serverConf
             std::map<int, std::string>::const_iterator it = err_pages.find(code);
             return (it == err_pages.end()) ? empty : it->second;
         }
+
 };
 
 

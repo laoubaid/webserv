@@ -9,3 +9,4 @@ logs
 .webserv.pid
 
 www/large_files/
+delme*

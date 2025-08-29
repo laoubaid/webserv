@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 16:47:37 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 03:58:17 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,6 +196,11 @@ void Block::process_location(serverConf& srvr_cfg) {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
     }
+
+    if (lct_cfg.get_redirect().first != 0) {
+        srvr_cfg.redirs[lct_cfg.get_path()] = lct_cfg.get_redirect().second;
+    }
+
     srvr_cfg.add_location(lct_cfg);
 }
 
@@ -222,6 +227,11 @@ void Block::process_server(std::vector<serverConf>& servres) {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
     }
+
+    if (srvr_cfg.get_redirect().first != 0) {
+        srvr_cfg.redirs["/"] = srvr_cfg.get_redirect().second;
+    }
+
     srvr_cfg.set_default();
 
     std::vector<Block>::iterator it_b;
@@ -232,6 +242,22 @@ void Block::process_server(std::vector<serverConf>& servres) {
             throw std::runtime_error("unknown Block! " + (*it_b).name);
         }
     }
+    std::map<std::string, std::string>::iterator it;
+    for (it = srvr_cfg.redirs.begin(); it != srvr_cfg.redirs.end(); ++it) {
+        std::string path = (*it).second;
+        std::set<std::string> visited;
+        while (true) {
+            if (visited.count(path))
+                throw std::runtime_error("redirection loop detected!");
+            visited.insert(path);
+            const locationConf& lct = srvr_cfg.identifyie_location(path);
+            if (lct.has_redirect() == false)
+                break ;
+            path = lct.get_redirect().second;
+        }
+        
+    }
+
     servres.push_back(srvr_cfg);
 }
 
