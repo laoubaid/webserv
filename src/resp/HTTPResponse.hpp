@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 17:08:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 01:06:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,6 @@ class HttpResponse {
         bool    serveStaticContent(const std::string& path, int code);
         bool    list_directory(const std::string& path);
 
-        const locationConf& identifyie_location(const std::string& str);
         bool                check_redirection(const locationConf& cfg);
 
         static const std::string& getMimeType(const std::string& ext);
@@ -106,9 +105,7 @@ class HttpResponse {
 size_t              get_file_size(std::fstream &file);
 bool                is_directory(const std::string& path);
 std::string         url_decode(const std::string& str);
-// std::string         resolve_path(const std::string& str);
-// const locationConf& identifyie_location(const std::string& str, const serverConf& cfg);
-// bool                check_redirection(const std::string& str, const locationConf& cfg);
+
 
 void init_status_lines();
 

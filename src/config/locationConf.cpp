@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 20:20:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 03:53:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@ locationConf::locationConf(std::string& str, serverConf& cfg) {
     is_upset = false;
     is_indexed = false;
     is_methods = false;
+    has_redirect_ = false;
+    if (redirect.first)
+        has_redirect_ = true;
     if (cfg.is_index()) {
         index = cfg.get_index();
         is_indexed = true;
@@ -61,6 +64,7 @@ void locationConf::set_redirect(std::vector<std::string>& values) {
     // valid redirections 301 302 303 307 308
     redirect.first = code;
     redirect.second = values[1];
+    has_redirect_ = true;
 }
 
 void locationConf::set_root(std::vector<std::string>& values) {

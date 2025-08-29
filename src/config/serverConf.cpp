@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 16:52:30 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 01:04:42 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@ serverConf::serverConf(/* args */) : clt_body_max_size(-1) {
     root = "./www";
     is_indexed = false;
     redirect = std::make_pair(0, "");
+    std::string tmp("/");
+    locationConf lct(tmp, *this);
+    add_location(lct);
 }
 
 serverConf::serverConf(const serverConf& obj) {
@@ -190,4 +193,36 @@ void serverConf::set_default() {
         locationConf lct(tmp, *this);
         add_location(lct);
     }
+}
+
+
+const locationConf& serverConf::identifyie_location(const std::string& str) const {
+    std::stringstream ss(str);
+    std::string part;
+    std::vector<std::string> stack;
+
+    while (std::getline(ss, part, '/')) {
+        if (part.empty())
+            continue;
+        stack.push_back(part);
+    }
+
+    std::string tmp_path;
+    while (stack.size()) {
+        // form the path
+        tmp_path.clear();
+        for (size_t i = 0; i < stack.size(); ++i) {
+            tmp_path += "/" + stack[i];
+        }
+        // check with location
+        if (is_location(tmp_path)) {
+            std::cout << "check this [" << tmp_path << "]\n";
+            return get_location(tmp_path);
+        } else {
+            if (!stack.empty())
+                stack.pop_back();
+        }
+    }
+    tmp_path = "/";
+    return get_location(tmp_path);
 }

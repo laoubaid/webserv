@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 20:40:47 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 01:05:43 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -233,37 +233,6 @@ void HttpResponse::responesForDelete(const locationConf& location, std::string& 
     }
 }
 
-const locationConf& HttpResponse::identifyie_location(const std::string& str) {
-    std::stringstream ss(str);
-    std::string part;
-    std::vector<std::string> stack;
-
-    while (std::getline(ss, part, '/')) {
-        if (part.empty())
-            continue;
-        stack.push_back(part);
-    }
-
-    std::string tmp_path;
-    while (stack.size()) {
-        // form the path
-        tmp_path.clear();
-        for (size_t i = 0; i < stack.size(); ++i) {
-            tmp_path += "/" + stack[i];
-        }
-        // check with location
-        if (conf_.is_location(tmp_path)) {
-            std::cout << "check this [" << tmp_path << "]\n";
-            return conf_.get_location(tmp_path);
-        } else {
-            if (!stack.empty())
-                stack.pop_back();
-        }
-    }
-    tmp_path = "/";
-    return conf_.get_location(tmp_path);
-}
-
 bool    HttpResponse::check_redirection(const locationConf& cfg) {
     const std::pair<int, std::string>& redir = cfg.get_redirect();
     
@@ -288,7 +257,7 @@ const std::string HttpResponse::generateResponse() {
         t_method    method = request_->getMethod();
         std::string path = url_decode(request_->getTarget());
         path = resolve_path(path);
-        const locationConf& location = identifyie_location(path);
+        const locationConf& location = conf_.identifyie_location(path);
         if (check_redirection(location)) {
             return resp_buff_;
         }

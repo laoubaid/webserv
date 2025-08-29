@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:41 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 16:46:09 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 03:59:42 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,16 +26,17 @@ enum MethodBits {
 class locationConf
 {
     private:
-        std::string                 path;       // error if not set
-        unsigned char               methods;    // default GET, POST, DELETE
-        bool                        is_methods; // default false
-        std::pair<int, std::string> redirect;   // could not exist fall to server block
-        bool                        autoindex;  // fall to server block
-        std::string                 root;       // fall to server block
-        std::string                 index;      // could not exist fall to server block
-        bool                        is_indexed; // default false
-        std::string                 up_store;   // could not exist
-        bool                        is_upset;   // default false
+        std::string                 path;           // error if not set
+        unsigned char               methods;        // default GET, POST, DELETE
+        bool                        is_methods;     // default false
+        std::pair<int, std::string> redirect;       // could not exist fall to server block
+        bool                        autoindex;      // fall to server block
+        std::string                 root;           // fall to server block
+        std::string                 index;          // could not exist fall to server block
+        bool                        is_indexed;     // default false
+        std::string                 up_store;       // could not exist
+        bool                        is_upset;       // default false
+        bool                        has_redirect_;  // default false
 
     public:
         locationConf() {};
@@ -58,7 +59,9 @@ class locationConf
         bool is_delete_allowed() {
             return methods & DELETE_BIT;
         }
-
+        bool has_redirect() const {
+            return has_redirect_;
+        }
         const std::string& get_path() const { 
             return path;
         };
