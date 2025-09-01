@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/29 01:06:27 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/31 04:16:14 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,12 @@
             "Content-Length: 77\r\n" \
             "Connection: close\r\n\r\n" \
             "<html><body><center><h1>500 Internal Server Error</h1><center></body></html>\n";
+
+# define NIMP_501_ "HTTP/1.1 501 Not Implemented\r\n" \
+            "Content-Type: text/html\r\n" \
+            "Content-Length: 71\r\n" \
+            "Connection: close\r\n\r\n" \
+            "<html><body><center><h1>501 Not Implemented</h1><center></body></html>\n";
 
 // # define FILE_BUFFER_SIZE 4096
 // # define FILE_BUFFER_SIZE 8192

@@ -6,31 +6,31 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/29 01:04:42 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/01 03:21:40 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "serverConf.hpp"
 
-serverConf::serverConf(/* args */) : clt_body_max_size(-1) {
-    clt_body_max_size = 1024 * 1024;
-    autoindex = false;
-    root = "./www";
-    is_indexed = false;
-    redirect = std::make_pair(0, "");
+serverConf::serverConf(/* args */) : clt_body_max_size_(-1) {
+    clt_body_max_size_ = 1024 * 1024;
+    autoindex_ = false;
+    root_ = "./www";
+    is_indexed_ = false;
+    redirect_ = std::make_pair(0, "");
     std::string tmp("/");
     locationConf lct(tmp, *this);
     add_location(lct);
 }
 
 serverConf::serverConf(const serverConf& obj) {
-    clt_body_max_size = obj.clt_body_max_size;
-    root = obj.root;
-    index = obj.index;
-    err_pages = obj.err_pages;
-    listens = obj.listens;
-    locations = obj.locations;
-    redirect = obj.redirect;
+    clt_body_max_size_ = obj.clt_body_max_size_;
+    root_ = obj.root_;
+    index_ = obj.index_;
+    err_pages_ = obj.err_pages_;
+    listens_ = obj.listens_;
+    locations_ = obj.locations_;
+    redirect_ = obj.redirect_;
 }
 
 serverConf::~serverConf() {}
@@ -82,7 +82,7 @@ void serverConf::add_listen(std::vector<std::string>& values) {
     _address.sin_family = AF_INET;
     _address.sin_addr.s_addr = htonl(ip_num);
     _address.sin_port = htons(port);
-    listens[port] = _address;
+    listens_[port] = _address;
 }
 
 void serverConf::add_err_page(std::vector<std::string>& values) {
@@ -94,7 +94,7 @@ void serverConf::add_err_page(std::vector<std::string>& values) {
         throw std::runtime_error("unknown error_page code!");
     // client errors are from 400 to 430
     // server errors are from 500 to 511
-    err_pages[code] = values[1];
+    err_pages_[code] = values[1];
 }
 
 void serverConf::set_clt_max_body_size(std::vector<std::string>& values) {
@@ -134,25 +134,25 @@ void serverConf::set_clt_max_body_size(std::vector<std::string>& values) {
         throw std::runtime_error("invalid size value!");
 
     size *= multiplier;
-    clt_body_max_size = static_cast<size_t>(size);
+    clt_body_max_size_ = static_cast<size_t>(size);
 }
 
 void serverConf::set_root(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid root paramter!");
     
-    root = values[0];
+    root_ = values[0];
 }
 
 void serverConf::set_index(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid index paramter!");
-    is_indexed = true;
-    index = values[0];
+    is_indexed_ = true;
+    index_ = values[0];
 }
 
 void serverConf::add_location(locationConf& lct) {
-    locations[lct.get_path()] = lct;
+    locations_[lct.get_path()] = lct;
 }
 
 void serverConf::set_redirect(std::vector<std::string>& values) {
@@ -163,8 +163,8 @@ void serverConf::set_redirect(std::vector<std::string>& values) {
     if (code < 301 || code > 308 || (code > 303 && code < 307))
         throw std::runtime_error("unknown redirection code!");
     // valid redirections 301 302 303 307 308
-    redirect.first = code;
-    redirect.second = values[1];
+    redirect_.first = code;
+    redirect_.second = values[1];
 }
 
 void serverConf::set_auto_index(std::vector<std::string>& values) {
@@ -172,23 +172,23 @@ void serverConf::set_auto_index(std::vector<std::string>& values) {
         throw std::runtime_error("invalid autoindex paramter!");
     
     if (values[0] == "on")
-        autoindex = true;
+        autoindex_ = true;
     else if (values[0] == "off")
-        autoindex = false;
+        autoindex_ = false;
     else
         throw  std::runtime_error("invalid autoindex paramter!");
 }
 
 void serverConf::set_default() {
-    if (listens.size() == 0) {
+    if (listens_.size() == 0) {
         struct sockaddr_in _address;
         memset(&_address, 0, sizeof(_address));    // is this allowed as well???
         _address.sin_family = AF_INET;
         _address.sin_port = htons(8080);  // default
         _address.sin_addr.s_addr = htonl(INADDR_ANY);
-        listens[8080] = _address;
+        listens_[8080] = _address;
     }
-    if (locations.empty()) {
+    if (locations_.empty()) {
         std::string tmp("/");
         locationConf lct(tmp, *this);
         add_location(lct);
@@ -216,7 +216,6 @@ const locationConf& serverConf::identifyie_location(const std::string& str) cons
         }
         // check with location
         if (is_location(tmp_path)) {
-            std::cout << "check this [" << tmp_path << "]\n";
             return get_location(tmp_path);
         } else {
             if (!stack.empty())

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/27 11:12:14 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/01 03:03:39 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,19 +86,22 @@ int webServ::handle_clients(epoll_event clt_evt) {
     Server *  svr_skt = get_server(client_fd);
     std::map<int, Client *>::iterator it = svr_skt->client_sockets.find(client_fd);
 
+    stat_ = (*it).second->get_state();
+
+    // if ((clt_evt.events & EPOLLOUT))
+    //     std::cout << "EPOLLOUT event detected! " << clt_evt.data.fd << std::endl;
+    // else
+    //     std::cout << "EPOLLIN event detected! " << clt_evt.data.fd << std::endl;
+
     if (clt_evt.events & EPOLLIN) {
-        std::cout << "EPOLLIN event detected! " << clt_evt.data.fd << std::endl;
-        
+        // std::cout << "EPOLLIN event detected! " << clt_evt.data.fd << std::endl;
         stat_ = (*it).second->receive(epoll_fd_);
-        if (stat_ == PEND)
-            (*it).second->set_event(epoll_fd_, EPOLLIN);
-        if (stat_ == RESP)
-            (*it).second->set_event(epoll_fd_, EPOLLIN | EPOLLOUT);
+
         if (stat_ == -1)
             return client_fd;
     }
-    if (clt_evt.events & EPOLLOUT) {
-        std::cout << "EPOLLOUT event detected! " << clt_evt.data.fd << std::endl;
+    if ((clt_evt.events & EPOLLOUT) && stat_ == RESP) {
+        // std::cout << "EPOLLOUT event detected! " << clt_evt.data.fd << std::endl;
         if ((*it).second->send_response(epoll_fd_))
             return client_fd;
     }
@@ -109,9 +112,9 @@ int webServ::run() {
     std::vector<int> tobekilled;
     int nevents = 0;
     while (true) {
-		std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-		nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, -1);
-		// while ((nevents = epoll_wait(epoll_fd_, eventQueue, MY_MAX_EVENTS, -1)) == -1) {                  // condition for debuging with strace (check man)
+		std::cout << "- -\n";
+		nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, 500);
+		// while ((nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, -1)) == -1) {                  // condition for debuging with strace (check man)
 		// 	if (errno == EINTR) continue; // Interrupted by signal, retry
 		// 	perror("epoll_wait");
 		// 	exit(EXIT_FAILURE);
@@ -123,7 +126,7 @@ int webServ::run() {
 		for (int i = 0; i < nevents; i++) {
             if (handle_connections(eventQueue[i].data.fd))
                 continue;
-			if (int client_fd = handle_clients(eventQueue[i])) 
+			if (int client_fd = handle_clients(eventQueue[i]))
                 tobekilled.push_back(client_fd);
 		}
 		for (std::vector<int>::iterator it = tobekilled.begin(); it != tobekilled.end(); ++it) {

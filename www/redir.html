@@ -1,1 +1,49 @@
-redirected here!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather Checker</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button { padding: 5px; font-size: 1em; }
+        #result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Check the Weather</h1>
+    <form id="weatherForm">
+        <input type="text" id="city" placeholder="Enter city" required>
+        <button type="submit">Get Weather</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('weatherForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const city = document.getElementById('city').value;
+            const apiKey = "e8a2906a763c72e8f0d9b6dc14f80582"; // Replace with your API key
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("City not found");
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <h2>${data.name}, ${data.sys.country}</h2>
+                    <p>Temperature: ${data.main.temp} °C</p>
+                    <p>Condition: ${data.weather[0].description}</p>
+                    <p>Humidity: ${data.main.humidity}%</p>
+                    <p>Wind Speed: ${data.wind.speed} m/s</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
