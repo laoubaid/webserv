@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/29 01:05:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/31 15:01:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,6 +161,9 @@ void    HttpResponse::handle_error(int err_code) {
         case 500:
             resp_buff_ =  IERR_500_;
             break;
+        case 501:
+            resp_buff_ =  NIMP_501_;
+            break;
         // case 413:
         //     resp_buff_ =  ELRG_413_;
         //     break;
@@ -207,10 +210,7 @@ void HttpResponse::responesForGet(const locationConf& location, std::string& pat
 }
 
 void HttpResponse::responesForDelete(const locationConf& location, std::string& path) {
-    // if (path.size() == 1 && path == "/")
-    //     path += "index.html";  // index is hardcoded?
     path = location.get_root() + path;
-    // std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
 
     if (!access(path.c_str(), F_OK)) {
         if (!access(path.c_str(), R_OK)) {
@@ -237,7 +237,7 @@ bool    HttpResponse::check_redirection(const locationConf& cfg) {
     const std::pair<int, std::string>& redir = cfg.get_redirect();
     
     if (redir.first != 0) {
-        std::cout << "redirection detected!\n";
+        // std::cout << "redirection detected!\n";
         resp_buff_ = status_lines.at(redir.first);
         resp_buff_ += "Location: " + redir.second + "\r\n\r\n";
         resp_stat_ = DONE;
@@ -250,10 +250,8 @@ const std::string HttpResponse::generateResponse() {
     int         status_code = request_->getParsingCode();
 
     resp_buff_.clear();
-    std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
-    if (status_code == 400) {
-        handle_error(400);
-    } else if (status_code == 200) {
+    // std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
+    if (status_code == 200) {
         t_method    method = request_->getMethod();
         std::string path = url_decode(request_->getTarget());
         path = resolve_path(path);
@@ -274,11 +272,9 @@ const std::string HttpResponse::generateResponse() {
                         "Connection: keep-alive\r\n"
                         "\r\n" + html;
         }
-    } else if (status_code == 413) {
-        handle_error(413);
     } else {
-        std::cout << RED_CLR << status_code <<  " Internal Server Error!" << DEF_CLR << std::endl;
-        handle_error(500);
+        std::cout << RED_CLR <<  " request Error status code : " << status_code << DEF_CLR << std::endl;
+        handle_error(status_code);
     }
     return resp_buff_;
 }

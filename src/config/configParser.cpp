@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/29 03:58:17 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/01 03:12:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,6 +192,8 @@ void Block::process_location(serverConf& srvr_cfg) {
             lct_cfg.set_auto_index((*it_d).values);
         } else if ((*it_d).key == "upload_store") {
             lct_cfg.set_up_store((*it_d).values);
+        } else if ((*it_d).key == "CGI") {
+            lct_cfg.set_cgi((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
@@ -254,8 +256,7 @@ void Block::process_server(std::vector<serverConf>& servres) {
             if (lct.has_redirect() == false)
                 break ;
             path = lct.get_redirect().second;
-        }
-        
+        }   
     }
 
     servres.push_back(srvr_cfg);

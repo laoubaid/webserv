@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 11:25:44 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/01 02:19:03 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include "Socket.hpp"
 
 # define RECV_BUF 4096
+// # define RECV_BUF 128
 
 class Client : Socket
 {
@@ -47,6 +48,12 @@ class Client : Socket
         bool operator<(const Client &other) const {
             return this->get_fd() < other.get_fd();
         }
+
+        int get_state() const {
+            return (request_) ? request_->getReqState() : -1;
+        }
+
+        void log() const;
 
 };
 

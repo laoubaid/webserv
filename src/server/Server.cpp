@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 11:27:07 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/01 03:01:23 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,10 @@ int Server::accept_connections(int epoll_fd) {
 		struct epoll_event clt_event;
 		memset(&clt_event, 0, sizeof(clt_event));
 		clt_event.data.fd = client_fd;
-		clt_event.events = EPOLLIN;
+		clt_event.events = EPOLLIN | EPOLLOUT;
+		// clt_event.events = EPOLLIN;
 		epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
-		std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
+		// std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 
 		client_sockets[client_fd] = new Client(client_fd, conf);
 
@@ -49,7 +50,7 @@ int	Server::add_to_epoll(int epoll_fd) {
 	memset(&svr_event, 0, sizeof(svr_event)); // init all struct member to 0
 
 	svr_event.data.fd = get_fd();
-	svr_event.events = EPOLLIN;// | EPOLLET; // We’re interested in readable events (e.g., when a client connects)
+	svr_event.events = EPOLLIN | EPOLLET; // We’re interested in readable events (e.g., when a client connects)
 	
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, get_fd(), &svr_event) == -1) {
 		throw std::runtime_error("Server: epoll_ctl() failed!");
