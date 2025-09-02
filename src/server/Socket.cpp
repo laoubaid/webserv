@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 11:24:34 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/31 14:53:42 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 04:12:32 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,13 +40,16 @@ int Socket::get_fd() const {
 
 int Socket::bind() {
 	if (::bind(s_fd_, (const sockaddr *)&s_addr_, sizeof(s_addr_)))
-		throw std::runtime_error("bind() failed!");
+		return 1;
+		// throw std::runtime_error("bind() failed!");
+
 	return 0;
 }
 
 int Socket::listen(int s__n) {
     if (::listen(s_fd_, s__n)) {
-		throw std::runtime_error("listen() failed!");
+		return 1;
+		// throw std::runtime_error("listen() failed!");
     }
 	return 0;
 }

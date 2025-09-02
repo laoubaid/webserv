@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 02:27:36 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:53:54 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ int Client::process_recv_data() {
 }
 
 /* send_response function returns 1 in case of error (send failed), 0 otherwise */
-int Client::send_response(int epoll_fd) {
+int Client::send_response() {
     // std::cout << "|\tSend response" << std::endl;
     // print_whatever("test");
     resbuf_.clear();
@@ -115,7 +115,6 @@ int Client::send_response(int epoll_fd) {
         request_ = NULL;
         delete response_;
         response_ = NULL;
-        // set_event(epoll_fd, EPOLLIN);
         vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
     }
     return 0;

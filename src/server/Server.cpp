@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 03:01:23 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:52:41 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,11 @@ Server::Server(const serverConf& cfg, sockaddr_in addr) : Socket(addr), conf(cfg
 	if (setsockopt(get_fd(), SOL_SOCKET, SO_REUSEADDR, (void *)&reuse, sizeof(reuse)) < 0) {
 		throw std::runtime_error("failed to set socket option to reuse address!");
 	}
+}
+
+Server::Server(const serverConf& cfg, int fd) : Socket(fd), conf(cfg)
+{
+    std::cout << "Server constracteur called!" << std::endl;
 }
 
 Server::~Server()
