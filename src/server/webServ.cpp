@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 03:03:39 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:54:02 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,17 +41,17 @@ int webServ::setup_epoll() {
 int webServ::setup_servers() {
     Server *    svtmp;
     for (size_t i = 0; i < srv_cfgs.size(); ++i) {
-        std::vector<int> ports = srv_cfgs[i].get_ports();
-        for (size_t j = 0; j < ports.size(); ++j) {
-            sockaddr_in tmp = srv_cfgs[i].get_addr(ports[j]);
-            svtmp = new Server(srv_cfgs[i], tmp);
+        const std::vector<sockaddr_in> listens = srv_cfgs[i].get_addrs();
+        for (size_t j = 0; j < listens.size(); ++j) {
+            svtmp = new Server(srv_cfgs[i], listens[j]);
             int svfd = svtmp->get_fd();
             srvr_skts_[svfd] = svtmp;
         }
     }
     std::map<int, Server*>::iterator it;
     for (it = srvr_skts_.begin(); it != srvr_skts_.end(); ++it) {
-        it->second->launch();
+        if (it->second->launch())
+            continue;
         it->second->add_to_epoll(epoll_fd_);
     }
     
@@ -102,7 +102,7 @@ int webServ::handle_clients(epoll_event clt_evt) {
     }
     if ((clt_evt.events & EPOLLOUT) && stat_ == RESP) {
         // std::cout << "EPOLLOUT event detected! " << clt_evt.data.fd << std::endl;
-        if ((*it).second->send_response(epoll_fd_))
+        if ((*it).second->send_response())
             return client_fd;
     }
     return 0;
@@ -112,7 +112,7 @@ int webServ::run() {
     std::vector<int> tobekilled;
     int nevents = 0;
     while (true) {
-		std::cout << "- -\n";
+		// std::cout << "- -\n";
 		nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, 500);
 		// while ((nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, -1)) == -1) {                  // condition for debuging with strace (check man)
 		// 	if (errno == EINTR) continue; // Interrupted by signal, retry

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/31 15:01:27 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:19:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,9 +181,10 @@ void HttpResponse::process_path(const locationConf& location, std::string& path)
     if (!access(path.c_str(), F_OK)) {
         if (!access(path.c_str(), R_OK)) {
             if (is_directory(path)) {
-                // Directory + GET → serve index, else autoindex if on, else 403
+                // std::cout << "Directory + GET → serve index, else autoindex if on, else 403\n"; delme
                 if (location.is_index()) {
-                    path = target_path + location.get_index();
+                    path = target_path + "/" + location.get_index();
+                    // std::cout << path << std::endl;  delme
                     process_path(location, path);
                     return ;
                 } else if (location.get_autoindex()) {
@@ -239,7 +240,8 @@ bool    HttpResponse::check_redirection(const locationConf& cfg) {
     if (redir.first != 0) {
         // std::cout << "redirection detected!\n";
         resp_buff_ = status_lines.at(redir.first);
-        resp_buff_ += "Location: " + redir.second + "\r\n\r\n";
+        resp_buff_ += "Location: " + redir.second + "\r\n";
+        resp_buff_ += "Content-Length: 0\r\n\r\n";
         resp_stat_ = DONE;
         return true;
     }

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 03:20:35 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:12:24 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,13 @@
 class serverConf
 {
     private:
-        std::map<int, sockaddr_in>          listens_;           // default 0.0.0.0:8080
+        std::vector<sockaddr_in>            listens_;           // default 0.0.0.0:8080
         std::map<int, std::string>          err_pages_;         // default empty
         size_t                              clt_body_max_size_; // default 1M
         std::string                         root_;              // default ./www
         std::string                         index_;             // default could not exist
         bool                                is_indexed_;        // default false
-        std::map<std::string, locationConf> locations_;         // default could not exist
+        std::map<std::string, locationConf> locations_;         // default always "/" exist
         std::pair<int, std::string>         redirect_;          // default could not exist
         bool                                autoindex_;         // default off
 
@@ -54,18 +54,6 @@ class serverConf
 
         const locationConf& identifyie_location(const std::string& str) const ;
 
-        sockaddr_in&        get_addr(int port) {
-            return listens_[port];
-        }
-        std::vector<int>    get_ports() {
-            std::vector<int> ports;
-            std::map<int, sockaddr_in>::iterator it;
-            for (it = listens_.begin(); it != listens_.end(); ++it) {
-                ports.push_back((*it).first);
-            }
-            return ports;
-        }
-
         bool is_location(std::string& str) const {
             std::map<std::string, locationConf>::const_iterator it;
             for (it = locations_.begin(); it != locations_.end(); ++it){
@@ -73,6 +61,10 @@ class serverConf
                     return true;
             }
             return false;
+        }
+
+        const std::vector<sockaddr_in>& get_addrs() const {
+            return listens_;
         }
 
         const std::pair<int, std::string>& get_redirect() const {

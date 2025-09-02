@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 02:19:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:54:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ class Client : Socket
         int process_recv_data();//Uvec &vec_buf);//, uint32_t event);
         void print_whatever(std::string whatever);
 
-        int send_response(int epoll_fd);
+        int send_response();
         void set_event(int epoll_fd, uint32_t events);
         
 

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 03:21:40 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:18:23 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,6 @@ serverConf::serverConf(/* args */) : clt_body_max_size_(-1) {
     root_ = "./www";
     is_indexed_ = false;
     redirect_ = std::make_pair(0, "");
-    std::string tmp("/");
-    locationConf lct(tmp, *this);
-    add_location(lct);
 }
 
 serverConf::serverConf(const serverConf& obj) {
@@ -82,7 +79,7 @@ void serverConf::add_listen(std::vector<std::string>& values) {
     _address.sin_family = AF_INET;
     _address.sin_addr.s_addr = htonl(ip_num);
     _address.sin_port = htons(port);
-    listens_[port] = _address;
+    listens_.push_back(_address);
 }
 
 void serverConf::add_err_page(std::vector<std::string>& values) {
@@ -186,9 +183,11 @@ void serverConf::set_default() {
         _address.sin_family = AF_INET;
         _address.sin_port = htons(8080);  // default
         _address.sin_addr.s_addr = htonl(INADDR_ANY);
-        listens_[8080] = _address;
+        listens_.push_back(_address);
     }
-    if (locations_.empty()) {
+    try {
+        get_location("/");
+    } catch(const std::exception& e) {
         std::string tmp("/");
         locationConf lct(tmp, *this);
         add_location(lct);

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:01 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/22 11:27:21 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/02 05:33:36 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class Server : public Socket
 		const serverConf&		conf;
 
 		Server(const serverConf& cfg, sockaddr_in addr);
+		Server(const serverConf& cfg, int fd);
 		~Server();
 
 		int	accept_connections(int epfd);
