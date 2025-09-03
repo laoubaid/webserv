@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 17:35:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/01 03:12:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ Block syntax(std::ifstream &config, std::vector<std::string> args) {
             return tmp_block;
     }
     if (block.isopen() && block.get_name() != "root")
-        return block.syntax_error("missing closing brace '}' at the end of the file");
+        return block.syntax_error("Missing closing brace '}' at the end of the file");
     return block;
 }
 
@@ -176,14 +176,14 @@ void Block::process_location(serverConf& srvr_cfg) {
     if (blocks.size())
         throw std::runtime_error("Blocks not allowed inside location block!");
     
-    locationConf lct_cfg(argument);
+    locationConf lct_cfg(argument, srvr_cfg);
 
     std::vector<Directive>::iterator it_d;
     for (it_d = directives.begin(); it_d != directives.end(); ++it_d) {
         if ((*it_d).key == "methods") {
             lct_cfg.set_methods((*it_d).values);
         } else if ((*it_d).key == "return") {
-            lct_cfg.add_redir((*it_d).values);
+            lct_cfg.set_redirect((*it_d).values);
         } else if ((*it_d).key == "root") {
             lct_cfg.set_root((*it_d).values);
         } else if ((*it_d).key == "index") {
@@ -192,10 +192,17 @@ void Block::process_location(serverConf& srvr_cfg) {
             lct_cfg.set_auto_index((*it_d).values);
         } else if ((*it_d).key == "upload_store") {
             lct_cfg.set_up_store((*it_d).values);
+        } else if ((*it_d).key == "CGI") {
+            lct_cfg.set_cgi((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
     }
+
+    if (lct_cfg.get_redirect().first != 0) {
+        srvr_cfg.redirs[lct_cfg.get_path()] = lct_cfg.get_redirect().second;
+    }
+
     srvr_cfg.add_location(lct_cfg);
 }
 
@@ -214,10 +221,20 @@ void Block::process_server(std::vector<serverConf>& servres) {
             srvr_cfg.set_root((*it_d).values);
         } else if ((*it_d).key == "index") {
             srvr_cfg.set_index((*it_d).values);
+        } else if ((*it_d).key == "autoindex") {
+            srvr_cfg.set_index((*it_d).values);
+        } else if ((*it_d).key == "return") {  // could be changed to redir
+            srvr_cfg.set_redirect((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
     }
+
+    if (srvr_cfg.get_redirect().first != 0) {
+        srvr_cfg.redirs["/"] = srvr_cfg.get_redirect().second;
+    }
+
+    srvr_cfg.set_default();
 
     std::vector<Block>::iterator it_b;
     for (it_b = blocks.begin(); it_b != blocks.end(); ++it_b) {
@@ -227,11 +244,26 @@ void Block::process_server(std::vector<serverConf>& servres) {
             throw std::runtime_error("unknown Block! " + (*it_b).name);
         }
     }
+    std::map<std::string, std::string>::iterator it;
+    for (it = srvr_cfg.redirs.begin(); it != srvr_cfg.redirs.end(); ++it) {
+        std::string path = (*it).second;
+        std::set<std::string> visited;
+        while (true) {
+            if (visited.count(path))
+                throw std::runtime_error("redirection loop detected!");
+            visited.insert(path);
+            const locationConf& lct = srvr_cfg.identifyie_location(path);
+            if (lct.has_redirect() == false)
+                break ;
+            path = lct.get_redirect().second;
+        }   
+    }
+
     servres.push_back(srvr_cfg);
 }
 
-std::vector<serverConf> Block::parser() {
-    std::vector<serverConf> servers;
+std::vector<serverConf>* Block::parser() {
+    std::vector<serverConf>* servers = new std::vector<serverConf>();
 
     if (directives.size())
         throw std::runtime_error("directives not allowed on config root!");
@@ -239,7 +271,7 @@ std::vector<serverConf> Block::parser() {
         if ((*it).name != "server") {
             throw std::runtime_error("only server blocks are allowed on config root!");
         }
-        (*it).process_server(servers);
+        (*it).process_server(*servers);
     }
     return servers;
 }
@@ -273,7 +305,7 @@ Block get_config(std::string filename) {
 
     std::ifstream config;
 
-    filename = "./conf/" + filename;  // hardcoded path?
+    // filename = "./conf/" + filename;  // hardcoded path?
     config.open(filename.c_str());
     if (!config.is_open()) {
         throw std::runtime_error("webserv: failed to open config file!");
@@ -281,9 +313,10 @@ Block get_config(std::string filename) {
 
     std::vector<std::string> vector = {"root"};
     Block rootBlock = syntax(config, vector);
+    if (rootBlock.get_name() == "Error")
+        throw std::runtime_error("Error!");
     config.close();
     std::cout << std::endl;
     // rootBlock.printTree(0);
     return rootBlock;
 }
-

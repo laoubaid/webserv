@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/21 17:21:01 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/29 01:02:11 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,6 @@
 #ifndef CONFIG_PARSER_HPP
 # define CONFIG_PARSER_HPP
 
-# include <iostream>
-# include <fstream>
-# include <string>
-# include <vector>
 # include "../include.hpp"
 # include "serverConf.hpp"
 
@@ -85,7 +81,7 @@ class Block {
         void process_server(std::vector<serverConf>& servres);
         void process_location(serverConf& conf);
 
-        std::vector<serverConf> parser();
+        std::vector<serverConf>* parser();
         Block syntax_error(const std::string& message);
 
         void printTree(int idt) const;

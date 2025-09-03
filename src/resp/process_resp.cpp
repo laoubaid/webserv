@@ -6,11 +6,25 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 18:17:08 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/28 17:07:40 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
+
+size_t get_file_size(std::fstream &file) {
+    file.seekg(0, std::ios::end);
+    size_t end_pos = static_cast<size_t>(file.tellg());
+    file.seekg(0, std::ios::beg);  // reset to beginning
+    return end_pos;
+}
+
+bool is_directory(const std::string& path) {
+    struct stat s;
+    if (stat(path.c_str(), &s) == 0)
+        return S_ISDIR(s.st_mode);
+    return false;
+}
 
 std::string url_decode(const std::string& str) {
     std::string result;
@@ -50,164 +64,5 @@ std::string resolve_path(const std::string& str) {
     for (size_t i = 0; i < stack.size(); ++i) {
         result += "/" + stack[i];
     }
-    // std::cout << result << std::endl;
     return result.empty() ? "/" : result;
 }
-
-size_t get_file_size(std::fstream &file) {
-    file.seekg(0, std::ios::end);
-    size_t end_pos = static_cast<size_t>(file.tellg());
-    file.seekg(0, std::ios::beg);  // reset to beginning
-    return end_pos;
-}
-
-bool HttpResponse::serveStaticContent(const std::string& path) {
-    file_.open(path, std::ios::in | std::ios::binary);
-    if (!file_.is_open()) {
-        resp_buff_ = FORB_403_;
-        resp_stat_ = DONE;
-        return false;
-    }
-    resp_buff_ = OK_200_;
-    resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + std::to_string(get_file_size(file_)) + "\r\n\r\n";
-    resp_stat_ = LOAD;
-    return true;
-}
-
-bool is_directory(const std::string& path) {
-    struct stat s;
-    if (stat(path.c_str(), &s) == 0)
-        return S_ISDIR(s.st_mode);
-    return false;
-}
-
-bool HttpResponse::list_directory(const std::string& path) {
-    std::string direname;
-    DIR* dir = opendir(path.c_str());
-
-    resp_buff_.clear();
-    if (dir == NULL) {
-        resp_buff_ = FORB_403_;
-        return false;
-    }
-    size_t idx = path.rfind("/");
-    if (idx != std::string::npos)
-        direname = path.substr(idx + 1);
-
-    std::string body = "<!DOCTYPE html><html><head><title>Index of " + direname + \
-    "</title></head><body><h1>Index of " + direname + "</h1><ul>";
-
-    struct dirent *ptr;
-    ptr = readdir(dir);
-    while (ptr) {
-        std::string tmp = std::string(ptr->d_name);
-        if (tmp != "." && tmp != "..")
-            body += "<li><a href=\"/" + direname + "/" + tmp + "\">" + tmp + "</a></li>";
-        ptr = readdir(dir);
-    }
-    body += "</ul></body></html>";
-    resp_buff_ = OK_200_;
-    resp_buff_ += "Content-Type: text/html\r\n"
-        "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
-
-    closedir(dir);
-    return true;
-}
-
-void HttpResponse::process_path(std::string& path) {
-
-    std::string web_root = "./www";       // get this from config  
-    // std::string web_root = "/media/laoubaid/laoubaid/movies/";       // get this from config  
-
-    if (path.size() == 1 && path == "/")
-        path += "index.html";
-    path = web_root + path;
-    // std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
-
-    if (!access(path.c_str(), F_OK)) {
-        if (!access(path.c_str(), R_OK)) {
-            if (is_directory(path)) {
-                list_directory(path);
-            } else {
-                serveStaticContent(path);
-                return ;
-            }
-        } else
-            resp_buff_ = FORB_403_;
-    } else
-        resp_buff_ = NOTF_404_;
-    resp_stat_ = DONE;
-    // note we are starting to read a file using the path from url needs alot more (use EPOLL for read btw!!)
-}
-
-bool HttpResponse::read_file_continu() {
-    // Open the file only once in the class member 
-    if (!file_.is_open() || resp_stat_ == DONE) {
-        return false;
-    }
-
-    char buffer[FILE_BUFFER_SIZE];     // change later
-    file_.read(buffer, sizeof(buffer));
-    resp_buff_ = std::string(buffer, file_.gcount());
-    if (file_.eof()) {
-        resp_stat_ = DONE;
-        file_.close();
-    }
-    return true;
-}
-
-void HttpResponse::responesForGet() {
-    if (resp_stat_ == STRT) {
-        // std::cout << "request line : " << request.getMethod() << " " << request.getTarget() << std::endl; 
-    
-        // this should be implemanted in the httpreq obj creation
-    
-        std::string path = url_decode(request_->getTarget());
-        path = resolve_path(path);
-    
-        process_path(path);
-    } else if (resp_stat_ == LOAD) {
-        // continu handling response here
-        read_file_continu();
-    }
-}
-
-void HttpResponse::delete_file(std::string& path) {
-
-    std::string web_root = "./www";       // get this from config  
-    // std::string web_root = "/media/laoubaid/laoubaid/movies/";       // get this from config
-
-    if (path.size() == 1 && path == "/")
-        path += "index.html";
-    path = web_root + path;
-    // std::cout << ">>>>>>>>>> final target path : " << path << std::endl;
-
-    if (!access(path.c_str(), F_OK)) {
-        if (!access(path.c_str(), R_OK)) {
-            if (is_directory(path)) {
-                resp_buff_ = FORB_403_;
-            } else {
-                if (std::remove(path.c_str()) == 0) {
-                    resp_buff_ = OK_200_;
-                    resp_buff_ += "\r\n";
-                } else {
-                    resp_buff_ = FORB_403_;
-                }
-            }
-        } else {
-            resp_buff_ = FORB_403_;
-        }
-    } else {
-        resp_buff_ = NOTF_404_;
-    }
-    resp_stat_ = DONE;
-}
-
-void HttpResponse::responesForDelete() {
-    std::string path = url_decode(request_->getTarget());
-    path = resolve_path(path);
-
-    delete_file(path);
-}
-
-

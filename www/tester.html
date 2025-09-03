@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HTTP Request Tester</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input, textarea, select, button { margin: 5px 0; width: 100%; }
+    textarea { height: 120px; }
+    .response { white-space: pre-wrap; background: #f0f0f0; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>HTTP Request Tester</h1>
+
+  <label for="method">Method:</label>
+  <select id="method">
+    <option>GET</option>
+    <option>POST</option>
+    <option>DELETE</option>
+  </select>
+
+  <label for="url">URL:</label>
+  <input type="text" id="url" placeholder="http://localhost:3000/api">
+
+  <label for="body">Body (JSON):</label>
+  <textarea id="body" placeholder='{ "key": "value" }'></textarea>
+
+  <button onclick="sendRequest()">Send Request</button>
+
+  <h2>Response</h2>
+  <div id="response" class="response"></div>
+
+  <script>
+    async function sendRequest() {
+      const method = document.getElementById('method').value;
+      const url = document.getElementById('url').value;
+      const body = document.getElementById('body').value;
+      const responseEl = document.getElementById('response');
+
+      try {
+        const options = { method };
+        if (method !== 'GET' && body.trim() !== '') {
+          options.headers = { 'Content-Type': 'application/json' };
+          options.body = body;
+        }
+
+        const res = await fetch(url, options);
+        const text = await res.text();
+
+        responseEl.textContent = `Status: ${res.status} ${res.statusText}\n\n${text}`;
+      } catch (err) {
+        responseEl.textContent = 'Error: ' + err;
+      }
+    }
+  </script>
+</body>
+</html>

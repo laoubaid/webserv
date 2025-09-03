@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/18 17:52:35 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/08/31 04:16:14 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 # include "../include.hpp"
 # include "../req/HTTPRequestParser.hpp"
+# include "../config/serverConf.hpp"
+// # include "../config/serverConf.hpp"
 
 # include <sys/stat.h>
 # include <sys/types.h>
@@ -52,6 +54,12 @@
             "Connection: close\r\n\r\n" \
             "<html><body><center><h1>500 Internal Server Error</h1><center></body></html>\n";
 
+# define NIMP_501_ "HTTP/1.1 501 Not Implemented\r\n" \
+            "Content-Type: text/html\r\n" \
+            "Content-Length: 71\r\n" \
+            "Connection: close\r\n\r\n" \
+            "<html><body><center><h1>501 Not Implemented</h1><center></body></html>\n";
+
 // # define FILE_BUFFER_SIZE 4096
 // # define FILE_BUFFER_SIZE 8192
 # define FILE_BUFFER_SIZE 16384
@@ -71,28 +79,40 @@ class HttpResponse {
         HTTPRequestParser   *request_;
         std::fstream        file_;
         std::string         resp_buff_;
+        const serverConf&   conf_;
+
         
     public:
-        HttpResponse(HTTPRequestParser *request) {
+        static std::map<int, std::string> status_lines;
+    
+        HttpResponse(HTTPRequestParser *request, const serverConf&   conf) : conf_(conf) {
             resp_stat_ = STRT;
             request_ = request;
         }
         const std::string   generateResponse();
-        void                responesForGet();
-        void                responesForDelete();
+        void                responesForGet(const locationConf& location, std::string& path);
+        void                responesForDelete(const locationConf& location, std::string& path);
 
         bool    read_file_continu();
 
-        void    process_path(std::string& path);
-        bool    serveStaticContent(const std::string& path);
+        void    handle_error(int err_code);
+
+        void    process_path(const locationConf& location, std::string& path);
+        bool    serveStaticContent(const std::string& path, int code);
         bool    list_directory(const std::string& path);
 
-        void    delete_file(std::string& path);
+        bool                check_redirection(const locationConf& cfg);
 
         static const std::string& getMimeType(const std::string& ext);
         t_resp_state&   getRespState();
         std::string&    getRespBuff();
 };
 
-#endif
+size_t              get_file_size(std::fstream &file);
+bool                is_directory(const std::string& path);
+std::string         url_decode(const std::string& str);
 
+
+void init_status_lines();
+
+#endif

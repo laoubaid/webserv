@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>500 Internal Server Error</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2b0000, #550000);
+      color: #f8f8f8;
+    }
+    main {
+      text-align: center;
+      max-width: 600px;
+    }
+    h1 {
+      font-size: 5rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      margin-bottom: 2rem;
+      color: #ccc;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #ccc;
+      border-top: 4px solid #f8f8f8;
+      border-radius: 50%;
+      margin: 1rem auto 2rem;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>500</h1>
+    <p>Something went wrong on our end.<br>Please try again later.</p>
+    <div class="spinner"></div>
+    <a href="/" role="button" class="contrast">Return Home</a>
+  </main>
+</body>
+</html>
