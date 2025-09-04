@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Uvec.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 22:41:10 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/10 18:49:53 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:30:04 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,13 @@ unsigned char&	Uvec::operator[](std::size_t index)
 	return ((*_vec)[index]);
 }
 
+unsigned char&	Uvec::operator[](std::size_t index) const
+{
+	if (index >= _vec->size())
+		throw std::out_of_range("index given is out of range");
+	return ((*_vec)[index]);
+}
+
 bool    Uvec::operator==(const Uvec& other) const
 {
 	if (_vec == NULL && other._vec == NULL) {
@@ -122,6 +129,11 @@ bool    Uvec::operator!=(const Uvec& other) const
 void	Uvec::push_back(unsigned char c)
 {
 	_vec->push_back(c);
+}
+
+void		Uvec::clear(void)
+{
+	_vec->clear();
 }
 
 std::size_t		Uvec::size(void) const
@@ -166,19 +178,18 @@ Uvec::const_iterator	Uvec::find(const_iterator begin, const_iterator end, const 
 	return (std::search(begin, end, other.begin(), other.end()));
 }
 
-// to be deleted
-void	Uvec::print(void) const
+std::ostream&	operator<<(std::ostream& out, const Uvec& vec)
 {
 	std::cout << "[ ";
-	for (std::vector<unsigned char>::iterator it = _vec->begin(); it != _vec->end(); it++)
+	for (Uvec::const_iterator it = vec.begin(); it != vec.end(); it++)
 	{
 		if (std::isprint(*it))
 			std::cout << *it;
 		else
 			std::cout << "0x" << std::hex << (int)*it;
-		if (it +1 != _vec->end())
+		if (it +1 != vec.end())
 			std::cout << ", ";
 	}
 	std::cout << " ]\n";
-	std::cout << std::dec; // reset to decimal base
+	return (out);
 }

@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:53:41 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/29 02:15:42 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/19 23:51:33 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ bool	validateFieldValue(const Uvec &vec)
 {
 	Uvec::const_iterator	it = vec.begin();
 	
-	while (it != vec.end() && (HTTPRequestParser::VCHAR.has(*it) || HTTPRequestParser::OBSTEXT.has(*it)))
+	while (it != vec.end() && (Request::VCHAR.has(*it) || Request::OBSTEXT.has(*it)))
 	{
 		it++;
 		while (it != vec.end() && (*it == ' ' || *it == '\t'))
@@ -59,7 +59,7 @@ bool	validateHexDigit(const Uvec &vec)
 {
 	Uvec::const_iterator	it = vec.begin();
 
-	while (it != vec.end() && HTTPRequestParser::HEXDIG.has(*it))
+	while (it != vec.end() && Request::HEXDIG.has(*it))
 		it++;
 	if (it != vec.end() || it == vec.begin())
 		return (false);
@@ -271,7 +271,7 @@ bool	validateContentLength(const Uvec &vec)
 			it++;
 		OWSMatch(vec, it);
 		size_t	counter = 0;
-		while (it != vec.end() && HTTPRequestParser::DIGIT.has(*it))
+		while (it != vec.end() && Request::DIGIT.has(*it))
 		{
 			it++;
 			counter++;

@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/29 00:35:46 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/26 11:22:05 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,9 @@
 
 # include "httpParsingIncludes.hpp"
 
-class HTTPRequestParser
+class Cgi;
+
+class Request
 {
 	private:
 		static std::map<std::string, validatorFunc>	stdFields;
@@ -31,17 +33,20 @@ class HTTPRequestParser
 
 		int									parsingCode;
 		t_method							method;
-		std::string							target;
+		t_target							target;
 		std::map<std::string, Uvec>			fields;
-		Uvec								body;
+		std::size_t							body_size;
+		std::string							body_file_path;
 		t_req_state							req_state;
-
+		Cgi									*cgi;
+		
 		void								processStartLine(Uvec startLine);
 		void								processFields(std::vector<Uvec> lines);
 		void								addField(std::string key, Uvec value);
 		void								badRequest(std::string err_msg);
 		void								processBody(const Uvec& raw_body);
-		void	processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body);
+		void								processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body);
+		void								is_cgi(std::string cgi_dir, std::vector<std::string> extensions);
 	public:
 		// vectors for nomalized characters
 		static Uvec	CRLF;
@@ -56,19 +61,20 @@ class HTTPRequestParser
 		static Uvec	QDTEXT;
 		static Uvec	QPAIR;
 
-		HTTPRequestParser(void);
-		HTTPRequestParser(Uvec httpRequest);
-		~HTTPRequestParser(void);
+		Request(void);
+		Request(Uvec httpRequest);
+		~Request(void);
 		
 		void				addBody(Uvec raw_body);
 		// getters
 		int					getParsingCode(void) const;
 		const t_method&		getMethod(void) const;
-		const std::string&	getTarget(void) const;
+		const t_target&		getTarget(void) const;
 		const std::map<std::string, Uvec>&	getFields(void) const;
 		bool				getFieldValue(const std::string& key, Uvec& value) const;
 		const t_req_state&	getReqState(void) const;
-		const Uvec&			getBody(void) const;
+		std::size_t			getBodySize(void) const;
+		const std::string&	getBodyFilePath(void) const;
 };
 
 

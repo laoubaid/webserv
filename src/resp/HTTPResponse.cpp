@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/02 05:19:55 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:28:26 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,8 +255,7 @@ const std::string HttpResponse::generateResponse() {
     // std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
     if (status_code == 200) {
         t_method    method = request_->getMethod();
-        std::string path = url_decode(request_->getTarget());
-        path = resolve_path(path);
+        std::string path = request_->getTarget().path;
         const locationConf& location = conf_.identifyie_location(path);
         if (check_redirection(location)) {
             return resp_buff_;

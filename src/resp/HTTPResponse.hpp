@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/31 04:16:14 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:24:48 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ typedef enum e_resp_state {
 class HttpResponse {
     private:
         t_resp_state        resp_stat_;
-        HTTPRequestParser   *request_;
+        Request   *request_;
         std::fstream        file_;
         std::string         resp_buff_;
         const serverConf&   conf_;
@@ -85,7 +85,7 @@ class HttpResponse {
     public:
         static std::map<int, std::string> status_lines;
     
-        HttpResponse(HTTPRequestParser *request, const serverConf&   conf) : conf_(conf) {
+        HttpResponse(Request *request, const serverConf&   conf) : conf_(conf) {
             resp_stat_ = STRT;
             request_ = request;
         }

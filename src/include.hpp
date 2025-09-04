@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   include.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/29 01:02:24 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:23:16 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,5 +62,9 @@ typedef struct	s_conf2
 }				t_conf2;
 
 std::string         resolve_path(const std::string& str);
+
+# include "req/httpParsingIncludes.hpp"
+# include "req/HTTPRequestParser.hpp"
+# include "cgi/Cgi.hpp"
 
 #endif

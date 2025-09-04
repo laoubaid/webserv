@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:38:37 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/29 01:01:22 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/19 23:50:59 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@ bool	pctEncodedMatch(const Uvec &vec, Uvec::const_iterator &it)
 	if (i == vec.end() || *i != '%')
 		return (false);
 	i++;
-	if (i == vec.end() || !HTTPRequestParser::HEXDIG.has(*i))
+	if (i == vec.end() || !Request::HEXDIG.has(*i))
 		return (false);
 	i++;
-	if (i == vec.end() || !HTTPRequestParser::HEXDIG.has(*i))
+	if (i == vec.end() || !Request::HEXDIG.has(*i))
 		return (false);
 	it = i +1;
 	return (true);
@@ -34,8 +34,8 @@ bool	pcharMatch(const Uvec &vec, Uvec::const_iterator &it)
 	Uvec::const_iterator	i = it;
 
 	if (	i != vec.end() && 
-		(	HTTPRequestParser::UNRESERVED.has(*i) || 
-			HTTPRequestParser::SUBDELIMS.has(*i) ||
+		(	Request::UNRESERVED.has(*i) || 
+			Request::SUBDELIMS.has(*i) ||
 			*i == ':' || *i == '@'))
 		i++;
 	else if (i != vec.end() &&!pctEncodedMatch(vec, i))
@@ -90,7 +90,7 @@ bool	tokenMatch(const Uvec &vec, Uvec::const_iterator &it)
 {
 	Uvec::const_iterator	i = it;
 
-	while (i != vec.end() && HTTPRequestParser::TCHAR.has(*i))
+	while (i != vec.end() && Request::TCHAR.has(*i))
 		i++;
 	if (i == it)
 		return (false);
@@ -110,12 +110,12 @@ bool	quotedStringMatch(const Uvec &vec, Uvec::const_iterator &it)
 		if (*i == '\\')
 		{
 			i++;
-			if (i == vec.end() || !HTTPRequestParser::QPAIR.has(*i))
+			if (i == vec.end() || !Request::QPAIR.has(*i))
 				return (false);
 		}
 		else
 		{
-			if (i == vec.end() || !HTTPRequestParser::QDTEXT.has(*i))
+			if (i == vec.end() || !Request::QDTEXT.has(*i))
 				return (false);
 		}
 		i++;

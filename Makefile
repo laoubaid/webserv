@@ -12,7 +12,8 @@ SRC = src/main.cpp src/server/Socket.cpp src/server/webServ.cpp \
 		src/req/strMatchers.cpp src/req/strValidators.cpp src/req/test_fields.cpp \
 		src/uvec/Uvec.cpp src/config/configParser.cpp \
 		src/config/serverConf.cpp src/config/locationConf.cpp \
-		src/resp/HTTPResponse.cpp src/resp/process_resp.cpp
+		src/resp/HTTPResponse.cpp src/resp/process_resp.cpp \
+		src/cgi/Cgi.cpp
 
 # OBJ = $(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRC))
 OBJ = $(patsubst src/%.cpp, $(OBJ_DIR)%.o, $(SRC))
@@ -45,7 +46,7 @@ $(NAME): $(OBJ)
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR) $(OBJ_DIR)server $(OBJ_DIR)req \
-	$(OBJ_DIR)uvec $(OBJ_DIR)config $(OBJ_DIR)resp
+	$(OBJ_DIR)uvec $(OBJ_DIR)config $(OBJ_DIR)resp $(OBJ_DIR)cgi
 
 $(OBJ_DIR)%.o: src/%.cpp
 	# mkdir -p $(OBJ_DIR)

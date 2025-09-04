@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/02 05:53:54 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:29:52 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ int Client::process_recv_data() {
     std::cout << "process_recv_data called!" << std::endl;
     if (!request_) {
         try {
-            request_ = new HTTPRequestParser(vec_buf_);
+            request_ = new Request(vec_buf_);
             std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]" << std::endl;
             
             if (request_->getReqState() == PEND) {
@@ -170,7 +170,7 @@ void Client::log() const {
                   << " [fd " << this->get_fd() << "] "
                   << method_str << " "
                   << status_str << " "
-                  << request_->getTarget()
+                  << request_->getTarget().path
                   << std::endl;
     }
 }
@@ -180,7 +180,7 @@ void Client::print_whatever(std::string whatever) {
     std::cout << YLW_CLR << ">\tthe client socket FD: " << this->get_fd() << DEF_CLR << std::endl;
     std::cout << "---------------------------------------------------------------------------------------" << std::endl;
     std::cout << "-------------------------------- THE START OF whatever! --------------------------------" << std::endl;
-    vec_buf_.print();
+    std::cout << vec_buf_;
     std::cout << "--------------------------------- THE END OF whatever! ---------------------------------" << std::endl;
     std::cout << "size of whatever: " << vec_buf_.size() << std::endl;
     std::cout << "---------------------------------------------------------------------------------------" << std::endl;

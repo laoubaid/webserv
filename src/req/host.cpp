@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/19 17:25:56 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/29 02:42:09 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/08/19 23:52:30 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
 {
 	std::size_t	i = 0;
 	
-	while (it +i != vec.end() && HTTPRequestParser::DIGIT.has(*(it +i)) && i < 4)
+	while (it +i != vec.end() && Request::DIGIT.has(*(it +i)) && i < 4)
 		i++;
 	if (i == 0 || i > 3)
 		return (false);
@@ -54,7 +54,7 @@ bool	h16Match(const Uvec &vec, Uvec::const_iterator &it)
 {
 	std::size_t	i = 0;
 
-	while (it +i != vec.end() && HTTPRequestParser::HEXDIG.has(*(it +i)) && i < 5)
+	while (it +i != vec.end() && Request::HEXDIG.has(*(it +i)) && i < 5)
 		i++;
 	if (i == 0 || i > 4)
 		return (false);
@@ -191,7 +191,7 @@ bool	IPvFutureMatch(const Uvec &vec, Uvec::const_iterator &it)
 	if (i == vec.end() || (*i != 'v' && *i != 'V'))
 		return (false);
 	i++;
-	while (i != vec.end() && HTTPRequestParser::HEXDIG.has(*i))
+	while (i != vec.end() && Request::HEXDIG.has(*i))
 	{
 		i++;
 		j++;
@@ -203,8 +203,8 @@ bool	IPvFutureMatch(const Uvec &vec, Uvec::const_iterator &it)
 		return (false);
 	i++;
 	while (	i != vec.end() &&
-			(HTTPRequestParser::UNRESERVED.has(*i) ||
-			HTTPRequestParser::SUBDELIMS.has(*i) ||
+			(Request::UNRESERVED.has(*i) ||
+			Request::SUBDELIMS.has(*i) ||
 			*i == ':'))
 	{
 		i++;
@@ -237,7 +237,7 @@ bool	regNameMatch(const Uvec &vec, Uvec::const_iterator &it)
 
 	while (true)
 	{
-		if (i != vec.end() && (HTTPRequestParser::UNRESERVED.has(*i) || HTTPRequestParser::SUBDELIMS.has(*i)))
+		if (i != vec.end() && (Request::UNRESERVED.has(*i) || Request::SUBDELIMS.has(*i)))
 			i++;
 		else if (!pctEncodedMatch(vec, i))
 			break ;
@@ -259,7 +259,7 @@ bool	hostMatch(const Uvec &vec, Uvec::const_iterator &it)
 
 bool	portMatch(const Uvec &vec, Uvec::const_iterator &it)
 {
-	while (it != vec.end() && HTTPRequestParser::DIGIT.has(*it))
+	while (it != vec.end() && Request::DIGIT.has(*it))
 		it++;
 	return (true);
 }

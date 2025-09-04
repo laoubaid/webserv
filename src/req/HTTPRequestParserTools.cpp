@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 13:08:06 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:34:30 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,13 +122,13 @@ const Uvec&		getValue(const std::map<std::string, Uvec>& map, const std::string&
 
 std::pair<unsigned long, Uvec>	process_chunked_body(Uvec data)
 {
-	Uvec::iterator	it = data.find(HTTPRequestParser::CRLF);
+	Uvec::iterator	it = data.find(Request::CRLF);
 
 	if (it == data.end())
 		throw std::out_of_range("body size not found");
 	Uvec	body_size_vec = Uvec(data.begin(), it);
 	Uvec	body = Uvec(it+2, data.end());
-	if (body.size() < 2 || Uvec(body.end() -2, body.end()) != HTTPRequestParser::CRLF)
+	if (body.size() < 2 || Uvec(body.end() -2, body.end()) != Request::CRLF)
 		throw std::runtime_error("unvalid body");
 	body = Uvec(body.begin(), body.end() -2);
 	if (!validateHexDigit(body_size_vec))
@@ -188,6 +188,7 @@ bool	has_shebang(std::string script_path)
 		if (c1 == '#' && c2 == '!')
 			return (true);
 	}
+	file.close();
 	return (false);
 }
 
@@ -209,3 +210,35 @@ std::string	get_ext(const std::string& path)
 	else
 		return (std::string(""));
 }
+
+// to be refactored
+// std::string resolve_path(const std::string& str)
+// {
+//     std::stringstream ss(str);
+//     std::string part;
+//     std::vector<std::string> stack;
+
+//     while (std::getline(ss, part, '/'))
+// 	{
+//         if (part.empty() || part == ".")
+//             continue;
+//         if (part == "..")
+// 		{
+//             if (!stack.empty())
+//                 stack.pop_back();
+//         }
+// 		else
+// 		{
+//             stack.push_back(part);
+//         }
+//     }
+
+//     std::string result;
+//     for (size_t i = 0; i < stack.size(); ++i)
+// 	{
+//         result += "/" + stack[i];
+//     }
+
+//     // return result.empty() ? ("./www/") : ("./www" + result);
+//     return result.empty() ? "/" : result;
+// }

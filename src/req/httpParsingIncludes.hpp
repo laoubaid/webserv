@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/02 11:41:00 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:34:49 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,11 @@
 # include <sstream>
 # include <fstream>
 # include <cstring>
+# include <cstdio>
+# include <sys/stat.h>
 # include "../uvec/Uvec.hpp"
+// # include "../cgi/Cgi.hpp"
+
 
 # define RED_COLOR "\033[31m"
 # define GREEN_COLOR "\033[32m"
@@ -48,9 +52,9 @@
 
 typedef enum e_method
 {
-	GET,
-	POST,
-	DELETE
+	DELETE = 1 << 0,
+	POST = 1 << 2,
+	GET = 1 << 3,
 }	t_method;
 typedef enum e_req_state {
     PEND,
@@ -59,6 +63,12 @@ typedef enum e_req_state {
 }	t_req_state;
 // typedef std::vector<unsigned char> t_vec_uc;
 typedef bool (*validatorFunc)(const Uvec &);
+typedef struct s_target
+{
+	std::string	raw;
+	std::string	path;
+	std::string	query;
+}	t_target;
 
 // tests (to be deleted)
 bool	testAllFields(void);
@@ -109,5 +119,8 @@ bool	IPv6addressMatch(const Uvec &vec, Uvec::const_iterator &it);
 bool	IPvFutureMatch(const Uvec &vec, Uvec::const_iterator &it);
 bool	IPv4addressMatch(const Uvec &vec, Uvec::const_iterator &it);
 bool	regNameMatch(const Uvec &vec, Uvec::const_iterator &it);
+
+// to be refactored
+// std::string resolve_path(const std::string& str);
 
 #endif

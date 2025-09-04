@@ -3,32 +3,32 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/17 22:54:34 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:17:59 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HTTPRequestParser.hpp"
+#include "../include.hpp"
 
-std::map<std::string, validatorFunc>	HTTPRequestParser::stdFields;
-std::vector<std::string>				HTTPRequestParser::invalidList;
-Uvec	HTTPRequestParser::DIGIT;
-Uvec	HTTPRequestParser::ALPHA;
-Uvec	HTTPRequestParser::CRLF;
-Uvec	HTTPRequestParser::HEXDIG;
-Uvec	HTTPRequestParser::UNRESERVED;
-Uvec	HTTPRequestParser::SUBDELIMS;
-Uvec	HTTPRequestParser::TCHAR;
-Uvec	HTTPRequestParser::VCHAR;
-Uvec	HTTPRequestParser::OBSTEXT;
-Uvec	HTTPRequestParser::QDTEXT;
-Uvec	HTTPRequestParser::QPAIR;
+std::map<std::string, validatorFunc>	Request::stdFields;
+std::vector<std::string>				Request::invalidList;
+Uvec	Request::DIGIT;
+Uvec	Request::ALPHA;
+Uvec	Request::CRLF;
+Uvec	Request::HEXDIG;
+Uvec	Request::UNRESERVED;
+Uvec	Request::SUBDELIMS;
+Uvec	Request::TCHAR;
+Uvec	Request::VCHAR;
+Uvec	Request::OBSTEXT;
+Uvec	Request::QDTEXT;
+Uvec	Request::QPAIR;
 
-HTTPRequestParser::StaticContainersInitializer	HTTPRequestParser::initializer;
+Request::StaticContainersInitializer	Request::initializer;
 
-HTTPRequestParser::StaticContainersInitializer::StaticContainersInitializer(void)
+Request::StaticContainersInitializer::StaticContainersInitializer(void)
 {
 	// std::cout << "initializer called\n";
 
@@ -61,20 +61,63 @@ HTTPRequestParser::StaticContainersInitializer::StaticContainersInitializer(void
 	QPAIR += OBSTEXT;
 }
 
-HTTPRequestParser::HTTPRequestParser(void)
+Request::Request(void)
 {
 }
-HTTPRequestParser::~HTTPRequestParser(void)
+Request::~Request(void)
 {
+	if (cgi)
+	{
+		delete cgi;
+		std::remove(body_file_path.c_str());
+	}
+	// delete file if it is tmp
 }
 
-void	HTTPRequestParser::badRequest(std::string err_msg)
+void	Request::badRequest(std::string err_msg)
 {
 	parsingCode = 400;
 	std::cerr << RED_COLOR << "[BAD REQUEST][ERROR CODE 400]: " << err_msg << RESET_COLOR << std::endl;
 }
 
-void	HTTPRequestParser::processStartLine(Uvec startLine)
+void	Request::is_cgi(std::string cgi_dir, std::vector<std::string> extensions)
+{
+	std::string::iterator	start = target.path.begin();
+	start++;
+	std::string::iterator it = std::find(start, target.path.end(), '/');
+	if (std::string(start, it) == cgi_dir) // cgi dir found
+	{
+		if (it == target.path.end() || it +1 == target.path.end()) // in case "/bin-dir" or "/bin-dir/"
+			return ;
+		cgi = new Cgi;
+		it = std::find(it+1, target.path.end(), '/');
+		cgi->set_script_name(std::string(target.path.begin(), it));
+		if (it != target.path.end())
+			it++;
+		cgi->set_path_info(std::string(it, target.path.end()));
+		return ;
+	}
+	it = std::find(target.path.begin(), target.path.end(), '.');
+	if (it != target.path.end())
+	{
+		std::string::iterator	ext_end = std::find(it +1, target.path.end(), '/');
+		std::string	ext = std::string(it+1, ext_end);
+		for (std::vector<std::string>::iterator it = extensions.begin(); it < extensions.end(); it++)
+		{
+			if (*it == ext) // extension found
+			{
+				cgi = new Cgi;
+				cgi->set_script_name(std::string(target.path.begin(), ext_end));
+				if (ext_end != target.path.end())
+					ext_end++;
+				cgi->set_path_info(std::string(ext_end, target.path.end()));
+				return ;
+			}
+		}
+	}
+}
+
+void	Request::processStartLine(Uvec startLine)
 {
 	Uvec	sp;
 	sp.push_back(' ');
@@ -96,15 +139,28 @@ void	HTTPRequestParser::processStartLine(Uvec startLine)
 	}
 	// target validity
 	if (validateTarget(infos[1]))
-		target = std::string(infos[1].begin(), infos[1].end());
+	{
+		target.raw = std::string(infos[1].begin(), infos[1].end());
+		// process target and assign the the target struct
+		Uvec::iterator	it = infos[1].find('?');
+		target.path = decode_url(resolve_path(std::string(infos[1].begin(), it)));
+		if (it != infos[1].end())
+			it++; 
+		target.query = std::string(it, infos[1].end());
+		// check permission for upload
+		std::vector<std::string>	ext = {"cgi", "py", "php"};
+		is_cgi("cgi-dir", ext); // should throw exception in case the file doesn't exist or can't be run
+	}
 	else
 		return (badRequest("invalid target"));
+	// if (!(method | get.location()))
+	// 	throw 405;
 	// version validity
 	if (infos[2] != Uvec((const unsigned char*)"HTTP/1.1", 8))
 		return (badRequest("invalid http version"));
 }
 
-void	HTTPRequestParser::addField(std::string key, Uvec value)
+void	Request::addField(std::string key, Uvec value)
 {
 	std::pair<
 		std::map<std::string, Uvec>::iterator,
@@ -124,7 +180,7 @@ void	HTTPRequestParser::addField(std::string key, Uvec value)
 	}
 }
 
-void	HTTPRequestParser::processFields(std::vector<Uvec> lines)
+void	Request::processFields(std::vector<Uvec> lines)
 {
 	
 	
@@ -158,7 +214,7 @@ void	HTTPRequestParser::processFields(std::vector<Uvec> lines)
 	}
 }
 
-void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body)
+void	Request::processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body)
 {
 	std::vector<Uvec>	transfer_encoding_list = ft_split(transfer_encoding, Uvec((const unsigned char *)",", 1));
 	int	chunked = 0;
@@ -181,7 +237,12 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 		try
 		{
 			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
-			body += processed.second;
+			// add to file
+			// creation of the file based on the purpose
+			std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
+			file.write(reinterpret_cast<char *>(&transfer_encoding[0]), transfer_encoding.size());
+			file.close();
+			body_size += processed.second.size();
 			if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
 				req_state = PEND;
 			else
@@ -203,17 +264,55 @@ void	HTTPRequestParser::processTransferEncoding(const Uvec& transfer_encoding, c
 	}
 }
 
-void	HTTPRequestParser::processBody(const Uvec& raw_body)
+void	Request::processBody(const Uvec& raw_body)
 {
 	Uvec	transfer_encoding, content_length;
 	bool	transfer_encoding_found = getFieldValue("transfer-encoding", transfer_encoding);
 	bool	content_length_found = getFieldValue("content-length", content_length);
 
+	if ((transfer_encoding_found || content_length_found) && (method == GET || method == DELETE))
+	{
+		parsingCode = 400;
+		req_state = CCLS;
+		throw std::runtime_error("bad request(400): method doesn't accept body");
+	}
 	if (transfer_encoding_found && content_length_found)
 	{
 		parsingCode = 400;
 		req_state = CCLS;
 		throw std::runtime_error("bad request(400): both transfer-encoding and content-length found");
+	}
+	// set up file
+	if (method == POST)
+	{
+		if (cgi)
+			body_file_path = "/tmp/webserv/webserv_cgi_body_[number of client's fd]";
+		else
+		{
+			// check premission
+				// upload allowed?
+			
+				// check if file exists
+			std::string	file_path = "/tmp/webserv"; // root of the target path
+			file_path += target.path;
+			std::ifstream	i_file(file_path.c_str());
+			if (i_file.good()) // i_ already exists
+			{
+				i_file.close();
+				parsingCode = 400;
+				req_state = CCLS;
+				throw std::runtime_error("bad request(400): uploading existing file");
+			}
+			body_file_path = file_path;
+			std::ofstream	o_file(body_file_path.c_str());
+			if (!o_file.is_open()) // directory doesn't exist
+			{
+				parsingCode = 400;
+				req_state = CCLS;
+				throw std::runtime_error("bad request(400): uploading directory doesn't exist");
+			}
+			o_file.close();
+		}
 	}
 	if (transfer_encoding_found)
 	{
@@ -235,7 +334,7 @@ void	HTTPRequestParser::processBody(const Uvec& raw_body)
 		}
 		fields["content-length"] = trimmed_vec;
 
-		std::cerr << "length: " << length << ", body size: " << raw_body.size();
+		// std::cerr << "length: " << length << ", body size: " << raw_body.size();
 		if (length > raw_body.size())
 			req_state = PEND;
 		else if (length == raw_body.size())
@@ -246,7 +345,11 @@ void	HTTPRequestParser::processBody(const Uvec& raw_body)
 			req_state = CCLS;
 			throw std::runtime_error("content-length not valid");
 		}
-		body = raw_body;
+		// add to file
+		std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
+		file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
+		file.close();
+		body_size += raw_body.size();
 	}
 	else
 	{
@@ -260,7 +363,7 @@ void	HTTPRequestParser::processBody(const Uvec& raw_body)
 	}
 }
 
-void	HTTPRequestParser::addBody(Uvec raw_body)
+void	Request::addBody(Uvec raw_body)
 {
 	Uvec	transfer_encoding, content_length;
 	bool	transfer_encoding_found = getFieldValue("transfer-encoding", transfer_encoding);
@@ -272,12 +375,16 @@ void	HTTPRequestParser::addBody(Uvec raw_body)
 	}
 	else if (content_length_found)
 	{
-		body += raw_body;
+		// add to file
+		std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
+		file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
+		file.close();
+		body_size += raw_body.size();
 		unsigned long  length;
 		stringToUnsignedLong(std::string(content_length.begin(), content_length.end()), length);
-		if (length > body.size())
+		if (length > body_size)
 			req_state = PEND;
-		else if (length == body.size())
+		else if (length == body_size)
 			req_state = RESP;
 		else
 		{
@@ -291,13 +398,18 @@ void	HTTPRequestParser::addBody(Uvec raw_body)
 		parsingCode = 411;
 		throw std::runtime_error("body with no content-length or transfer-encoding");
 	}
+	if (cgi && req_state == RESP)
+		cgi->run(*this);
 }
 
-HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
+Request::Request(Uvec httpRequest)
 {
-	// std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
-	// std::cout << "____________________________________________________________________________" << std::endl << std::endl;
+	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
+	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
 	parsingCode = 200;
+	body_size = 0;
+	req_state = PEND;
+	cgi = NULL;
 	
 	// split with crlfcrlf to get 2 (headers and body)
 	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
@@ -310,11 +422,7 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	}
 	Uvec	headers(httpRequest.begin(), pos);
 	Uvec	rawBody(pos+4, httpRequest.end());
-
-	// std::cout << "headers: ";
-	// headers.print();
-	// std::cout << "rawBody: ";
-	// rawBody.print();
+	
 	std::vector<Uvec>	lines = ft_split(headers, CRLF);
 	
 	// for (std::vector<Uvec>::iterator it = lines.begin(); it < lines.end(); it++)
@@ -322,48 +430,46 @@ HTTPRequestParser::HTTPRequestParser(Uvec httpRequest)
 	// 	std::cout << "vec: ";
 	// 	(*it).print();
 	// }
-	req_state = CCLS;
+	
 	if (lines.size() < 2) // the least that should be there are three lines (start-line, host header field at least, empty line)
 	{
 		parsingCode = 400;
-		// std::cout << "HERE\n";
 		return;
 	}
 	processStartLine(lines[0]);
 	if (parsingCode == 400)
 		return ;
-
+	
 	// field line parsing:
 	processFields(lines);
 
-	// std::cout << "rawBody: ";
-	// rawBody.print();
-
 	processBody(rawBody);
+	if (cgi && req_state == RESP)
+		cgi->run(*this);
 }
 
 	// getter functions
-int	HTTPRequestParser::getParsingCode(void) const
+int	Request::getParsingCode(void) const
 {
 	return (parsingCode);
 }
 
-const t_method&		HTTPRequestParser::getMethod(void) const
+const t_method&		Request::getMethod(void) const
 {
 	return (method);
 }
 
-const std::string&	HTTPRequestParser::getTarget(void) const
+const t_target&	Request::getTarget(void) const
 {
 	return (target);
 }
 
-const std::map<std::string, Uvec>&	HTTPRequestParser::getFields(void) const
+const std::map<std::string, Uvec>&	Request::getFields(void) const
 {
 	return (fields);
 }
 
-bool		HTTPRequestParser::getFieldValue(const std::string& key, Uvec& value) const
+bool		Request::getFieldValue(const std::string& key, Uvec& value) const
 {
 	try
 	{
@@ -376,12 +482,17 @@ bool		HTTPRequestParser::getFieldValue(const std::string& key, Uvec& value) cons
 	}
 }
 
-const t_req_state&		HTTPRequestParser::getReqState(void) const
+const t_req_state&		Request::getReqState(void) const
 {
 	return (req_state);
 }
 
-const Uvec&			HTTPRequestParser::getBody(void) const
+const std::string&			Request::getBodyFilePath(void) const
 {
-	return (body);
+	return (body_file_path);
+}
+
+std::size_t			Request::getBodySize(void) const
+{
+	return (body_size);
 }

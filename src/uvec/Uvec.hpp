@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 22:40:11 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/07/28 17:05:56 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/04 10:29:57 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,11 +42,13 @@ class Uvec
 		Uvec&	operator+(const Uvec &other);
 		Uvec&	operator+=(const Uvec &other);
 		unsigned char&	operator[](std::size_t index);
+		unsigned char&	operator[](std::size_t index) const;
 
 		bool    operator==(const Uvec& other) const;
 		bool    operator!=(const Uvec& other) const;
 
 		void		push_back(unsigned char c);
+		void		clear(void);
 		std::size_t	size(void) const;
 		bool		has(unsigned char c) const;
 		iterator	find(unsigned char c);
@@ -55,12 +57,7 @@ class Uvec
 		const_iterator	find(const Uvec &other) const;
 		iterator	find(iterator begin, iterator end, const Uvec &other);
 		const_iterator	find(const_iterator begin, const_iterator end, const Uvec &other) const;
-
-		// to be deleted
-		void	print(void) const;
 };
-
-
-
+std::ostream&	operator<<(std::ostream& out, const Uvec& vec);
 
 #endif
