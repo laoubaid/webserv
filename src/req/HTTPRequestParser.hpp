@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/26 11:22:05 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/05 15:20:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include "httpParsingIncludes.hpp"
 
 class Cgi;
+class serverConf;
 
 class Request
 {
@@ -39,6 +40,8 @@ class Request
 		std::string							body_file_path;
 		t_req_state							req_state;
 		Cgi									*cgi;
+		const serverConf					*conf_;
+		int									client_fd_;
 		
 		void								processStartLine(Uvec startLine);
 		void								processFields(std::vector<Uvec> lines);
@@ -62,7 +65,7 @@ class Request
 		static Uvec	QPAIR;
 
 		Request(void);
-		Request(Uvec httpRequest);
+		Request(Uvec httpRequest, const serverConf& cfg, int fd_);
 		~Request(void);
 		
 		void				addBody(Uvec raw_body);
@@ -75,6 +78,10 @@ class Request
 		const t_req_state&	getReqState(void) const;
 		std::size_t			getBodySize(void) const;
 		const std::string&	getBodyFilePath(void) const;
+
+		Cgi* get_cgi() {
+			return cgi;
+		}
 };
 
 

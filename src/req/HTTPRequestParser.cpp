@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/04 10:17:59 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/06 01:52:12 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include.hpp"
+#include "../config/serverConf.hpp"
 
 std::map<std::string, validatorFunc>	Request::stdFields;
 std::vector<std::string>				Request::invalidList;
@@ -153,8 +154,13 @@ void	Request::processStartLine(Uvec startLine)
 	}
 	else
 		return (badRequest("invalid target"));
-	// if (!(method | get.location()))
-	// 	throw 405;
+
+	const locationConf& loc = conf_->identifyie_location(target.path);
+	if (!(loc.get_methods() & method)) {
+		parsingCode = 405;
+		return ;
+	}
+
 	// version validity
 	if (infos[2] != Uvec((const unsigned char*)"HTTP/1.1", 8))
 		return (badRequest("invalid http version"));
@@ -184,7 +190,7 @@ void	Request::processFields(std::vector<Uvec> lines)
 {
 	
 	
-	for (int i = 1; i < lines.size() && lines[i].size() != 0; i++)
+	for (size_t i = 1; i < lines.size() && lines[i].size() != 0; i++)
 	{
 		Uvec	key;
 		
@@ -286,15 +292,22 @@ void	Request::processBody(const Uvec& raw_body)
 	if (method == POST)
 	{
 		if (cgi)
-			body_file_path = "/tmp/webserv/webserv_cgi_body_[number of client's fd]";
+			body_file_path = "/tmp/webserv_cgi_body_" + std::to_string(client_fd_);
 		else
 		{
-			// check premission
-				// upload allowed?
-			
-				// check if file exists
-			std::string	file_path = "/tmp/webserv"; // root of the target path
-			file_path += target.path;
+			const locationConf& tmp = conf_->identifyie_location(target.path);
+			std::string file_path = tmp.get_path();
+			if (tmp.is_upset()) {
+				int tmpidx = target.path.rfind("/");
+				file_path = target.path.substr(tmpidx + 1);
+				file_path = tmp.get_upstore() + file_path;
+			} else {
+				parsingCode = 403; //tmeporray
+				req_state = RESP;
+				return ;
+			}
+
+			std::cout << "INFO: " << file_path << std::endl; 
 			std::ifstream	i_file(file_path.c_str());
 			if (i_file.good()) // i_ already exists
 			{
@@ -335,6 +348,7 @@ void	Request::processBody(const Uvec& raw_body)
 		fields["content-length"] = trimmed_vec;
 
 		// std::cerr << "length: " << length << ", body size: " << raw_body.size();
+		// std::cout << "\tPB [" << body_size << " : " << raw_body.size() << "]" << std::endl;
 		if (length > raw_body.size())
 			req_state = PEND;
 		else if (length == raw_body.size())
@@ -347,7 +361,8 @@ void	Request::processBody(const Uvec& raw_body)
 		}
 		// add to file
 		std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
-		file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
+		if (raw_body.size())
+			file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
 		file.close();
 		body_size += raw_body.size();
 	}
@@ -377,9 +392,11 @@ void	Request::addBody(Uvec raw_body)
 	{
 		// add to file
 		std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
-		file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
+		if (raw_body.size())
+			file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
 		file.close();
 		body_size += raw_body.size();
+		// std::cout << "\t[" << body_size << " : " << raw_body.size() << "]" << std::endl;
 		unsigned long  length;
 		stringToUnsignedLong(std::string(content_length.begin(), content_length.end()), length);
 		if (length > body_size)
@@ -402,8 +419,10 @@ void	Request::addBody(Uvec raw_body)
 		cgi->run(*this);
 }
 
-Request::Request(Uvec httpRequest)
+Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_)
 {
+	conf_ = &cfg;
+	client_fd_ = fd_;
 	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
 	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
 	parsingCode = 200;
@@ -418,6 +437,7 @@ Request::Request(Uvec httpRequest)
 	if (pos == httpRequest.end())
 	{
 		parsingCode = 400;
+		req_state = RESP;
 		return ;
 	}
 	Uvec	headers(httpRequest.begin(), pos);
@@ -434,11 +454,14 @@ Request::Request(Uvec httpRequest)
 	if (lines.size() < 2) // the least that should be there are three lines (start-line, host header field at least, empty line)
 	{
 		parsingCode = 400;
+		req_state = RESP;
 		return;
 	}
 	processStartLine(lines[0]);
-	if (parsingCode == 400)
+	if (parsingCode == 400) {
+		req_state = RESP;
 		return ;
+	}
 	
 	// field line parsing:
 	processFields(lines);

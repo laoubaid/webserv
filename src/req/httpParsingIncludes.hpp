@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpParsingIncludes.hpp                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/04 10:34:49 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/04 16:18:30 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,8 @@
 typedef enum e_method
 {
 	DELETE = 1 << 0,
-	POST = 1 << 2,
-	GET = 1 << 3,
+	POST = 1 << 1,
+	GET = 1 << 2,
 }	t_method;
 typedef enum e_req_state {
     PEND,
@@ -122,5 +122,7 @@ bool	regNameMatch(const Uvec &vec, Uvec::const_iterator &it);
 
 // to be refactored
 // std::string resolve_path(const std::string& str);
+
+// # include "../config/serverConf.hpp"
 
 #endif

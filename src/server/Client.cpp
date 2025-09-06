@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/04 10:29:52 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/06 01:11:57 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,17 +47,28 @@ int Client::receive(int epoll_fd) {
     int nread = recv(client_fd, buf, RECV_BUF - 1, 0);
     
     if (nread <= 0) {
-        // if (nread == 0)
-            // std::cout << "Client disconnected! (recv() == 0)" << std::endl;
-        // else
-            // perror("recv() failed");
+        if (nread == 0)
+            std::cout << "Client disconnected! (recv() == 0)" << std::endl;
+        else
+            perror("recv() failed");
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-        // std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
+        std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
         return -1;
     }
+    
+    // std::cout << "nread : " << nread << std::endl;
+    
     Uvec tmp_vec_buf(buf, nread); // Convert the buffer to Uvec
     Uvec delimiter((const unsigned char*)"\r\n\r\n", 4);
     vec_buf_ += tmp_vec_buf;
+
+    // std::cout << "vec_buf_" << vec_buf_.size() << std::endl;
+    
+    if (request_ && request_->getReqState() == PEND) {
+        process_recv_data(); 
+        return request_->getReqState();
+    }
+    
     if (vec_buf_.size() < RECV_BUF && vec_buf_.find(delimiter) == vec_buf_.end()) {
         return 0;
     }
@@ -66,33 +77,41 @@ int Client::receive(int epoll_fd) {
 }
 
 int Client::process_recv_data() {
-    std::cout << "process_recv_data called!" << std::endl;
+    // std::cout << "|\tprocess_recv_data called!" << std::endl;
     if (!request_) {
         try {
-            request_ = new Request(vec_buf_);
-            std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]" << std::endl;
+            request_ = new Request(vec_buf_, conf_, get_fd());
+            std::cout << "|\t|\tIDLE request CODE: [" << YLW_CLR << request_->getParsingCode() << DEF_CLR << "]";
+            std::cout << " state: {" << request_->getReqState() << "}" << std::endl;
             
             if (request_->getReqState() == PEND) {
-                vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
+                vec_buf_.clear();
+                // vec_buf_ = Uvec((const unsigned char*)"", 0);  // ugly clear hhhh
             }
         } catch (const std::exception &e) {
             std::cerr << "Error creating HTTPRequestParser: " << e.what() << std::endl;
             return -1; // Handle error appropriately
         }
     }
-    if (request_ && request_->getReqState() == PEND) {
+    else if (request_ && request_->getReqState() == PEND) {
+        // std::cout << "|\t|\tadding to body\n" << std::endl;
         try {
             request_->addBody(vec_buf_);
+            vec_buf_.clear();
         } catch (const std::exception &e) {
             std::cerr << "Error adding to body: " << e.what() << std::endl;
             return -1; // Handle error appropriately
         }
     }
-    if (request_ && request_->getReqState() == CCLS) {
-        delete request_;
-        request_ = NULL;
-    }
+    // if (request_ && request_->getReqState() == CCLS) {
+    //     std::cout << "is this usefull?\n";
+    //     delete request_;
+    //     request_ = NULL;
+    // }
     if (request_ && request_->getReqState() == RESP) {
+        // Cgi* tmp = request_->get_cgi();
+        // if (tmp)
+	    //     tmp->run(*request_);
         response_ = new HttpResponse(request_, conf_);
         // log();
     }
@@ -146,9 +165,9 @@ void Client::log() const {
         // Pick method color
         std::string method_str;
         switch (method) {
-            case 0: method_str = std::string(CYAN) + "GET" + RESET; break;
-            case 1: method_str = std::string(YELLOW) + "POST" + RESET; break;
-            case 2: method_str = std::string(RED) + "DELETE" + RESET; break;
+            case GET: method_str = std::string(CYAN) + "GET" + RESET; break;
+            case POST: method_str = std::string(YELLOW) + "POST" + RESET; break;
+            case DELETE: method_str = std::string(RED) + "DELETE" + RESET; break;
             default: method_str = "UNKNOWN"; break;
         }
 

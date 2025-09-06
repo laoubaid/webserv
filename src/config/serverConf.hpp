@@ -6,15 +6,17 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/02 05:12:24 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 15:42:12 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_CONF_HPP
 # define SERVER_CONF_HPP
 
-// # include "../include.hpp"
+# include "../include.hpp"
 # include "locationConf.hpp"
+
+// class locationConf;
 
 class serverConf
 {

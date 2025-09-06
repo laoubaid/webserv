@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/04 12:04:26 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/05 15:34:59 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ void	Cgi::set_env(const Request& req)
 	// values that are hardcoded and needs to be changed
 	std::string	DocumentRoot = "/var/www/html"; // The exact mapping depends on the server’s configuration (DocumentRoot, Alias, ScriptAlias, etc).
 	std::string	client_ip = "42.13.37.42"; // replace with client ip address
-	std::string	server_port = "8080"; // get post from config file
+	std::string	server_port = "8080"; // get port from config file
 
 	env_vec.push_back(std::string("AUTH_TYPE=") + get_auth_type(req));
 	if (req.getBodySize())
@@ -173,7 +173,7 @@ void	Cgi::set_argv(void)
 std::string	Cgi::run(const Request& req)
 {
 	// in the beginning of the server signal should be set
-	signal(SIGPIPE, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);        // chang place
 
 	int	status;
 	int pipe_in[2];
@@ -200,7 +200,7 @@ std::string	Cgi::run(const Request& req)
 	child_pid = pid;
 	close(pipe_in[0]);
 	close(pipe_out[1]);
-	sleep(1);
+	// sleep(1);                      // ??????????????
 	// past body to cgi
 	if (req.getBodySize())
 	{

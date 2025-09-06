@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:41 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/01 03:15:12 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 17:09:00 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class locationConf
 {
     private:
         std::string                 path_;          // error if not set
-        unsigned char               methods_;       // default GET, POST, DELETE
+        unsigned int                methods_;       // default GET, POST, DELETE
         bool                        has_methods_;   // default false
         std::pair<int, std::string> redirect_;      // could not exist fall to server block
         bool                        autoindex_;     // fall to server block
@@ -62,6 +62,15 @@ class locationConf
         }
         bool is_delete_allowed() {
             return methods_ & DELETE_BIT;
+        }
+        unsigned int get_methods() const {
+            return methods_;
+        }
+        bool is_upset() const {
+            return is_upset_;
+        }
+        const std::string& get_upstore() const {
+            return up_store_;
         }
         bool has_redirect() const {
             return has_redirect_;

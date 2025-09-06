@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/04 10:24:48 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/04 16:00:29 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,12 @@
             "Connection: close\r\n" \
             "Content-Length: 65\r\n\r\n" \
             "<html><body><center><h1>404 Not Found</h1><center></body></html>\n"
+
+# define METN_405_ "HTTP/1.1 405 Method Not Allowed\r\n" \
+            "Content-Type: text/html\r\n" \
+            "Connection: close\r\n" \
+            "Content-Length: 74\r\n\r\n" \
+            "<html><body><center><h1>405 Method Not Allowed</h1><center></body></html>\n"
 
 # define ELRG_413_ "HTTP/1.1 413 Entity Too Large\r\n" \
             "Content-Type: text/html\r\n" \

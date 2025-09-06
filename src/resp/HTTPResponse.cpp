@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/04 10:28:26 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/05 15:02:24 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,9 @@ void    HttpResponse::handle_error(int err_code) {
         case 404:
             resp_buff_ =  NOTF_404_;
             break;
+        case 405:
+            resp_buff_ =  METN_405_;
+            break;
         case 413:
             resp_buff_ =  ELRG_413_;
             break;
@@ -252,7 +255,7 @@ const std::string HttpResponse::generateResponse() {
     int         status_code = request_->getParsingCode();
 
     resp_buff_.clear();
-    // std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
+    std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
     if (status_code == 200) {
         t_method    method = request_->getMethod();
         std::string path = request_->getTarget().path;
@@ -274,7 +277,7 @@ const std::string HttpResponse::generateResponse() {
                         "\r\n" + html;
         }
     } else {
-        std::cout << RED_CLR <<  " request Error status code : " << status_code << DEF_CLR << std::endl;
+        // std::cout << RED_CLR <<  " request Error status code : " << status_code << DEF_CLR << std::endl;
         handle_error(status_code);
     }
     return resp_buff_;

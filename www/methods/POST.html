@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Raw Upload Test</title>
+</head>
+<body>
+    <h1>Raw Upload Test</h1>
+    <form id="uploadForm" method="POST">
+        <label for="filename">Filename:</label><br>
+        <input type="text" id="filename" name="filename" value="test.txt"><br><br>
+
+        <label for="content">File content:</label><br>
+        <textarea id="content" name="content" rows="10" cols="50">Hello world!</textarea><br><br>
+
+        <button type="button" onclick="upload()">Upload</button>
+    </form>
+
+    <script>
+        function upload() {
+            var filename = document.getElementById('filename').value;
+            var content = document.getElementById('content').value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/large_files/" + encodeURIComponent(filename), true);
+            xhr.setRequestHeader("Content-Type", "application/octet-stream");
+            // Browser automatically sends Content-Length
+            xhr.send(content);
+            xhr.onload = function() {
+                alert("Upload complete, server responded: " + xhr.status);
+            };
+        }
+    </script>
+</body>
+</html>

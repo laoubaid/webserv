@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/02 05:17:21 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/04 17:43:41 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ locationConf::locationConf(std::string& str, serverConf& cfg) {
     if (str.empty())
         throw std::runtime_error("unvalid location argumnet!");
     path_ = resolve_path(str);
-    methods_ = GET_BIT | POST_BIT | DELETE_BIT;
+    methods_ = 7;
     autoindex_ = cfg.is_autoindex();
     redirect_ = cfg.get_redirect();
     root_ = cfg.get_root();
@@ -98,7 +98,7 @@ void locationConf::set_up_store(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid upload_store paramter!");
     is_upset_ = true;
-    up_store_ = values[0];
+    up_store_ = resolve_path(values[0]) + "/";
 }
 
 void locationConf::set_cgi(std::vector<std::string>& values) {
