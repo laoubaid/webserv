@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/05 15:20:27 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:32:18 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 class Cgi;
 class serverConf;
+class locationConf;
 
 class Request
 {
@@ -32,23 +33,26 @@ class Request
 		};
 		static  StaticContainersInitializer	initializer;
 
-		int									parsingCode;
-		t_method							method;
-		t_target							target;
-		std::map<std::string, Uvec>			fields;
-		std::size_t							body_size;
-		std::string							body_file_path;
-		t_req_state							req_state;
-		Cgi									*cgi;
-		const serverConf					*conf_;
-		int									client_fd_;
+		int									_parsingCode;
+		t_method							_method;
+		t_target							_target;
+		std::map<std::string, Uvec>			_fields;
+		bool								_chunked;
+		std::size_t							_content_length;
+		std::size_t							_body_size;
+		std::string							_body_file_path;
+		t_req_state							_req_state;
+		Cgi									*_cgi;
+		const serverConf					*_conf;
+		const locationConf					*_loc;
+		int									_client_fd;
 		
 		void								processStartLine(Uvec startLine);
 		void								processFields(std::vector<Uvec> lines);
 		void								addField(std::string key, Uvec value);
-		void								badRequest(std::string err_msg);
-		void								processBody(const Uvec& raw_body);
-		void								processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body);
+		int									req_err(std::string throw_msg, int status_code, t_req_state req_state);
+		void								setup_body(const Uvec& raw_body);
+		void								processTransferEncoding(const Uvec& raw_body);
 		void								is_cgi(std::string cgi_dir, std::vector<std::string> extensions);
 	public:
 		// vectors for nomalized characters
@@ -80,8 +84,11 @@ class Request
 		const std::string&	getBodyFilePath(void) const;
 
 		Cgi* get_cgi() {
-			return cgi;
+			return (_cgi);
 		}
+		const locationConf& getlocation() const {
+            return *_loc;
+        }
 };
 
 

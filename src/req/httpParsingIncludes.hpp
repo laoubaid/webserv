@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpParsingIncludes.hpp                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/04 16:18:30 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/07 20:50:15 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ typedef enum e_method
 typedef enum e_req_state {
     PEND,
     RESP,
-    CCLS
 }	t_req_state;
 // typedef std::vector<unsigned char> t_vec_uc;
 typedef bool (*validatorFunc)(const Uvec &);
@@ -102,6 +101,7 @@ bool	transferCodingMatch(const Uvec &vec, Uvec::const_iterator &it);
 
 // vec validators
 bool		validateTarget(const Uvec &vec);
+bool	validateHttpV(const Uvec &vec);
 bool	validateFieldName(const Uvec &vec);
 bool	validateFieldValue(const Uvec &vec);
 bool	validateContentLength(const Uvec &vec);

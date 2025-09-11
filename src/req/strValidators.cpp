@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:53:41 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/19 23:51:33 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/07 20:50:06 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,27 @@ bool	validateTarget(const Uvec &vec)
 		queryMatch(vec, it);
 	}
 	if (it != vec.end())
+		return (false);
+	return (true);
+}
+
+bool	validateHttpV(const Uvec &vec)
+{
+	Uvec::const_iterator	it = vec.begin();
+
+	if (vec.size() != 8)
+		return (false);
+	Uvec	http((const unsigned char*)"HTTP/", 5);
+	if (Uvec(vec.begin(), vec.begin() +5) != http)
+		return (false);
+	it += 5;
+	if (!Request::DIGIT.has(*it))
+		return (false);
+	it++;
+	if (*it != '.')
+		return (false);
+	it++;
+	if (!Request::DIGIT.has(*it))
 		return (false);
 	return (true);
 }

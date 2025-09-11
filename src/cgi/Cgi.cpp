@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/05 15:34:59 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/08 14:21:14 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,8 @@ std::string	Cgi::run(const Request& req)
 	// in the beginning of the server signal should be set
 	signal(SIGPIPE, SIG_IGN);        // chang place
 
+	// should throw exception in case the file doesn't exist or can't be run
+	
 	int	status;
 	int pipe_in[2];
 	int pipe_out[2];

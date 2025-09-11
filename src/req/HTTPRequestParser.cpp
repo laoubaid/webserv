@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/06 01:52:12 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:35:53 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,51 +67,55 @@ Request::Request(void)
 }
 Request::~Request(void)
 {
-	if (cgi)
+	if (_cgi)
 	{
-		delete cgi;
-		std::remove(body_file_path.c_str());
+		delete _cgi;
+		// std::remove(_body_file_path.c_str());
 	}
-	// delete file if it is tmp
 }
 
-void	Request::badRequest(std::string err_msg)
+int	Request::req_err(std::string throw_msg, int status_code, t_req_state state)
 {
-	parsingCode = 400;
-	std::cerr << RED_COLOR << "[BAD REQUEST][ERROR CODE 400]: " << err_msg << RESET_COLOR << std::endl;
+	_parsingCode = status_code;
+	_req_state = state;
+	if (throw_msg.size())
+		throw std::runtime_error(throw_msg);
+	if (_body_file_path.size())
+		std::remove(_body_file_path.c_str());
+	return (1);
 }
 
 void	Request::is_cgi(std::string cgi_dir, std::vector<std::string> extensions)
 {
-	std::string::iterator	start = target.path.begin();
-	start++;
-	std::string::iterator it = std::find(start, target.path.end(), '/');
-	if (std::string(start, it) == cgi_dir) // cgi dir found
+	///////////////////// hard coded /////////////////////////////
+	//	cgi_dir = "/cgi-dir/";                                  //
+	//	extensions = {"cgi", "py", "php"};                      //
+	//////////////////////////////////////////////////////////////
+
+	if (_target.path.size() > cgi_dir.size() && cgi_dir == _target.path.substr(0, cgi_dir.size())) // cgi dir found
 	{
-		if (it == target.path.end() || it +1 == target.path.end()) // in case "/bin-dir" or "/bin-dir/"
-			return ;
-		cgi = new Cgi;
-		it = std::find(it+1, target.path.end(), '/');
-		cgi->set_script_name(std::string(target.path.begin(), it));
-		if (it != target.path.end())
+		_cgi = new Cgi;
+		std::string::iterator it = std::find(_target.path.begin() + cgi_dir.size(), _target.path.end(), '/');
+		_cgi->set_script_name(std::string(_target.path.begin(), it));
+		if (it != _target.path.end())
 			it++;
-		cgi->set_path_info(std::string(it, target.path.end()));
+		_cgi->set_path_info(std::string(it, _target.path.end()));
 		return ;
 	}
-	it = std::find(target.path.begin(), target.path.end(), '.');
-	if (it != target.path.end())
+	std::string::iterator it = std::find(_target.path.begin(), _target.path.end(), '.');
+	if (it != _target.path.end())
 	{
-		std::string::iterator	ext_end = std::find(it +1, target.path.end(), '/');
+		std::string::iterator	ext_end = std::find(it +1, _target.path.end(), '/');
 		std::string	ext = std::string(it+1, ext_end);
 		for (std::vector<std::string>::iterator it = extensions.begin(); it < extensions.end(); it++)
 		{
 			if (*it == ext) // extension found
 			{
-				cgi = new Cgi;
-				cgi->set_script_name(std::string(target.path.begin(), ext_end));
-				if (ext_end != target.path.end())
+				_cgi = new Cgi;
+				_cgi->set_script_name(std::string(_target.path.begin(), ext_end));
+				if (ext_end != _target.path.end())
 					ext_end++;
-				cgi->set_path_info(std::string(ext_end, target.path.end()));
+				_cgi->set_path_info(std::string(ext_end, _target.path.end()));
 				return ;
 			}
 		}
@@ -125,45 +129,40 @@ void	Request::processStartLine(Uvec startLine)
 	std::vector<Uvec>	infos = ft_split(startLine, sp);
 	
 	if (infos.size() != 3)
-		return (badRequest("invalid number of words in start line"));
+		req_err("invalid number of words in start line", 400, RESP);
 	// method validity
 	if (infos[0] == Uvec((const unsigned char*)"GET", 3))
-		method = GET;
+		_method = GET;
 	else if (infos[0] == Uvec((const unsigned char*)"POST", 4))
-		method = POST;
+		_method = POST;
 	else if (infos[0] == Uvec((const unsigned char*)"DELETE", 6))
-		method = DELETE;
+		_method = DELETE;
 	else
-	{
-		parsingCode = 501;
-		return;
-	}
+		req_err("method not supported", 501, RESP);
 	// target validity
 	if (validateTarget(infos[1]))
 	{
-		target.raw = std::string(infos[1].begin(), infos[1].end());
+		_target.raw = std::string(infos[1].begin(), infos[1].end());
 		// process target and assign the the target struct
 		Uvec::iterator	it = infos[1].find('?');
-		target.path = decode_url(resolve_path(std::string(infos[1].begin(), it)));
+		_target.path = decode_url(resolve_path(std::string(infos[1].begin(), it)));
 		if (it != infos[1].end())
 			it++; 
-		target.query = std::string(it, infos[1].end());
+		_target.query = std::string(it, infos[1].end());
 		// check permission for upload
 		std::vector<std::string>	ext = {"cgi", "py", "php"};
-		is_cgi("cgi-dir", ext); // should throw exception in case the file doesn't exist or can't be run
+		is_cgi("/cgi-dir/", ext);
 	}
 	else
-		return (badRequest("invalid target"));
+		req_err("invalid target", 400, RESP);
 
-	const locationConf& loc = conf_->identifyie_location(target.path);
-	if (!(loc.get_methods() & method)) {
-		parsingCode = 405;
-		return ;
-	}
+	_loc = &_conf->identifie_location(_target.path);
+    if (!(_loc->get_methods() & _method)) 
+		req_err("method not allowed", 405, RESP);
 
 	// version validity
-	if (infos[2] != Uvec((const unsigned char*)"HTTP/1.1", 8))
-		return (badRequest("invalid http version"));
+	if (!validateHttpV(infos[2]))
+		req_err("invalid http version format", 400, RESP);
 }
 
 void	Request::addField(std::string key, Uvec value)
@@ -171,12 +170,13 @@ void	Request::addField(std::string key, Uvec value)
 	std::pair<
 		std::map<std::string, Uvec>::iterator,
 		bool
-	>	result = fields.insert(std::make_pair(key, value));
+	>	result = _fields.insert(std::make_pair(key, value));
 
 	if (!result.second)
 	{
 		if (std::find(invalidList.begin(), invalidList.end(), key) != invalidList.end())
-			return (badRequest("header field doesn't qualify as a list"));
+			req_err("header field doesn't qualify as a list", 400, RESP);
+			// return (badRequest("header field doesn't qualify as a list"));
 		else
 		{
 			Uvec	sep((const unsigned char*)" , ", 3);
@@ -188,17 +188,13 @@ void	Request::addField(std::string key, Uvec value)
 
 void	Request::processFields(std::vector<Uvec> lines)
 {
-	
-	
-	for (size_t i = 1; i < lines.size() && lines[i].size() != 0; i++)
+	for (std::size_t i = 1; i < lines.size() && lines[i].size() != 0; i++)
 	{
 		Uvec	key;
 		
-		// t_vec_uc::iterator	colon = std::find(lines[i].begin(), lines[i].end(), ':');
 		Uvec::iterator	colon = lines[i].find(':');
 		if (colon == lines[i].end())
-			return (badRequest("colon not found"));
-		// std::transform(lines[i].begin(), colon, std::back_inserter(key), toLowerChar); // does it work???
+			req_err("bad header field: colon not found", 400, RESP);
 		for (Uvec::iterator it = lines[i].begin(); it != colon; it++)
 		{
 			key.push_back(tolower(*it));
@@ -206,130 +202,77 @@ void	Request::processFields(std::vector<Uvec> lines)
 		
 		Uvec	value = ft_trim(Uvec(colon +1, lines[i].end()));
 		if (!validateFieldName(key))
-			return (badRequest("header field name not valid"));
+			req_err("bad header field: invalid header field name", 400, RESP);
 		std::string	str_key(key.begin(), key.end());
 		std::map<std::string, validatorFunc>::iterator it = stdFields.find(str_key);
 		if (it == stdFields.end())
 		{
 			if (!validateFieldValue(value))
-				return (badRequest("default header field value not valid"));
+				req_err("bad header field: invalid header field value (default)", 400, RESP);
 		}
 		else if (!it->second(value))
-			return (badRequest("header field value not valid"));
+			req_err("bad header field: invalid header field value", 400, RESP);
 		addField(str_key, value);
 	}
 }
 
-void	Request::processTransferEncoding(const Uvec& transfer_encoding, const Uvec& raw_body)
-{
-	std::vector<Uvec>	transfer_encoding_list = ft_split(transfer_encoding, Uvec((const unsigned char *)",", 1));
-	int	chunked = 0;
-	Uvec	chunked_vec = Uvec((const unsigned char *)"chunked", 7);
-	for (std::vector<Uvec>::iterator it = transfer_encoding_list.begin(); it != transfer_encoding_list.end(); it++)
-	{
-		if (ft_trim(*it) == chunked_vec)
-		{
-			chunked = 1;
-			break;
-		}
-	}
-	if (chunked)
-	{
-		if (!raw_body.size())
-		{
-			req_state = PEND;
-			return;
-		}
-		try
-		{
-			std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
-			// add to file
-			// creation of the file based on the purpose
-			std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
-			file.write(reinterpret_cast<char *>(&transfer_encoding[0]), transfer_encoding.size());
-			file.close();
-			body_size += processed.second.size();
-			if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
-				req_state = PEND;
-			else
-				req_state = RESP;
-		}
-		catch(const std::exception& e)
-		{
-			// std::cerr << "HERE " << e.what() << "\n";
-			parsingCode = 400;
-			req_state = CCLS;
-			throw std::runtime_error("invalid chunked size number");
-		}
-	}
-	else
-	{
-		parsingCode = 400;
-		req_state = CCLS;
-		throw std::runtime_error("body with transfer-encoding but no chunked");
-	}
-}
-
-void	Request::processBody(const Uvec& raw_body)
+void	Request::setup_body(const Uvec& raw_body)
 {
 	Uvec	transfer_encoding, content_length;
 	bool	transfer_encoding_found = getFieldValue("transfer-encoding", transfer_encoding);
 	bool	content_length_found = getFieldValue("content-length", content_length);
 
-	if ((transfer_encoding_found || content_length_found) && (method == GET || method == DELETE))
-	{
-		parsingCode = 400;
-		req_state = CCLS;
-		throw std::runtime_error("bad request(400): method doesn't accept body");
-	}
+	if ((transfer_encoding_found || content_length_found) && (_method == GET || _method == DELETE))
+		req_err("method doesn't accept body", 400, RESP);
 	if (transfer_encoding_found && content_length_found)
-	{
-		parsingCode = 400;
-		req_state = CCLS;
-		throw std::runtime_error("bad request(400): both transfer-encoding and content-length found");
-	}
+		req_err("both transfer-encoding and content-length found", 400, RESP);
 	// set up file
-	if (method == POST)
+	if (_method == POST)
 	{
-		if (cgi)
-			body_file_path = "/tmp/webserv_cgi_body_" + std::to_string(client_fd_);
+		if (_cgi)
+			_body_file_path = "/tmp/webserv_cgi_body_" + std::to_string(_client_fd);
 		else
 		{
-			const locationConf& tmp = conf_->identifyie_location(target.path);
+			const locationConf& tmp = *_loc;
 			std::string file_path = tmp.get_path();
 			if (tmp.is_upset()) {
-				int tmpidx = target.path.rfind("/");
-				file_path = target.path.substr(tmpidx + 1);
+				int tmpidx = _target.path.rfind("/");
+				file_path = _target.path.substr(tmpidx + 1);
 				file_path = tmp.get_upstore() + file_path;
-			} else {
-				parsingCode = 403; //tmeporray
-				req_state = RESP;
-				return ;
-			}
-
+			} else 
+				req_err("upload not set", 403, RESP); // ! what is the status code of this one???
+		
 			std::cout << "INFO: " << file_path << std::endl; 
 			std::ifstream	i_file(file_path.c_str());
 			if (i_file.good()) // i_ already exists
 			{
 				i_file.close();
-				parsingCode = 400;
-				req_state = CCLS;
-				throw std::runtime_error("bad request(400): uploading existing file");
+				req_err("uploading existing file", 400, RESP);
 			}
-			body_file_path = file_path;
-			std::ofstream	o_file(body_file_path.c_str());
+			_body_file_path = file_path;
+			std::ofstream	o_file(_body_file_path.c_str());
 			if (!o_file.is_open()) // directory doesn't exist
-			{
-				parsingCode = 400;
-				req_state = CCLS;
-				throw std::runtime_error("bad request(400): uploading directory doesn't exist");
-			}
+				req_err("uploading directory doesn't exist", 400, RESP);
 			o_file.close();
 		}
 	}
 	if (transfer_encoding_found)
 	{
-		processTransferEncoding(transfer_encoding, raw_body);
+		std::vector<Uvec>	transfer_encoding_list = ft_split(transfer_encoding, Uvec((const unsigned char *)",", 1));
+		int	chunked = 0;
+		Uvec	chunked_vec = Uvec((const unsigned char *)"chunked", 7);
+		for (std::vector<Uvec>::iterator it = transfer_encoding_list.begin(); it != transfer_encoding_list.end(); it++)
+		{
+			if (ft_trim(*it) == chunked_vec)
+			{
+				chunked = 1;
+				break;
+			}
+		}
+		if (chunked)
+			chunked = true;
+		else
+			req_err("body with transfer-encoding but no chunked", 400, RESP);
 	}
 	else if (content_length_found)
 	{
@@ -343,103 +286,86 @@ void	Request::processBody(const Uvec& raw_body)
 			unsigned long	v;
 			stringToUnsignedLong(std::string(trimmed_vec.begin(), trimmed_vec.end()), v);
 			if (v != length)
-				return (badRequest("content length list has different values"));
+				req_err("content length list has different values", 400, RESP);
 		}
-		fields["content-length"] = trimmed_vec;
-
-		// std::cerr << "length: " << length << ", body size: " << raw_body.size();
-		// std::cout << "\tPB [" << body_size << " : " << raw_body.size() << "]" << std::endl;
-		if (length > raw_body.size())
-			req_state = PEND;
-		else if (length == raw_body.size())
-			req_state = RESP;
-		else
-		{
-			parsingCode = 400;
-			req_state = CCLS;
-			throw std::runtime_error("content-length not valid");
-		}
-		// add to file
-		std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
-		if (raw_body.size())
-			file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
-		file.close();
-		body_size += raw_body.size();
+		_fields["content-length"] = trimmed_vec;
+		_content_length = length;
 	}
 	else
 	{
 		if (!raw_body.size())
-			req_state = RESP;
+			_req_state = RESP;
 		else
-		{
-			parsingCode = 411;
-			throw std::runtime_error("body with no content-length or transfer-encoding");
-		}
+			req_err("body with no content-length or transfer-encoding", 411, RESP);
+	}
+}
+
+void	Request::processTransferEncoding(const Uvec& raw_body)
+{
+	try
+	{
+		std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
+		// add to file
+		std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
+		if (processed.first)
+			file.write(reinterpret_cast<char *>(&processed.second[0]), processed.second.size());
+		file.close();
+		_body_size += processed.first;
+		if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
+			_req_state = PEND;
+		else
+			_req_state = RESP;
+	}
+	catch(const std::exception& e)
+	{
+		req_err(std::string("invalid chunked body: ") + e.what(), 400, RESP);
 	}
 }
 
 void	Request::addBody(Uvec raw_body)
 {
-	Uvec	transfer_encoding, content_length;
-	bool	transfer_encoding_found = getFieldValue("transfer-encoding", transfer_encoding);
-	bool	content_length_found = getFieldValue("content-length", content_length);
-
-	if (transfer_encoding_found)
+	if (_chunked)
 	{
-		processTransferEncoding(transfer_encoding, raw_body);
-	}
-	else if (content_length_found)
-	{
-		// add to file
-		std::ofstream	file(body_file_path.c_str(), std::ios::binary | std::ios::app);
-		if (raw_body.size())
-			file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
-		file.close();
-		body_size += raw_body.size();
-		// std::cout << "\t[" << body_size << " : " << raw_body.size() << "]" << std::endl;
-		unsigned long  length;
-		stringToUnsignedLong(std::string(content_length.begin(), content_length.end()), length);
-		if (length > body_size)
-			req_state = PEND;
-		else if (length == body_size)
-			req_state = RESP;
-		else
-		{
-			parsingCode = 400;
-			req_state = CCLS;
-			throw std::runtime_error("content-length not valid");
-		}
+		processTransferEncoding(raw_body);
 	}
 	else
 	{
-		parsingCode = 411;
-		throw std::runtime_error("body with no content-length or transfer-encoding");
+		// add to file
+		std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
+		if (raw_body.size())
+			file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
+		file.close();
+		_body_size += raw_body.size();
+		if (_content_length > _body_size)
+			_req_state = PEND;
+		else if (_content_length == _body_size)
+			_req_state = RESP;
+		else
+			req_err("body received is bigger than the content-length", 400, RESP);
 	}
-	if (cgi && req_state == RESP)
-		cgi->run(*this);
+	if (_cgi && _req_state == RESP)
+		_cgi->run(*this);
 }
 
-Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_)
+Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_) :
+_conf(&cfg), _client_fd(fd_), _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL)
 {
-	conf_ = &cfg;
-	client_fd_ = fd_;
+	// conf_ = &cfg;
+	// client_fd_ = fd_;
 	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
 	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
-	parsingCode = 200;
-	body_size = 0;
-	req_state = PEND;
-	cgi = NULL;
+	// parsingCode = 200;
+	// body_size = 0;
+	// req_state = PEND;
+	// cgi = NULL;
 	
 	// split with crlfcrlf to get 2 (headers and body)
 	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
 	Uvec::iterator	pos = httpRequest.find(DCRLF);
 
 	if (pos == httpRequest.end())
-	{
-		parsingCode = 400;
-		req_state = RESP;
-		return ;
-	}
+		req_err("Req empty line not found", 400, RESP);
+	
 	Uvec	headers(httpRequest.begin(), pos);
 	Uvec	rawBody(pos+4, httpRequest.end());
 	
@@ -452,51 +378,51 @@ Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_)
 	// }
 	
 	if (lines.size() < 2) // the least that should be there are three lines (start-line, host header field at least, empty line)
-	{
-		parsingCode = 400;
-		req_state = RESP;
-		return;
-	}
+		req_err("start line or mandatory header not found", 400, RESP);
+	
 	processStartLine(lines[0]);
-	if (parsingCode == 400) {
-		req_state = RESP;
-		return ;
-	}
+	// if (parsingCode == 400) {
+	// 	req_state = RESP;
+	// 	return ;
+	// }
 	
 	// field line parsing:
 	processFields(lines);
 
-	processBody(rawBody);
-	if (cgi && req_state == RESP)
-		cgi->run(*this);
+	setup_body(rawBody);
+
+	if (rawBody.size())
+		addBody(rawBody);
+	if (_cgi && _req_state == RESP)
+		_cgi->run(*this);
 }
 
 	// getter functions
 int	Request::getParsingCode(void) const
 {
-	return (parsingCode);
+	return (_parsingCode);
 }
 
 const t_method&		Request::getMethod(void) const
 {
-	return (method);
+	return (_method);
 }
 
 const t_target&	Request::getTarget(void) const
 {
-	return (target);
+	return (_target);
 }
 
 const std::map<std::string, Uvec>&	Request::getFields(void) const
 {
-	return (fields);
+	return (_fields);
 }
 
 bool		Request::getFieldValue(const std::string& key, Uvec& value) const
 {
 	try
 	{
-		value = getValue(fields, key);
+		value = getValue(_fields, key);
 		return (true);
 	}
 	catch(const std::exception& e)
@@ -507,15 +433,15 @@ bool		Request::getFieldValue(const std::string& key, Uvec& value) const
 
 const t_req_state&		Request::getReqState(void) const
 {
-	return (req_state);
+	return (_req_state);
 }
 
 const std::string&			Request::getBodyFilePath(void) const
 {
-	return (body_file_path);
+	return (_body_file_path);
 }
 
 std::size_t			Request::getBodySize(void) const
 {
-	return (body_size);
+	return (_body_size);
 }
