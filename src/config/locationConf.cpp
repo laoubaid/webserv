@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/04 17:43:41 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/09 11:45:29 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void locationConf::set_redirect(std::vector<std::string>& values) {
         throw std::runtime_error("unknown redirection code!");
     // valid redirections 301 302 303 307 308
     redirect_.first = code;
-    redirect_.second = values[1];
+    redirect_.second = resolve_path(values[1]);
     has_redirect_ = true;
 }
 
@@ -72,14 +72,14 @@ void locationConf::set_root(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid root paramter!");
     
-    root_ = values[0];
+    root_ = resolve_path(values[0]);
 }
 
 void locationConf::set_index(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid index paramter!");
     is_indexed_ = true;
-    index_ = values[0];
+    index_ = resolve_path(values[0]);
 }
 
 void locationConf::set_auto_index(std::vector<std::string>& values) {
@@ -98,13 +98,15 @@ void locationConf::set_up_store(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid upload_store paramter!");
     is_upset_ = true;
-    up_store_ = resolve_path(values[0]) + "/";
+    up_store_ = resolve_path(values[0]);  //! this might need "/", use exact size instead in the post method
 }
 
 void locationConf::set_cgi(std::vector<std::string>& values) {
-    if (values.size() != 2)
-        throw std::runtime_error("invalid CGI paramter!");
+    if (values.size() < 2)
+        throw std::runtime_error("Missing CGI paramter!");
     has_cgi_ = true;
-    cgi_ext_ = values[0];
-    cgi_path_ = values[1];
+
+	if (values[0].rfind("."))
+		throw std::runtime_error("Malformed CGI extentions");
+	cgis_[values[0]] = resolve_path(values[1]);
 }

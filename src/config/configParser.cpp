@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/05 23:00:06 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/08 12:50:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,7 +252,7 @@ void Block::process_server(std::vector<serverConf>& servres) {
             if (visited.count(path))
                 throw std::runtime_error("redirection loop detected!");
             visited.insert(path);
-            const locationConf& lct = srvr_cfg.identifyie_location(path);
+            const locationConf& lct = srvr_cfg.identifie_location(path);
             if (lct.has_redirect() == false)
                 break ;
             path = lct.get_redirect().second;

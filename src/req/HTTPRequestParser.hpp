@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/11 22:32:18 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:41:14 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ class Request
 		Cgi* get_cgi() {
 			return (_cgi);
 		}
-		const locationConf& getlocation() const {
+		const locationConf& get_location() const {
             return *_loc;
         }
 };

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/11 22:35:53 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:43:19 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -348,7 +348,7 @@ void	Request::addBody(Uvec raw_body)
 }
 
 Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_) :
-_conf(&cfg), _client_fd(fd_), _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL)
+_parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL), _conf(&cfg), _client_fd(fd_)
 {
 	// conf_ = &cfg;
 	// client_fd_ = fd_;

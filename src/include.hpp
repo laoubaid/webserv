@@ -6,17 +6,18 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/04 15:46:30 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/07 15:43:02 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef _INCLUDE_HPP_
 # define _INCLUDE_HPP_
 
-# include <unistd.h>
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
+# include <cstdio>
+# include <cstdlib>
+# include <cerrno>
+# include <cstring>
+# include <string>
 # include <error.h>
 # include <sys/socket.h>
 # include <iostream>
@@ -59,7 +60,7 @@ typedef struct	s_conf2
 	
 }				t_conf2;
 
-std::string         resolve_path(const std::string& str);
+std::string	resolve_path(const std::string& str);
 
 # include "req/httpParsingIncludes.hpp"
 # include "req/HTTPRequestParser.hpp"

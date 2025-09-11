@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 11:24:34 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/02 04:12:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/07 15:21:57 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,16 @@
 
 Socket::Socket(sockaddr_in addr)
 {
-    // std::cout << "Socket SVR Default constracteur called!" << std::endl;
+	// std::cout << "Socket SVR Default constracteur called!" << std::endl;
 	s_fd_ = socket(addr.sin_family, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    if (s_fd_ == -1) {
+	if (s_fd_ == -1) {
 		throw std::runtime_error("socket() creation failed! ");
 	}
-    s_addr_ = addr;
+	s_addr_ = addr;
 }
 
 Socket::Socket(int clt_fd){
-    // std::cout << "Socket CLT Default constracteur called!" << std::endl;
+	// std::cout << "Socket CLT Default constracteur called!" << std::endl;
 	s_fd_ = clt_fd;
 }
 
@@ -34,7 +34,7 @@ Socket::~Socket() {
 }
 
 int Socket::get_fd() const {
-    return s_fd_;
+	return s_fd_;
 }
 
 
@@ -47,10 +47,10 @@ int Socket::bind() {
 }
 
 int Socket::listen(int s__n) {
-    if (::listen(s_fd_, s__n)) {
+	if (::listen(s_fd_, s__n)) {
 		return 1;
 		// throw std::runtime_error("listen() failed!");
-    }
+	}
 	return 0;
 }
 
