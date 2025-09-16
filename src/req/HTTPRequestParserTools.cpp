@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/04 10:34:30 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/16 15:05:31 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -209,6 +209,12 @@ std::string	get_ext(const std::string& path)
 		return (std::string(it+1, path.end()));
 	else
 		return (std::string(""));
+}
+
+bool fileExists(const char* filename)
+{
+	struct stat buffer;
+    return (stat(filename, &buffer) == 0);
 }
 
 // to be refactored

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/11 22:43:19 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/16 17:39:17 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,8 @@ Request::~Request(void)
 		delete _cgi;
 		// std::remove(_body_file_path.c_str());
 	}
+	if (_file.is_open())
+		_file.close();
 }
 
 int	Request::req_err(std::string throw_msg, int status_code, t_req_state state)
@@ -85,38 +87,35 @@ int	Request::req_err(std::string throw_msg, int status_code, t_req_state state)
 	return (1);
 }
 
-void	Request::is_cgi(std::string cgi_dir, std::vector<std::string> extensions)
+void	Request::is_cgi()
 {
 	///////////////////// hard coded /////////////////////////////
 	//	cgi_dir = "/cgi-dir/";                                  //
 	//	extensions = {"cgi", "py", "php"};                      //
 	//////////////////////////////////////////////////////////////
+	// std::string		location = _loc->get_path(); //   /cgi-dir/scriptname.php/
 
-	if (_target.path.size() > cgi_dir.size() && cgi_dir == _target.path.substr(0, cgi_dir.size())) // cgi dir found
+	
+	if (_loc->has_cgi())
 	{
-		_cgi = new Cgi;
-		std::string::iterator it = std::find(_target.path.begin() + cgi_dir.size(), _target.path.end(), '/');
-		_cgi->set_script_name(std::string(_target.path.begin(), it));
-		if (it != _target.path.end())
-			it++;
-		_cgi->set_path_info(std::string(it, _target.path.end()));
-		return ;
-	}
-	std::string::iterator it = std::find(_target.path.begin(), _target.path.end(), '.');
-	if (it != _target.path.end())
-	{
-		std::string::iterator	ext_end = std::find(it +1, _target.path.end(), '/');
-		std::string	ext = std::string(it+1, ext_end);
-		for (std::vector<std::string>::iterator it = extensions.begin(); it < extensions.end(); it++)
+		std::cout << "location has cgi\n";
+		std::string::iterator	a = _target.path.begin() + _loc->get_path().size();
+		if (*a == '/')
+			a++;
+		std::string::iterator b = std::find(a, _target.path.end(), '/');
+		std::string	filename(a, b);
+		std::size_t	pos = filename.rfind('.');
+		if (pos != std::string::npos)
 		{
-			if (*it == ext) // extension found
+			std::string	ext = std::string(a + pos, b);
+			if (_loc->valid_cgi_ext(ext)) // extension found
 			{
-				_cgi = new Cgi;
-				_cgi->set_script_name(std::string(_target.path.begin(), ext_end));
-				if (ext_end != _target.path.end())
-					ext_end++;
-				_cgi->set_path_info(std::string(ext_end, _target.path.end()));
-				return ;
+				std::cout << "cgi ext found\n";
+				_cgi = new Cgi(this, _loc->get_cgi_path(ext));
+				_cgi->set_script_name(std::string(_target.path.begin(), b));
+				if (b != _target.path.end())
+					b++;
+				_cgi->set_path_info(std::string(b, _target.path.end()));
 			}
 		}
 	}
@@ -150,13 +149,12 @@ void	Request::processStartLine(Uvec startLine)
 			it++; 
 		_target.query = std::string(it, infos[1].end());
 		// check permission for upload
-		std::vector<std::string>	ext = {"cgi", "py", "php"};
-		is_cgi("/cgi-dir/", ext);
+		_loc = &_conf->identifie_location(_target.path);
+		is_cgi();
 	}
 	else
 		req_err("invalid target", 400, RESP);
 
-	_loc = &_conf->identifie_location(_target.path);
     if (!(_loc->get_methods() & _method)) 
 		req_err("method not allowed", 405, RESP);
 
@@ -238,7 +236,7 @@ void	Request::setup_body(const Uvec& raw_body)
 			if (tmp.is_upset()) {
 				int tmpidx = _target.path.rfind("/");
 				file_path = _target.path.substr(tmpidx + 1);
-				file_path = tmp.get_upstore() + file_path;
+				file_path = tmp.get_upstore() + "/" + file_path;
 			} else 
 				req_err("upload not set", 403, RESP); // ! what is the status code of this one???
 		
@@ -247,14 +245,13 @@ void	Request::setup_body(const Uvec& raw_body)
 			if (i_file.good()) // i_ already exists
 			{
 				i_file.close();
-				req_err("uploading existing file", 400, RESP);
+				req_err("uploading existing file", 409, RESP);
 			}
 			_body_file_path = file_path;
-			std::ofstream	o_file(_body_file_path.c_str());
-			if (!o_file.is_open()) // directory doesn't exist
-				req_err("uploading directory doesn't exist", 400, RESP);
-			o_file.close();
 		}
+		_file.open(_body_file_path.c_str(), std::ios::binary | std::ios::app);
+		if (!_file.is_open()) // directory doesn't exist
+			req_err("file can't be created", 403, RESP);
 	}
 	if (transfer_encoding_found)
 	{
@@ -331,10 +328,11 @@ void	Request::addBody(Uvec raw_body)
 	else
 	{
 		// add to file
-		std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
+		// std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
+		if (!_file.is_open())
+			req_err("file closed unexpectedly", 403, RESP);
 		if (raw_body.size())
-			file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
-		file.close();
+			_file.write(reinterpret_cast<char *>(&raw_body[0]), raw_body.size());
 		_body_size += raw_body.size();
 		if (_content_length > _body_size)
 			_req_state = PEND;
@@ -344,7 +342,7 @@ void	Request::addBody(Uvec raw_body)
 			req_err("body received is bigger than the content-length", 400, RESP);
 	}
 	if (_cgi && _req_state == RESP)
-		_cgi->run(*this);
+		_cgi->run();
 }
 
 Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_) :
@@ -394,7 +392,7 @@ _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL),
 	if (rawBody.size())
 		addBody(rawBody);
 	if (_cgi && _req_state == RESP)
-		_cgi->run(*this);
+		_cgi->run();
 }
 
 	// getter functions
@@ -444,4 +442,14 @@ const std::string&			Request::getBodyFilePath(void) const
 std::size_t			Request::getBodySize(void) const
 {
 	return (_body_size);
+}
+
+void	Request::setParsingCode(int code)
+{
+	_parsingCode = code;
+}
+
+void	Request::setReqState(t_req_state state)
+{
+	_req_state = state;
 }

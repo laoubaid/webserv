@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/11 22:41:14 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/16 17:16:43 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Request
 		std::size_t							_content_length;
 		std::size_t							_body_size;
 		std::string							_body_file_path;
+		std::ofstream						_file;
 		t_req_state							_req_state;
 		Cgi									*_cgi;
 		const serverConf					*_conf;
@@ -53,7 +54,7 @@ class Request
 		int									req_err(std::string throw_msg, int status_code, t_req_state req_state);
 		void								setup_body(const Uvec& raw_body);
 		void								processTransferEncoding(const Uvec& raw_body);
-		void								is_cgi(std::string cgi_dir, std::vector<std::string> extensions);
+		void								is_cgi();
 	public:
 		// vectors for nomalized characters
 		static Uvec	CRLF;
@@ -82,6 +83,9 @@ class Request
 		const t_req_state&	getReqState(void) const;
 		std::size_t			getBodySize(void) const;
 		const std::string&	getBodyFilePath(void) const;
+
+		void				setParsingCode(int code);
+		void				setReqState(t_req_state state);
 
 		Cgi* get_cgi() {
 			return (_cgi);
