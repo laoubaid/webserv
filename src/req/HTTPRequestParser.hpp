@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/16 17:16:43 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/23 16:25:02 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef HTTPREQUESTPARSER_HPP
 # define HTTPREQUESTPARSER_HPP
 
+# include "../include.hpp"
 # include "httpParsingIncludes.hpp"
 
 class Cgi;
@@ -47,6 +48,9 @@ class Request
 		const serverConf					*_conf;
 		const locationConf					*_loc;
 		int									_client_fd;
+		int									_epoll_fd;
+
+		sockaddr_in							_clt_addr;
 		
 		void								processStartLine(Uvec startLine);
 		void								processFields(std::vector<Uvec> lines);
@@ -70,7 +74,9 @@ class Request
 		static Uvec	QPAIR;
 
 		Request(void);
-		Request(Uvec httpRequest, const serverConf& cfg, int fd_);
+		// Request(Uvec httpRequest, const serverConf& cfg, int fd_, int ep_fd);
+		Request( const serverConf& cfg, int fd_, int ep_fd, sockaddr_in clt_addr);
+		void ParseRequest(Uvec httpRequest);
 		~Request(void);
 		
 		void				addBody(Uvec raw_body);
@@ -84,12 +90,14 @@ class Request
 		std::size_t			getBodySize(void) const;
 		const std::string&	getBodyFilePath(void) const;
 
+		int					getEpollFd(void) const { return _epoll_fd; };
+		Cgi					*getCgiObject() { return _cgi; };  //! chang this
+
 		void				setParsingCode(int code);
 		void				setReqState(t_req_state state);
 
-		Cgi* get_cgi() {
-			return (_cgi);
-		}
+		int					get_cgi_pipe(int flag);
+
 		const locationConf& get_location() const {
             return *_loc;
         }

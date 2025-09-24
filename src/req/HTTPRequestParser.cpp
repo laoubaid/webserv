@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/16 17:39:17 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/23 16:24:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,8 @@ Request::~Request(void)
 	if (_cgi)
 	{
 		delete _cgi;
-		// std::remove(_body_file_path.c_str());
+		std::cout << "[INFO] REQ removing the tmp file for body \n";
+		std::remove(_body_file_path.c_str());
 	}
 	if (_file.is_open())
 		_file.close();
@@ -98,7 +99,7 @@ void	Request::is_cgi()
 	
 	if (_loc->has_cgi())
 	{
-		std::cout << "location has cgi\n";
+		std::cout << "[INFO] REQ location has cgi\n";
 		std::string::iterator	a = _target.path.begin() + _loc->get_path().size();
 		if (*a == '/')
 			a++;
@@ -110,8 +111,8 @@ void	Request::is_cgi()
 			std::string	ext = std::string(a + pos, b);
 			if (_loc->valid_cgi_ext(ext)) // extension found
 			{
-				std::cout << "cgi ext found\n";
-				_cgi = new Cgi(this, _loc->get_cgi_path(ext));
+				std::cout << "[INFO] REQ cgi ext found\n";
+				_cgi = new Cgi(this, _loc->get_cgi_path(ext), _clt_addr);
 				_cgi->set_script_name(std::string(_target.path.begin(), b));
 				if (b != _target.path.end())
 					b++;
@@ -240,7 +241,7 @@ void	Request::setup_body(const Uvec& raw_body)
 			} else 
 				req_err("upload not set", 403, RESP); // ! what is the status code of this one???
 		
-			std::cout << "INFO: " << file_path << std::endl; 
+			std::cout << "[INFO] REQ : " << file_path << std::endl; 
 			std::ifstream	i_file(file_path.c_str());
 			if (i_file.good()) // i_ already exists
 			{
@@ -341,13 +342,20 @@ void	Request::addBody(Uvec raw_body)
 		else
 			req_err("body received is bigger than the content-length", 400, RESP);
 	}
-	if (_cgi && _req_state == RESP)
+	if (_cgi && _req_state == RESP) {
+		if (_file.is_open())
+			_file.close();
 		_cgi->run();
+	}
 }
 
-Request::Request(Uvec httpRequest, const serverConf& cfg, int fd_) :
-_parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL), _conf(&cfg), _client_fd(fd_)
+Request::Request(const serverConf& cfg, int fd_, int ep_fd, sockaddr_in clt_addr) :
+_parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL), _conf(&cfg), _client_fd(fd_), _epoll_fd(ep_fd), _clt_addr(clt_addr)
 {
+	_loc = &_conf->identifie_location("/");
+}
+
+void Request::ParseRequest(Uvec httpRequest) {
 	// conf_ = &cfg;
 	// client_fd_ = fd_;
 	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
@@ -452,4 +460,8 @@ void	Request::setParsingCode(int code)
 void	Request::setReqState(t_req_state state)
 {
 	_req_state = state;
+}
+
+int Request::get_cgi_pipe(int flag) {
+	return _cgi ? _cgi->get_pipe(flag) : -1;
 }

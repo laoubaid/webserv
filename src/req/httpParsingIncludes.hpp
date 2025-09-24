@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpParsingIncludes.hpp                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/16 17:59:07 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/17 19:03:40 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,12 +54,15 @@ typedef enum e_method
 }	t_method;
 typedef enum e_req_state {
     PEND,
+	CGI,
+	ACGI,
     RESP,
 }	t_req_state;
 typedef enum e_cgi_state {
+	IDLE,
 	WRITE,
 	READ,
-	DONE
+	END
 }	t_cgi_state;
 // typedef std::vector<unsigned char> t_vec_uc;
 typedef bool (*validatorFunc)(const Uvec &);

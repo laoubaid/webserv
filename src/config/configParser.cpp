@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/08 12:50:27 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/17 21:25:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,6 +223,8 @@ void Block::process_server(std::vector<serverConf>& servres) {
             srvr_cfg.set_index((*it_d).values);
         } else if ((*it_d).key == "autoindex") {
             srvr_cfg.set_index((*it_d).values);
+        } else if ((*it_d).key == "client_timeout") {
+            srvr_cfg.set_timeout((*it_d).values);
         } else if ((*it_d).key == "return") {  // could be changed to redir
             srvr_cfg.set_redirect((*it_d).values);
         } else {
@@ -251,6 +253,8 @@ void Block::process_server(std::vector<serverConf>& servres) {
         while (true) {
             if (visited.count(path))
                 throw std::runtime_error("redirection loop detected!");
+			if (srvr_cfg.is_location(path) == false)
+				break ;
             visited.insert(path);
             const locationConf& lct = srvr_cfg.identifie_location(path);
             if (lct.has_redirect() == false)
@@ -258,7 +262,6 @@ void Block::process_server(std::vector<serverConf>& servres) {
             path = lct.get_redirect().second;
         }   
     }
-
     servres.push_back(srvr_cfg);
 }
 

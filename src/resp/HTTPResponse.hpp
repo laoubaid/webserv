@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/11 12:36:53 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/23 17:24:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,59 +16,17 @@
 # include "../include.hpp"
 # include "../req/HTTPRequestParser.hpp"
 # include "../config/serverConf.hpp"
-// # include "../config/serverConf.hpp"
+# include "default_pages.hpp"
 
 # include <sys/stat.h>
 # include <sys/types.h>
 // # include <sys/syscall.h>
 # include <dirent.h>
 
-# include <fstream>
 
-# define OK_200_ "HTTP/1.1 200 OK\r\n" \
-			"Connection: keep-alive\r\n"
-
-# define BADR_400_ "HTTP/1.1 400 Bad Request\r\n\r\n"
-
-# define FORB_403_ "HTTP/1.1 403 FORBIDDEN\r\n" \
-			"Content-Type: text/html\r\n" \
-			"Connection: close\r\n" \
-			"Content-Length: 65\r\n\r\n" \
-			"<html><body><center><h1>403 Forbidden</h1><center></body></html>\n"
-
-# define NOTF_404_ "HTTP/1.1 404 Not Found\r\n" \
-			"Content-Type: text/html\r\n" \
-			"Connection: close\r\n" \
-			"Content-Length: 65\r\n\r\n" \
-			"<html><body><center><h1>404 Not Found</h1><center></body></html>\n"
-
-# define METN_405_ "HTTP/1.1 405 Method Not Allowed\r\n" \
-			"Content-Type: text/html\r\n" \
-			"Connection: close\r\n" \
-			"Content-Length: 74\r\n\r\n" \
-			"<html><body><center><h1>405 Method Not Allowed</h1><center></body></html>\n"
-
-# define ELRG_413_ "HTTP/1.1 413 Entity Too Large\r\n" \
-			"Content-Type: text/html\r\n" \
-			"Content-Length: 73\r\n" \
-			"Connection: close\r\n\r\n" \
-			"<!DOCTYPE html><html><body><h1>413 Payload Too Large</h1></body></html>\n";
-
-# define IERR_500_ "HTTP/1.1 500 Internal Server Error\r\n" \
-			"Content-Type: text/html\r\n" \
-			"Content-Length: 77\r\n" \
-			"Connection: close\r\n\r\n" \
-			"<html><body><center><h1>500 Internal Server Error</h1><center></body></html>\n";
-
-# define NIMP_501_ "HTTP/1.1 501 Not Implemented\r\n" \
-			"Content-Type: text/html\r\n" \
-			"Content-Length: 71\r\n" \
-			"Connection: close\r\n\r\n" \
-			"<html><body><center><h1>501 Not Implemented</h1><center></body></html>\n";
-
-// # define FILE_BUFFER_SIZE 4096
+# define FILE_BUFFER_SIZE 4096
 // # define FILE_BUFFER_SIZE 8192
-# define FILE_BUFFER_SIZE 16384
+// # define FILE_BUFFER_SIZE 16384
 
 // create a static class HTTPResponse, so i dont need to create an instance of it
 // but i can use its methods to generate responses based on the status code
@@ -93,12 +51,16 @@ class HttpResponse {
 		
 	public:
 		static std::map<int, std::string> status_lines;
+		static std::map<int, std::string> error_pages;
 	
 		HttpResponse(Request& request, const serverConf&   conf);
+		~HttpResponse();
 
 		const std::string			generateResponse();
-		void						responesForGet();
-		void						responesForDelete();
+		void						responseForGet();
+		void						responseForDelete();
+		void						responseForPost();
+		void						cgi_response();
 
 		bool						read_file_continu();
 
@@ -114,6 +76,7 @@ class HttpResponse {
 		static const std::string&	getMimeType(const std::string& ext);
 		t_resp_state&				getRespState();
 		std::string&				getRespBuff();
+		void				setRespState(t_resp_state tmp);
 };
 
 size_t		get_file_size(std::fstream &file);
@@ -122,5 +85,6 @@ std::string	url_decode(const std::string& str);
 
 
 void init_status_lines();
+void init_error_pages();
 
 #endif

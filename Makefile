@@ -1,7 +1,12 @@
 
 # Compiler and flags
-CC = clang++ -g3 #-std=c++98 #-fsanitize=address
-CFLAGS = -Wall -Wextra# -Werror -g3
+CC = clang++
+CC = clang++ -g3 
+# CC = clang++ -g3 -std=c++98 
+# CC = clang++ -g3 -fsanitize=address
+
+CFLAGS = -Wall -Wextra
+# CFLAGS = -Wall -Wextra -Werror -g3
 
 OBJ_DIR = obj/
 

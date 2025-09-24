@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:51 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/07 15:22:26 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/17 18:51:39 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,10 @@
 class webServ
 {
 	private:
-		int                     epoll_fd_;
-		std::vector<serverConf> srv_cfgs;
-		std::map <int, Server*> srvr_skts_;
+		int						epoll_fd_;
+		std::vector<serverConf>	srv_cfgs;
+		std::map <int, Server*>	srvr_skts_;
+		std::map <int, Client*>	cgi_pipes;
 
 		epoll_event             eventQueue[MAX_EVENTS_]; // change to [MAX_EVENTS] later
 	public:
@@ -39,6 +40,10 @@ class webServ
 		int handle_connections(int fd);
 		int handle_clients(epoll_event clt_evt);
 		int run();
+		
+		int handle_cgis(epoll_event clt_evt);
+
+		void check_timeouts();
 };
 
 

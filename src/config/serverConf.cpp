@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/08 10:24:30 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/14 11:46:16 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 serverConf::serverConf(/* args */) : clt_body_max_size_(-1) {
 	clt_body_max_size_ = 1024 * 1024;
+	client_timeout_ = 5;
 	autoindex_ = false;
 	root_ = "./www/";
 	is_indexed_ = false;
@@ -23,11 +24,14 @@ serverConf::serverConf(/* args */) : clt_body_max_size_(-1) {
 serverConf::serverConf(const serverConf& obj) {
 	clt_body_max_size_ = obj.clt_body_max_size_;
 	root_ = obj.root_;
+	is_indexed_ = obj.is_indexed_;
 	index_ = obj.index_;
+	autoindex_ = obj.autoindex_;
 	err_pages_ = obj.err_pages_;
 	listens_ = obj.listens_;
 	locations_ = obj.locations_;
 	redirect_ = obj.redirect_;
+	client_timeout_ = obj.client_timeout_;
 }
 
 serverConf::~serverConf() {}
@@ -150,6 +154,39 @@ void serverConf::set_index(std::vector<std::string>& values) {
 
 void serverConf::add_location(locationConf& lct) {
 	locations_[lct.get_path()] = lct;
+}
+
+void serverConf::set_timeout(std::vector<std::string>& values) {
+	if (values.size() != 1)
+		throw std::runtime_error("invalid client_timeout parameter!");
+
+	std::string& raw = values[0];
+	if (raw.empty())
+		throw std::runtime_error("invalid client_timeout parameter!");
+
+	char last_char = raw[raw.size() - 1];
+	int multiplier = 1;
+	std::string number_part = raw;
+
+	if (last_char < '0' || last_char > '9') {
+		number_part = raw.substr(0, raw.size() - 1);
+		if (last_char == 'M')
+			multiplier = 60;
+		else
+			throw std::runtime_error(std::string("client_timout unknown size suffix: ") + last_char);
+	}
+	for (size_t i = 0; i < number_part.size(); ++i) {
+		if (!std::isdigit(number_part[i]))
+			throw std::runtime_error("invalid number in client_timeout: " + number_part);
+	}
+	int time = std::atoi(number_part.c_str());
+	if (time <= 0)
+		throw std::runtime_error("invalid client_timeout time value!");
+
+	time *= multiplier;
+	if (time > 600)
+		time = 600;
+	client_timeout_ = static_cast<size_t>(time);
 }
 
 void serverConf::set_redirect(std::vector<std::string>& values) {

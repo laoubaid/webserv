@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/08 12:50:49 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/23 17:25:33 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 
 int main(int ac, char **av)
 {
-
-	init_status_lines();
+	signal(SIGPIPE, SIG_IGN);
+	init_status_lines(); //! move it away
+	init_error_pages(); //! move it away
 
 
 	if (ac != 2) {

@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/16 18:18:28 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/09/23 16:17:39 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
 #include "../config/locationConf.hpp"
 
-Cgi::Cgi(Request *req, std::string interp) : _req(req), argv(NULL), env(NULL), _state(WRITE)
+Cgi::Cgi(Request *req, std::string interp, sockaddr_in clt_addr) : _req(req), argv(NULL), env(NULL), _state(IDLE), _clt_addr(clt_addr)
 {
 	_interpreter = interp;
 	root = _req->get_location().get_root();
@@ -35,8 +35,17 @@ Cgi::~Cgi(void)
 		delete[] argv[i];
 	}
 	delete[] argv;
-	close(_write_in);
-	close(_read_from);
+	if (_out_file.is_open())
+		_out_file.close();
+	if (_in_file.is_open())
+		_in_file.close();
+	if (_write_in != -1)
+		close(_write_in);
+	if (_write_in != -1)
+		close(_read_from);
+
+	std::cout << "[INFO] CGI removing the tmp file for output \n";
+	std::remove(_out_file_path.c_str());
 }
 
 std::string	get_auth_type(const Request& req)
@@ -86,8 +95,16 @@ void	Cgi::set_env(void)
 	std::vector<std::string>	env_vec;
 
 	// values that are hardcoded and needs to be changed
-	std::string	client_ip = "42.13.37.42"; //! replace with client ip address
-	std::string	server_port = "8080"; //! get port from config file
+
+	char ip_str[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &_clt_addr.sin_addr, ip_str, sizeof(ip_str));
+	int port = ntohs(_clt_addr.sin_port);
+
+	std::string	client_ip(ip_str);
+	std::string	server_port = std::to_string(port); //! server port or client port? for now client port is set
+	std::cout << "ip:port " << client_ip << ":" << server_port << std::endl;
+
+	// _req->get_location().get_root()
 
 	env_vec.push_back(std::string("AUTH_TYPE=") + get_auth_type(*_req));
 	if (_req->getBodySize())
@@ -114,7 +131,9 @@ void	Cgi::set_env(void)
 			break;
 	}
 	env_vec.push_back(std::string("REQUEST_METHOD=") + method);
+	env_vec.push_back(std::string("REDIRECT_STATUS=200"));
 	env_vec.push_back(std::string("SCRIPT_NAME=") + script_name);
+	env_vec.push_back(std::string("SCRIPT_FILENAME=") + _req->get_location().get_root() + script_name);
 	env_vec.push_back(std::string("SERVER_NAME=") + get_server_name(*_req));
 	env_vec.push_back(std::string("SERVER_PORT=") + server_port);
 	env_vec.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
@@ -164,16 +183,16 @@ void	Cgi::cgi_err(std::string throw_msg, int status_code, t_req_state req_state)
 
 std::string	Cgi::run(void)
 {
-	// in the beginning of the server signal should be set
-	signal(SIGPIPE, SIG_IGN);        //! change place
-	/////////////////////////////////////////////////////
+	_req->setReqState(CGI);
+
+	std::cout << "[INFO] -- RUNNING CGI --" << std::endl;
 
 	// should throw exception in case the file doesn't exist or can't be run
 	std::string file = root + script_name;
 	if (!fileExists(file.c_str()))
 		cgi_err("[CGI ERROR] script doesn't exist", 404, RESP);
 	
-	int	status;
+	// int	status;
 	int pipe_in[2];
 	int pipe_out[2];
 	set_env();
@@ -201,90 +220,202 @@ std::string	Cgi::run(void)
 	close(pipe_in[0]);
 	close(pipe_out[1]);
 
-	if (_req->getBodySize())
-		_file.open(_req->getBodyFilePath().c_str(), std::ios::binary);
-	// _write_in to epoll
-	// epoll_ctl(_write_in)
-	// you need to write the body to the child process
-	// then write the output of the child process
-	// clean up using waitpid
+	if (_req->getBodySize()) {
+		_state = WRITE;
+		_in_file.open(_req->getBodyFilePath().c_str(), std::ios::binary);   //! close this file
+		
+		// _write_in to epoll
+		struct epoll_event clt_event;
+		memset(&clt_event, 0, sizeof(clt_event));
+		clt_event.data.fd = _write_in;
+		clt_event.events = EPOLLOUT;  //* must check for both in and out at same time (subject requirements).
+		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_ADD, _write_in, &clt_event);
+		std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
+	} else {
+		_state = READ;
+
+		// _read_from to epoll
+		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _write_in, NULL);    //* deleting the write_in pipe end from epoll
+		struct epoll_event clt_event;
+		memset(&clt_event, 0, sizeof(clt_event));
+		clt_event.data.fd = _read_from;
+		clt_event.events = EPOLLIN;  //* must check for both in and out at same time (subject requirements).
+		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_ADD, _read_from, &clt_event);
+		std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
+
+		{
+			std::ostringstream oss;
+			oss << "/tmp/outfile_" << this;
+			_out_file_path = oss.str();
+		}
+		_out_file.open(_out_file_path, std::ios::binary | std::ios::app);   //! close this as well
+	}
+	
 
 	// sleep(1);                      // ??????????????
 	// past body to cgi
 	
 
-	while (waitpid(child_pid, &status, WNOHANG) <= 0)
-	{
-		sleep(1);
-	}
+	//?  comback later
+	// while (waitpid(child_pid, &status, WNOHANG) <= 0)
+	// {
+	// 	sleep(1);
+	// }
 	
-	if (WIFEXITED(status)) {
-		printf("Child exited normally with status %d\n", WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
-		printf("Child terminated by signal %d\n", WTERMSIG(status));
-    }
+	// if (WIFEXITED(status)) {
+	// 	printf("Child exited normally with status %d\n", WEXITSTATUS(status));
+    // } else if (WIFSIGNALED(status)) {
+	// 	printf("Child terminated by signal %d\n", WTERMSIG(status));
+    // }
 
 	// waitpid(child_pid, &status, WNOHANG); // dont wait for child process but avoid zombies
 	// print_env();
+	return "";
 	
 }
 
-void	Cgi::write_body()
+int		Cgi::get_pipe(int flag) {
+		if (flag == 0)
+			return _write_in;
+		return _read_from;
+}
+
+int	Cgi::write_body()
 {
+	std::cout << "[INFO] CGI write body in pipe\n";
 	if (_req->getBodySize())
 	{
-		if (!_file.is_open())
+		if (!_in_file.is_open())
 			cgi_err("[CGI ERROR] file not open", 403, RESP);
-		std::cout << "body found\n";
+		std::cout << "[INFO] CGI body found\n";
 		
 		std::vector<unsigned char>	buffer(CGI_BUFFER);
-		if (_file.read(reinterpret_cast<char*>(&buffer[0]), buffer.size()) || _file.gcount() > 0)
+		if (_in_file.read(reinterpret_cast<char*>(&buffer[0]), buffer.size()) || _in_file.gcount() > 0)
 		{
-			// std::cout << "writing this buffer: ";
-			// for (std::vector<unsigned char>::iterator it = buffer.begin(); it < buffer.end(); it++)
-			// {
-			// 	std::cout << *it;
-			// }
-			// std::cout << std::endl;
-			std::size_t	char_read = _file.gcount();
+			std::cout << "[INFO] CGI writing this buffer: ";
+			for (std::vector<unsigned char>::iterator it = buffer.begin(); it < buffer.end(); it++) {
+				std::cout << *it;
+			}
+			std::cout << std::endl;
+			
+			std::size_t	char_read = _in_file.gcount();
 			if (char_read > 0)
 			{
 				if (write(_write_in, buffer.data(), char_read) == -1)
 					cgi_err("[CGI ERROR] script terminated unexpectedly", 502, RESP);
 			}
 		}
-		if (_file.eof())
+		if (_in_file.eof())
 		{
 			_state = READ;
-			// remove _write_in from epoll and add _read_from instead
+			epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _write_in, NULL);    //* deleting the write_in pipe end from epoll
+			struct epoll_event clt_event;
+			memset(&clt_event, 0, sizeof(clt_event));
+			clt_event.data.fd = _read_from;
+			clt_event.events = EPOLLIN;  //* must check for both in and out at same time (subject requirements).
+			epoll_ctl(_req->getEpollFd(), EPOLL_CTL_ADD, _read_from, &clt_event);
+			std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
+			close(_write_in);  //! close in destructor? i did
+			_write_in = -1;
+			std::cout << "[INFO] CGI file ends switching pipes in epoll\n";
+
+			{
+				std::ostringstream oss;
+				oss << "/tmp/outfile_" << this;
+				_out_file_path = oss.str();
+			}
+			_out_file.open(_out_file_path, std::ios::binary | std::ios::app);   //! close this as well
+
+			return 1;
 		}
+		return 0;
 	}
+	return 1;
 }
 
-const std::string&	Cgi::read_output()
+int	Cgi::read_output()
 {
-	int	char_read;
-	std::string	str;
+	std::cout << "[INFO] CGI read output from pipe\n";
 	char	buff[CGI_BUFFER];
-	if ((char_read = read(_read_from, buff, CGI_BUFFER)) > 0) // fd[0] is the file decriptor to be monitored in epoll
-	{
-		// buff read should be sent to client unless when 'status' is changed for response first line 'HTTP/1.1 200 OK' for exmple
-		str = buff;
-	}
+
+	if (!_out_file.is_open())
+		cgi_err("[CGI ERROR] file not open", 500, RESP);
+	ssize_t char_read = read(_read_from, buff, CGI_BUFFER);
 	if (char_read == -1)
 		cgi_err("[CGI ERROR] error during reading from pipe", 502, RESP);
 	if (char_read == 0)
 	{
-		_state = DONE;
-		// remove _read_from from epoll and call waitpid???
+		std::cout << "[INFO] CGI scripts ended!\n";
+		_state = END;
+		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _read_from, NULL);    //* deleting the read_from pipe end from epoll
+		close(_read_from);  //! close this fd
+		_read_from = -1;
+		_out_file.close();
+		return 1;
 	}
-	return (str);
+	// buff read should be sent to client unless when 'status' is changed for response first line 'HTTP/1.1 200 OK' for exmple
+	std::string str(buff, char_read); // build directly from buffer and length
+	// std::cout << "\n-\n" << str << "\n-"<< std::endl;
+	_out_file.write(str.c_str(), char_read);
+	return 0;
+}
+
+bool Cgi::check_process_status() {
+    if (child_pid <= 0) {
+        return false; // No valid process
+    }
+    
+    int status;
+    pid_t result = waitpid(child_pid, &status, WNOHANG);
+	std::cout << "[INFO] CGI calling waitpid and gets: " << result << std::endl;
+    
+    if (result == 0) {
+        // Process is still running
+        return false;
+    } else if (result == child_pid) {
+        // Process has terminated
+        if (WIFEXITED(status)) {
+            exit_status_ = WEXITSTATUS(status);
+            std::cout << "[INFO] CGI process exited with status: " << exit_status_ << std::endl;
+        } else if (WIFSIGNALED(status)) {
+            int signal = WTERMSIG(status);
+            exit_status_ = -signal; // Negative to indicate signal termination
+            std::cout << "[INFO] CGI process terminated by signal: " << signal << std::endl;
+        }
+        _state = END;
+        return true;
+    } else {
+        // Error occurred
+        perror("waitpid");
+        _state = END;
+        exit_status_ = -1;
+        return true;
+    }
+}
+
+bool Cgi::is_process_finished() {
+    if (_state == END) {
+        return true;
+    }
+    return check_process_status();
+}
+
+int Cgi::get_cgi_exit_status() {
+	return exit_status_;
+}
+
+int Cgi::get_cgi_pid() {
+	return child_pid;
+}
+
+std::string Cgi::get_outfile_path() {
+	return _out_file_path;
 }
 
 // to be deleted
 void	Cgi::print_env(void)
 {
-	std::cout << "printing env...\n";
+	std::cout << "[INFO] CGI printing env...\n";
 	for (std::size_t i = 0; env[i]; i++)
 	{
 		std::cout << env[i] << std::endl;

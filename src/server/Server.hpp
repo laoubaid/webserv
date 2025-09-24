@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:01 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/07 15:22:01 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/14 10:46:32 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ class Server : public Socket
 		int	add_to_epoll(int epfd);
 		int	launch();
 
+		void check_timeout();
 };
 
 

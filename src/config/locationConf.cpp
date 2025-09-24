@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/09 11:45:29 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/17 21:26:10 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void locationConf::set_redirect(std::vector<std::string>& values) {
         throw std::runtime_error("unknown redirection code!");
     // valid redirections 301 302 303 307 308
     redirect_.first = code;
-    redirect_.second = resolve_path(values[1]);
+    redirect_.second = values[1];
     has_redirect_ = true;
 }
 

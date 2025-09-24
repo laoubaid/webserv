@@ -1,35 +1,389 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Raw Upload Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POST Request Tester</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2e1a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            color: #e6edf3;
+            overflow-x: hidden;
+            padding: 2rem 0;
+        }
+        .container {
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #3fb950, #56d364);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .method-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #3fb950, #56d364);
+            color: #0d1117;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(63, 185, 80, 0.3);
+        }
+        .intro-text {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: rgba(230, 237, 243, 0.8);
+            line-height: 1.6;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .highlight {
+            color: #56d364;
+            font-weight: 600;
+        }
+        .form-container {
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid #3fb950;
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(63, 185, 80, 0.2);
+            transition: all 300ms ease;
+        }
+        .form-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(63, 185, 80, 0.3);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            color: #56d364;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        input[type="text"], 
+        input[type="url"], 
+        select, 
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid rgba(63, 185, 80, 0.3);
+            border-radius: 8px;
+            background: rgba(13, 17, 23, 0.8);
+            color: #e6edf3;
+            font-size: 1rem;
+            transition: all 200ms ease;
+        }
+        input[type="text"]:focus, 
+        input[type="url"]:focus, 
+        select:focus, 
+        textarea:focus {
+            outline: none;
+            border-color: #56d364;
+            box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.2);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+        .button {
+            background: linear-gradient(135deg, #3fb950, #56d364);
+            color: #0d1117;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 200ms ease;
+            margin: 0.5rem;
+            min-width: 120px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(63, 185, 80, 0.4);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+        .button.secondary {
+            background: transparent;
+            color: #56d364;
+            border: 2px solid #3fb950;
+        }
+        .button.secondary:hover {
+            background: rgba(63, 185, 80, 0.1);
+        }
+        .response-container {
+            background: rgba(13, 17, 23, 0.9);
+            border: 2px solid rgba(63, 185, 80, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: left;
+            display: none;
+        }
+        .response-container.show {
+            display: block;
+            animation: fadeIn 300ms ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .response-header {
+            color: #56d364;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid rgba(63, 185, 80, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        .response-content {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #3fb950;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(63, 185, 80, 0.2);
+            color: #56d364;
+            border: 2px solid #3fb950;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 200ms ease;
+            backdrop-filter: blur(10px);
+        }
+        .back-button:hover {
+            background: rgba(63, 185, 80, 0.3);
+            transform: translateX(-5px);
+        }
+        .loading {
+            display: none;
+            color: #56d364;
+            margin-top: 1rem;
+        }
+        .loading.show {
+            display: block;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(63, 185, 80, 0.3);
+            border-top: 2px solid #56d364;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            .form-container {
+                padding: 1.5rem;
+            }
+            .back-button {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.6rem 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Raw Upload Test</h1>
-    <form id="uploadForm" method="POST">
-        <label for="filename">Filename:</label><br>
-        <input type="text" id="filename" name="filename" value="test.txt"><br><br>
+    <a href="index.html" class="back-button">← Back</a>
+    
+    <div class="container">
+        <h1>POST Request</h1>
+        <div class="method-badge">POST</div>
+        <p class="intro-text">
+            Send data to the server to <span class="highlight">create new resources</span> or submit information. 
+            Configure your request parameters, headers, and body content below.
+        </p>
 
-        <label for="content">File content:</label><br>
-        <textarea id="content" name="content" rows="10" cols="50">Hello world!</textarea><br><br>
+        <div class="form-container">
+            <form id="postForm">
+                <div class="form-group">
+                    <label for="url">Target URL</label>
+                    <input type="url" id="url" name="url" placeholder="https://api.example.com/endpoint" required>
+                </div>
 
-        <button type="button" onclick="upload()">Upload</button>
-    </form>
+                <div class="form-group">
+                    <label for="contentType">Content Type</label>
+                    <select id="contentType" name="contentType">
+                        <option value="application/json">application/json</option>
+                        <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                        <option value="multipart/form-data">multipart/form-data</option>
+                        <option value="text/plain">text/plain</option>
+                        <option value="application/xml">application/xml</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="headers">Custom Headers (JSON format)</label>
+                    <textarea id="headers" name="headers" placeholder='{"Authorization": "Bearer token", "X-Custom-Header": "value"}'></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="body">Request Body</label>
+                    <textarea id="body" name="body" placeholder='{"name": "John Doe", "email": "john@example.com"}'></textarea>
+                </div>
+
+                <div class="form-group" style="text-align: center;">
+                    <button type="submit" class="button">Send POST Request</button>
+                    <button type="button" class="button secondary" onclick="clearForm()">Clear Form</button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                Sending POST request...
+            </div>
+        </div>
+
+        <div class="response-container" id="responseContainer">
+            <div class="response-header">Response</div>
+            <div class="response-content" id="responseContent"></div>
+        </div>
+    </div>
 
     <script>
-        function upload() {
-            var filename = document.getElementById('filename').value;
-            var content = document.getElementById('content').value;
-
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "/large_files/" + encodeURIComponent(filename), true);
-            xhr.setRequestHeader("Content-Type", "application/octet-stream");
-            // Browser automatically sends Content-Length
-            xhr.send(content);
-            xhr.onload = function() {
-                alert("Upload complete, server responded: " + xhr.status);
-            };
+        document.getElementById('postForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const responseContainer = document.getElementById('responseContainer');
+            const responseContent = document.getElementById('responseContent');
+            
+            // Show loading
+            loading.classList.add('show');
+            responseContainer.classList.remove('show');
+            
+            // Get form data
+            const url = document.getElementById('url').value;
+            const contentType = document.getElementById('contentType').value;
+            const headersText = document.getElementById('headers').value;
+            const body = document.getElementById('body').value;
+            
+            try {
+                // Parse custom headers
+                let headers = {
+                    'Content-Type': contentType
+                };
+                
+                if (headersText.trim()) {
+                    try {
+                        const customHeaders = JSON.parse(headersText);
+                        headers = {...headers, ...customHeaders};
+                    } catch (headerError) {
+                        throw new Error('Invalid JSON format in headers');
+                    }
+                }
+                
+                // Make the POST request
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: body || undefined
+                });
+                
+                // Get response details
+                const responseText = await response.text();
+                const responseHeaders = {};
+                response.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+                
+                // Display response
+                const responseInfo = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: responseHeaders,
+                    body: responseText
+                };
+                
+                responseContent.textContent = JSON.stringify(responseInfo, null, 2);
+                
+            } catch (error) {
+                responseContent.textContent = `Error: ${error.message}`;
+            } finally {
+                // Hide loading and show response
+                loading.classList.remove('show');
+                responseContainer.classList.add('show');
+            }
+        });
+        
+        function clearForm() {
+            document.getElementById('postForm').reset();
+            document.getElementById('responseContainer').classList.remove('show');
         }
+        
+        // Auto-format JSON in body field
+        document.getElementById('body').addEventListener('blur', function() {
+            const body = this.value.trim();
+            if (body && body.startsWith('{')) {
+                try {
+                    const formatted = JSON.stringify(JSON.parse(body), null, 2);
+                    this.value = formatted;
+                } catch (e) {
+                    // Invalid JSON, leave as is
+                }
+            }
+        });
+        
+        // Auto-format JSON in headers field
+        document.getElementById('headers').addEventListener('blur', function() {
+            const headers = this.value.trim();
+            if (headers && headers.startsWith('{')) {
+                try {
+                    const formatted = JSON.stringify(JSON.parse(headers), null, 2);
+                    this.value = formatted;
+                } catch (e) {
+                    // Invalid JSON, leave as is
+                }
+            }
+        });
     </script>
 </body>
 </html>

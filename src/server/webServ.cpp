@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/07 15:50:46 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/22 23:43:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ int webServ::setup_servers() {
 			svtmp = new Server(srv_cfgs[i], listens[j]);
 			int svfd = svtmp->get_fd();
 			srvr_skts_[svfd] = svtmp;
+			std::cout << CONN_CLR <<"\n$ New Server established! fd: " << svfd << DEF_CLR << std::endl;
 		}
 	}
 	std::map<int, Server*>::iterator	it;
@@ -89,48 +90,97 @@ int webServ::handle_clients(epoll_event clt_evt) {
 	Server*								svr_skt = get_server(client_fd);
 	std::map<int, Client *>::iterator	it;
 
-	it = svr_skt->client_sockets.find(client_fd);
-	stat_ = (*it).second->get_state();
+	if (svr_skt) {
+		it = svr_skt->client_sockets.find(client_fd);
+		if (it != svr_skt->client_sockets.end()) {
+			stat_ = (*it).second->get_state();
+			if (stat_ == CGI) {
+				(*it).second->set_cgi_obj(cgi_pipes, 1);   //! return value?
+				(*it).second->set_req_state(ACGI);
+				return 0;
+			}
+			if (clt_evt.events & EPOLLIN) {
+				// std::cout << "[EPOLLIN] event detected! > CLIENT: " << clt_evt.data.fd << std::endl;
+				stat_ = (*it).second->receive(epoll_fd_);
 
-	if (clt_evt.events & EPOLLIN) {
-		// std::cout << "EPOLLIN event detected! " << clt_evt.data.fd << std::endl;
-		stat_ = (*it).second->receive(epoll_fd_);
-
-		if (stat_ == -1)
-			return client_fd;
-	}
-	if ((clt_evt.events & EPOLLOUT) && stat_ == RESP) {
-		// std::cout << "EPOLLOUT event detected! " << clt_evt.data.fd << std::endl;
-		if ((*it).second->send_response())
-			return client_fd;
+				if (stat_ == -1) {
+					(*it).second->set_cgi_obj(cgi_pipes, 0);
+					return client_fd;
+				}
+			}
+			if ((clt_evt.events & EPOLLOUT) && stat_ == RESP) {
+				// std::cout << "[EPOLLOUT] event detected! > CLIENT: " << clt_evt.data.fd << std::endl;
+				if ((*it).second->send_response())
+					return client_fd;
+			} 
+		}
 	}
 	return 0;
 }
 
+int webServ::handle_cgis(epoll_event event) {
+	int									pipe_fd = event.data.fd;
+	std::map<int, Client *>::iterator	it;
+
+	it = cgi_pipes.find(pipe_fd);
+	if (it != cgi_pipes.end()) {
+		std::cout << "[EPOLL] event detected! > PIPE: " << event.data.fd << std::endl;
+		if ((*it).second->cgi_pipe_io(pipe_fd))
+			return pipe_fd;
+	}
+
+	return 0;
+}
+
 int webServ::run() {
-	std::vector<int>	tobekilled;
+	std::vector<int>	toBeKilled;
 	int					nevents = 0;
 
 	while (true) {
 		// std::cout << "- - -\n";
-		nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, 1000);   //? if (errno == EINTR) continue;
+		nevents = epoll_wait(epoll_fd_, eventQueue, MAX_EVENTS_, 1000);   //? if (errno == EINTR) continue;   change -1
 		if (nevents < 0)
 			throw std::runtime_error("epoll_wait() failed!");
 		
 		// 2. Handle triggered events
 		for (int i = 0; i < nevents; i++) {
+			// std::cout << "new Event in fd: " << eventQueue[i].data.fd << std::endl;
 			if (handle_connections(eventQueue[i].data.fd))
 				continue;
-			if (int client_fd = handle_clients(eventQueue[i]))
-				tobekilled.push_back(client_fd);
+			else if (int client_fd = handle_clients(eventQueue[i]))
+				toBeKilled.push_back(client_fd);
+			else {
+				int pipe_fd = handle_cgis(eventQueue[i]);
+				if (pipe_fd) {
+					std::cout << "[INFO] WS adding pipe to the <toBeKilled> vector\n";
+					toBeKilled.push_back(pipe_fd);
+				}
+			}
 		}
-		for (std::vector<int>::iterator it = tobekilled.begin(); it != tobekilled.end(); ++it) {
-			Server *  svr_skt = get_server(*it);
-			epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, *it, NULL);
-			delete svr_skt->client_sockets[*it];
-			svr_skt->client_sockets.erase(*it);
+		for (std::vector<int>::iterator it = toBeKilled.begin(); it != toBeKilled.end(); ++it) {
+			int client_fd = *it;
+			if (cgi_pipes.find(*it) != cgi_pipes.end()) {
+				client_fd = cgi_pipes.at(*it)->get_fd_client();
+				cgi_pipes.erase(*it);
+				continue ;
+			}
+			Server *  svr_skt = get_server(client_fd);
+			if (svr_skt) {
+				epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_fd, NULL);
+				delete svr_skt->client_sockets[client_fd];
+				svr_skt->client_sockets.erase(client_fd);
+			}
 		}
-		tobekilled.clear();
+		toBeKilled.clear();
+		check_timeouts();
+	}
+}
+
+void webServ::check_timeouts() {
+	std::map <int, Server*>::iterator it;
+
+	for (it = srvr_skts_.begin(); it != srvr_skts_.end(); ++it) {
+		(*it).second->check_timeout();
 	}
 }
 
