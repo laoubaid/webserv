@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/26 02:21:58 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:25:15 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ std::map<int, std::string> HttpResponse::status_lines;
 std::map<int, std::string> HttpResponse::error_pages;
 
 void init_status_lines() {
-	HttpResponse::status_lines[200] = OK_200_;  //! delete keepalive
+	HttpResponse::status_lines[200] = "HTTP/1.1 200 OK\r\n";
 	HttpResponse::status_lines[201] = "HTTP/1.1 201 Created\r\n";
 	HttpResponse::status_lines[204] = "HTTP/1.1 204 No Content\r\n";
 
@@ -51,7 +51,7 @@ void init_error_pages() {
 	HttpResponse::error_pages[404] = NOTF_404_;
 	HttpResponse::error_pages[405] = METN_405_;
 	HttpResponse::error_pages[408] = RTIM_408_;
-	HttpResponse::error_pages[409] = CONFL_409_;
+	HttpResponse::error_pages[409] = CNFL_409_;
 	HttpResponse::error_pages[413] = ELRG_413_;
 	HttpResponse::error_pages[500] = IERR_500_;
 	HttpResponse::error_pages[501] = NIMP_501_;
@@ -111,6 +111,7 @@ bool HttpResponse::serveStaticContent(const std::string& path, int code) {
 	resp_buff_ = status_lines.at(code);
 	resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + std::to_string(get_file_size(file_)) + "\r\n\r\n";
 	resp_stat_ = LOAD;
+	request_.setMethod(GET);
 	status_code_ = 200;
 	return true;
 }
@@ -145,7 +146,7 @@ bool HttpResponse::list_directory() {
 		ptr = readdir(dir);
 	}
 	body += "</ul>\n</body>\n</html>\n";
-	resp_buff_ = OK_200_;
+	resp_buff_ = status_lines[200];
 	resp_buff_ += "Content-Type: text/html\r\n"
 		"Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 
@@ -160,7 +161,7 @@ bool	HttpResponse::read_file_continu() {
 		return false;
 	}
 
-	char buffer[FILE_BUFFER_SIZE];     //! change later
+	char buffer[FILE_BUFFER_SIZE];
 	file_.read(buffer, sizeof(buffer));
 	resp_buff_ = std::string(buffer, file_.gcount());
 	if (file_.eof()) {
@@ -174,6 +175,7 @@ bool	HttpResponse::read_file_continu() {
 void	HttpResponse::handle_error(int err_code) {
 	std::string path = conf_.get_err_page(err_code);
 	if (!path.empty()) {
+		std::cout << "[INFO] RESP error page found in the config" << std::endl;
 		path = conf_.get_root() + "/" + path;
 		path = resolve_path(path);
 		if (serveStaticContent(path, err_code))
@@ -215,13 +217,13 @@ void	HttpResponse::handle_error(int err_code) {
 void HttpResponse::process_path() {
 	// uri_ = location_.get_root() + uri_;
 	std::string target_path = location_.get_root() + uri_;
-	target_path = resolve_path(target_path);  //! in case somthing fucked up its this one lol
+	target_path = resolve_path(target_path);
 
 	std::cout << "[INFO] RESP the file to look for : " << target_path << std::endl;
 	if (!access(target_path.c_str(), F_OK)) {
 		if (!access(target_path.c_str(), R_OK)) {
 			if (is_directory(target_path)) {
-				//info std::cout << "Directory + GET → serve index, else autoindex if on, else 403\n"; // delme
+				// std::cout << "Directory + GET → serve index, else autoindex if on, else 403\n"; // delme
 				if (location_.is_index()) {
 					uri_ += "/" + location_.get_index();
 					process_path();
@@ -283,13 +285,13 @@ void HttpResponse::responseForPost() {
 		resp_buff_ = "HTTP/1.1 201 Created\r\n"
 					 "Content-Type: text/html\r\n"
 					 "Content-Length: 0\r\n"
-					 "Connection: keep-alive\r\n"
+					 "Connection: close\r\n"
 					 // "Location: /new/resource/url\r\n"  // add if relevant
 					 "\r\n";
 	} else if (status_code_ == 204) {
 		// No Content → explicitly empty body
 		resp_buff_ = "HTTP/1.1 204 No Content\r\n"
-					 "Connection: keep-alive\r\n"
+					 "Connection: close\r\n"
 					 "\r\n";
 	} else {
 		// Default: 200 OK with body
@@ -416,8 +418,7 @@ void HttpResponse::cgi_response() {
 }
 
 const std::string HttpResponse::generateResponse() {
-	//! body received is bigger than the content-length cause segfault
-	// std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
+	std::cout << GRN_CLR << "Generating response ... " << DEF_CLR << std::endl;
 
 	resp_buff_.clear();
 	if (status_code_ / 100 == 2) {
@@ -431,7 +432,7 @@ const std::string HttpResponse::generateResponse() {
 			responseForGet();
 		else if (method == DELETE)
 			responseForDelete();
-		else //! this is for POST method, temporarily of course hhhh
+		else
 			responseForPost();
 	} else {
 		std::cout << RED_CLR <<  " request Error status code : " << status_code_ << DEF_CLR << std::endl;

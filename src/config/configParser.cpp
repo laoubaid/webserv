@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/25 01:17:41 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:00:00 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,6 +235,8 @@ void Block::process_server(std::vector<serverConf>& servres) {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
         }
     }
+
+	srvr_cfg.get_err_page(0);
 
     if (srvr_cfg.get_redirect().first != 0) {
         srvr_cfg.redirs["/"] = srvr_cfg.get_redirect().second;

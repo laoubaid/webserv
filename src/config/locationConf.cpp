@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/17 21:26:10 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:25:54 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ void locationConf::set_up_store(std::vector<std::string>& values) {
     if (values.size() != 1)
         throw std::runtime_error("invalid upload_store paramter!");
     is_upset_ = true;
-    up_store_ = resolve_path(values[0]);  //! this might need "/", use exact size instead in the post method
+    up_store_ = resolve_path(values[0]);
 }
 
 void locationConf::set_cgi(std::vector<std::string>& values) {

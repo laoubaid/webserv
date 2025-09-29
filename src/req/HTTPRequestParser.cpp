@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/26 02:21:58 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:16:03 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -460,6 +460,10 @@ void	Request::setParsingCode(int code)
 void	Request::setReqState(t_req_state state)
 {
 	_req_state = state;
+}
+
+void	Request::setMethod(const t_method mthd){
+	_method = mthd;
 }
 
 int Request::get_cgi_pipe(int flag) {

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/27 11:30:54 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/29 23:29:48 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,12 +42,14 @@ bool Client::check_timeout() {
 	std::time_t now = std::time(NULL);
 	int status_code = 0;
 
+	// std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
 	if (state_timout_ == 0 && static_cast<size_t>(now - req_timeout_) > conf_.get_recv_timeout()) {
 		request_ = new Request(conf_, get_fd(), epoll_fd_, client_addr_);
 		status_code = 408;
 	} else if (state_timout_ == 1 && static_cast<size_t>(now - cgi_timeout_) > conf_.get_cgi_timeout()) {
 		status_code = 504;
 	} else if (state_timout_ == 2 && static_cast<size_t>(now - resp_timeout_) > conf_.get_send_timeout()) {
+		// std::cout << "[INFO] CLT response timeout: " << resp_timeout_ << std::endl;  // for response
 		return true;
 	}
 	if (status_code) {
@@ -125,7 +127,7 @@ int Client::send_response() {
 	resbuf_.clear();
 	resbuf_ = response_->generateResponse();
 	if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) != -1) {
-		std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
+		// std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
 		reset_resp_timeout();
 		if (response_->getRespState() == DONE) {
 			std::cout << "[INFO] CLT end of connection" << std::endl;
@@ -167,11 +169,10 @@ int Client::cgi_pipe_io(int pipe_fd) {
 	std::cout << "[INFO] CLT cgi pipe I/O operation\n";
 	reset_cgi_timeout();
 	if (cgi_) {
-		cgi_->check_process_status();
 		if (pipe_fd == cgi_->get_pipe(0)) {
 			return cgi_->write_body();
 		} else {
-			if (cgi_->read_output() && response_ == NULL) {
+			if (cgi_->read_output()) {
 				request_->setReqState(RESP);
 				cgi_->check_process_status();
 				request_->setParsingCode((cgi_->get_cgi_exit_status() == 0) ? 200 : 500);

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/24 22:16:05 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:09:32 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,11 +74,7 @@ class serverConf
 			return redirect_;
 		}
 
-		const std::string& get_err_page(int code) const {
-			static const std::string empty;
-			std::map<int, std::string>::const_iterator it = err_pages_.find(code);
-			return (it == err_pages_.end()) ? empty : it->second;
-		}
+		const std::string get_err_page(int code) const;
 
 };
 

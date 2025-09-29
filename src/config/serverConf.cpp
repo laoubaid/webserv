@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/25 01:17:25 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:26:08 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ void serverConf::set_index(std::vector<std::string>& values) {
 	if (values.size() != 1)
 		throw std::runtime_error("invalid index paramter!");
 	is_indexed_ = true;
-	index_ = resolve_path(values[0]) + "/";   //! might cause problems addin "/" for files !?
+	index_ = resolve_path(values[0]) + "/";
 }
 
 void serverConf::add_location(locationConf& lct) {
@@ -285,4 +285,11 @@ const locationConf& serverConf::identifie_location(const std::string& str) const
 		}
 	}
 	return get_location("/");
+}
+
+const std::string serverConf::get_err_page(int code) const {
+	std::map<int, std::string>::const_iterator it;
+
+	it = err_pages_.find(code);
+	return (it == err_pages_.end()) ? "" : it->second;
 }

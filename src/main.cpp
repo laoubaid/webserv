@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/26 02:42:19 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/29 17:31:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int main(int ac, char **av)
 		return 1;
 	}
 
-	std::vector<serverConf>* servers;
+	std::vector<serverConf>* servers = NULL;
 	try {
 		servers = get_config(av[1]).parser();
 		std::cout << "\033[32mConfiguration file parsed successfully!\033[0m" << std::endl;

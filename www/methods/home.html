@@ -57,14 +57,14 @@
 
         .hand {
             display: grid;
-            grid-template-columns: repeat(3, 0);
+            grid-template-columns: repeat(4, 0);
             gap: 0;
             justify-content: center;
             transition: 300ms ease-out;
         }
 
         body:hover .hand {
-            grid-template-columns: repeat(3, 22vmin);
+            grid-template-columns: repeat(4, 22vmin);
             gap: 4vmin;
         }
 
@@ -83,7 +83,7 @@
             width: 22vmin;
             height: 25vmin;
             transform-origin: 50% 100%;
-            transform: translateX(-50%) rotate(calc((var(--i) * 20deg) - 20deg));
+            transform: translateX(-50%) rotate(calc((var(--i) * 15deg) - 22.5deg));
             border-radius: 12px;
             border: 2px solid;
             background: rgba(13, 17, 23, 0.9);
@@ -98,7 +98,7 @@
             width: 22vmin;
             height: 25vmin;
             transform-origin: 50% 100%;
-            transform: translateX(-50%) rotate(calc((var(--i) * 20deg) - 20deg));
+            transform: translateX(-50%) rotate(calc((var(--i) * 15deg) - 22.5deg));
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -137,6 +137,11 @@
             background: linear-gradient(135deg, rgba(248, 81, 73, 0.15), rgba(13, 17, 23, 0.9));
         }
 
+        .card-cgi::before {
+            border-color: #a855f7;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(13, 17, 23, 0.9));
+        }
+
         /* Hover effects */
         body:hover .card::before,
         body:hover .card-content {
@@ -167,6 +172,11 @@
             border-color: #ff7b72;
         }
 
+        body:hover .card-cgi:hover::before {
+            box-shadow: 0 15px 40px -8px rgba(168, 85, 247, 0.6);
+            border-color: #c084fc;
+        }
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             .card {
@@ -180,7 +190,7 @@
             }
 
             body:hover .hand {
-                grid-template-columns: repeat(3, 26vmin);
+                grid-template-columns: repeat(4, 26vmin);
                 gap: 3vmin;
             }
 
@@ -203,22 +213,28 @@
             a clean interface to test different HTTP methods and server responses.
         </p>
         <div class="hand">
-            <a href="/methods/GET.html" class="card card-get" style="--i: 0">
+            <a href="GET.html" class="card card-get" style="--i: 0">
                 <div class="card-content">
                     <div class="card-title">GET</div>
                     <div class="card-description">Retrieve data from the server</div>
                 </div>
             </a>
-            <a href="/methods/POST.html" class="card card-post" style="--i: 1">
+            <a href="POST.html" class="card card-post" style="--i: 1">
                 <div class="card-content">
                     <div class="card-title">POST</div>
                     <div class="card-description">Send data to create resources</div>
                 </div>
             </a>
-            <a href="/methods/DELETE.html" class="card card-delete" style="--i: 2">
+            <a href="DELETE.html" class="card card-delete" style="--i: 2">
                 <div class="card-content">
                     <div class="card-title">DELETE</div>
                     <div class="card-description">Remove resources from server</div>
+                </div>
+            </a>
+            <a href="CGI.html" class="card card-cgi" style="--i: 3">
+                <div class="card-content">
+                    <div class="card-title">CGI</div>
+                    <div class="card-description">Test server-side scripts</div>
                 </div>
             </a>
         </div>

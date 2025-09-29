@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/29 09:42:31 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/29 09:56:25 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,9 +147,6 @@ void	Cgi::set_env(void)
 	env_vec.push_back(std::string("SERVER_PORT=") + server_port);
 	env_vec.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
 	env_vec.push_back(std::string("SERVER_SOFTWARE=webserv/1.0.0"));
-
-	// const std::map<std::string, Uvec>&	getFields(void) const;
-	// bool				getFieldValue(const std::string& key, Uvec& value) const;
 
 	std::map<std::string, Uvec>::const_iterator it;
 	for (it = _req->getFields().begin(); it != _req->getFields().end(); ++it) {

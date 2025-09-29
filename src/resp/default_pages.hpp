@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 17:11:44 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/23 17:31:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/30 00:23:56 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define DEF_PAGES_HPP
 
 # define OK_200_ "HTTP/1.1 200 OK\r\n" \
-			"Connection: close\r\n"
+			"Connection: close\r\n\r\n"
 
 #define CRTD_201_ "HTTP/1.1 201 Created\r\n" \
 			"Connection: close\r\n\r\n"
@@ -54,11 +54,11 @@
 			"Content-Length: 74\r\n\r\n" \
 			"<html><body><center><h1>408 Request Timeout</h1></center></body></html>\n"
 
-# define CONFL_409_ "HTTP/1.1 409 Conflict\r\n" \
+# define CNFL_409_ "HTTP/1.1 409 Conflict\r\n" \
 			"Content-Type: text/html\r\n" \
 			"Connection: close\r\n" \
-			"Content-Length: 67\r\n\r\n" \
-			"<html><body><center><h1>409 Conflict</h1></center></body></html>\n"
+			"Content-Length: 65\r\n\r\n" \
+			"<html><body><center><h1>409 Conflict</h1></center></body></html>\n";
 
 # define ELRG_413_ "HTTP/1.1 413 Entity Too Large\r\n" \
 			"Content-Type: text/html\r\n" \
