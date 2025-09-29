@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Login Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            min-height: 100vh;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: rgba(13, 17, 23, 0.8);
+            border: 2px solid rgba(88, 166, 255, 0.3);
+            border-radius: 16px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(13, 17, 23, 0.8);
+            border: 2px solid #58a6ff;
+            border-radius: 8px;
+            color: #e6edf3;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(88, 166, 255, 0.4);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(230, 237, 243, 0.7);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #79c0ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(22, 27, 34, 0.8);
+            border: 2px solid rgba(88, 166, 255, 0.3);
+            border-radius: 8px;
+            color: #e6edf3;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1));
+            border: 2px solid #58a6ff;
+            border-radius: 12px;
+            color: #e6edf3;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.3), rgba(88, 166, 255, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(88, 166, 255, 0.4);
+        }
+
+        .test-credentials {
+            background: rgba(22, 27, 34, 0.6);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .test-title {
+            color: #79c0ff;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .test-info {
+            color: rgba(230, 237, 243, 0.7);
+            line-height: 1.4;
+        }
+
+        .message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .message.error {
+            background: rgba(248, 81, 73, 0.2);
+            border: 1px solid #f85149;
+            color: #ff7b72;
+        }
+
+        .message.success {
+            background: rgba(63, 185, 80, 0.2);
+            border: 1px solid #3fb950;
+            color: #56d364;
+        }
+
+        @media (max-width: 480px) {
+            .back-btn {
+                position: static;
+                margin-bottom: 2rem;
+                display: inline-block;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .login-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← Back to Menu</a>
+    
+    <div class="login-container">
+        <h1>Session Login</h1>
+        <p class="subtitle">Test session cookie functionality</p>
+        
+        <div class="test-credentials">
+            <div class="test-title">Test Credentials:</div>
+            <div class="test-info">
+                Username: <strong>admin</strong><br>
+                Password: <strong>password</strong><br>
+                <em>(Any credentials work for testing)</em>
+            </div>
+        </div>
+
+        <div id="message"></div>
+
+        <form action="/cgi-bin/login.cgi" method="POST" id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+    </div>
+
+    <script>
+        // Check if user is already logged in
+        function checkExistingSession() {
+            const cookies = document.cookie;
+            if (cookies && cookies.includes('session_id=')) {
+                // User already has session, redirect to dashboard
+                window.location.href = '/dashboard.html';
+                return;
+            }
+        }
+
+        // Check for messages in URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const messageEl = document.getElementById('message');
+        
+        if (urlParams.has('error')) {
+            messageEl.innerHTML = '<div class="message error">Login failed: Invalid credentials</div>';
+        }
+        
+        if (urlParams.has('logout')) {
+            messageEl.innerHTML = '<div class="message success">Successfully logged out</div>';
+        }
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                e.preventDefault();
+                messageEl.innerHTML = '<div class="message error">Please enter both username and password</div>';
+            }
+        });
+
+        // Check session on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            checkExistingSession();
+        });
+    </script>
+</body>
+</html>

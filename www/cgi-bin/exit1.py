@@ -6,11 +6,13 @@ import time
 
 
 
-print ("Status: 200 ok")
+print ("Status: 200 OK")
+# time.sleep(11)
 print ("Content-Type: text/plain\n")
 
-exit(1)
 # Sleep for 5 seconds
-# time.sleep(5)
+# time.sleep(60)
+# exit(1)
 
 # Print response
+print ("hello from cgi exit1.py\n")

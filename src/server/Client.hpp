@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/23 16:01:38 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/27 11:33:32 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,10 @@ class Client : Socket
 		std::string			resbuf_;
 		Uvec				vec_buf_;
 
-		std::time_t			timeout_;
+		std::time_t			req_timeout_;
+		std::time_t			cgi_timeout_;
+		std::time_t			resp_timeout_;
+		int					state_timout_;
 
 		int					epoll_fd_;
 		Cgi*				cgi_;
@@ -61,7 +64,7 @@ class Client : Socket
 			return (request_) ? request_->getReqState() : -1;
 		}
 
-		int get_fd_client(); //!  redifine
+		int get_fd_client();
 
 		void	set_req_state(t_req_state stat) {
 			if (request_)
@@ -75,7 +78,11 @@ class Client : Socket
 		sockaddr_in get_client_addr();
 
 		bool	check_timeout();
-		void	reset_timeout() { timeout_ = std::time(NULL);}
+		void	reset_req_timeout() { req_timeout_ = std::time(NULL);}
+		void	reset_cgi_timeout() { cgi_timeout_ = std::time(NULL);}
+		void	reset_resp_timeout() { resp_timeout_ = std::time(NULL);}
+
+		int		kill_cgi();
 
 		void log() const;
 

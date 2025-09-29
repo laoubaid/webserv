@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/23 19:48:37 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/26 02:21:58 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,7 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
 }
 
 bool HttpResponse::serveStaticContent(const std::string& path, int code) {
+	std::cout << "[INFO] RESP serving static file path: " << path << std::endl;
 	file_.open(path, std::ios::in | std::ios::binary);
 	if (!file_.is_open()) {
 		handle_error(403);
@@ -115,30 +116,35 @@ bool HttpResponse::serveStaticContent(const std::string& path, int code) {
 }
 
 bool HttpResponse::list_directory() {
+	std::string target_path = location_.get_root() + uri_;
 	std::string direname;
-	DIR* dir = opendir(uri_.c_str());
+	DIR* dir = opendir(target_path.c_str());
 
+	std::cout << "[INFO] RESP target_path in list directory : " << target_path << std::endl;
 	resp_buff_.clear();
 	if (dir == NULL) {
 		handle_error(403);
 		return false;
 	}
-	size_t idx = uri_.rfind("/");
+	size_t idx = target_path.rfind("/");
 	if (idx != std::string::npos)
-		direname = uri_.substr(idx + 1);
+		direname = target_path.substr(idx + 1);
 
-	std::string body = "<!DOCTYPE html><html><head><title>Index of " + direname + \
-	"</title></head><body><h1>Index of " + direname + "</h1><ul>";
+	std::string body = "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + direname + \
+	"</title>\n</head>\n<body>\n<h1>Index of " + direname + "</h1>\n<ul>\n";
 
 	struct dirent *ptr;
 	ptr = readdir(dir);
 	while (ptr) {
-		std::string tmp = std::string(ptr->d_name);
-		if (tmp != "." && tmp != "..")
-			body += "<li><a href=\"/" + direname + "/" + tmp + "\">" + tmp + "</a></li>";
+		std::string filename = std::string(ptr->d_name);
+		if (filename != "." && filename != "..") {
+			std::string filepath = "/" + direname + "/" + filename;
+			filepath = resolve_path(filepath);
+			body += "<li><a href=\"" + filepath + "\">" + filename + "</a></li>\n";
+		}
 		ptr = readdir(dir);
 	}
-	body += "</ul></body></html>";
+	body += "</ul>\n</body>\n</html>\n";
 	resp_buff_ = OK_200_;
 	resp_buff_ += "Content-Type: text/html\r\n"
 		"Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
@@ -169,8 +175,9 @@ void	HttpResponse::handle_error(int err_code) {
 	std::string path = conf_.get_err_page(err_code);
 	if (!path.empty()) {
 		path = conf_.get_root() + "/" + path;
+		path = resolve_path(path);
 		if (serveStaticContent(path, err_code))
-		return ;
+			return ;
 	}
 	std::cout << "[INFO] RESP handle error numero : " << err_code << std::endl;
 
@@ -206,16 +213,17 @@ void	HttpResponse::handle_error(int err_code) {
 // }
 
 void HttpResponse::process_path() {
-	uri_ = location_.get_root() + uri_;
-	std::string target_path = uri_;
+	// uri_ = location_.get_root() + uri_;
+	std::string target_path = location_.get_root() + uri_;
+	target_path = resolve_path(target_path);  //! in case somthing fucked up its this one lol
 
-	std::cout << "[INFO] RESP the file to look for : " << uri_ << std::endl;
-	if (!access(uri_.c_str(), F_OK)) {
-		if (!access(uri_.c_str(), R_OK)) {
-			if (is_directory(uri_)) {
+	std::cout << "[INFO] RESP the file to look for : " << target_path << std::endl;
+	if (!access(target_path.c_str(), F_OK)) {
+		if (!access(target_path.c_str(), R_OK)) {
+			if (is_directory(target_path)) {
 				//info std::cout << "Directory + GET → serve index, else autoindex if on, else 403\n"; // delme
 				if (location_.is_index()) {
-					uri_ = target_path + "/" + location_.get_index();
+					uri_ += "/" + location_.get_index();
 					process_path();
 					return ;
 				} else if (location_.get_autoindex()) {
@@ -224,7 +232,7 @@ void HttpResponse::process_path() {
 					handle_error(403);
 				}
 			} else {
-				serveStaticContent(uri_, 200);
+				serveStaticContent(target_path, 200);
 				return ;
 			}
 		} else
@@ -409,7 +417,7 @@ void HttpResponse::cgi_response() {
 
 const std::string HttpResponse::generateResponse() {
 	//! body received is bigger than the content-length cause segfault
-	std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
+	// std::cout << GRN_CLR << "Generating response ..." << DEF_CLR << std::endl;
 
 	resp_buff_.clear();
 	if (status_code_ / 100 == 2) {
@@ -417,23 +425,14 @@ const std::string HttpResponse::generateResponse() {
 		if (check_redirection(location_)) {
 			return resp_buff_;
 		}
-		if (request_.getCgiObject() != NULL && resp_stat_ != DONE) {
+		if (request_.getCgiObject() != NULL && resp_stat_ != DONE)
 			cgi_response();
-		}
-		else if (method == GET) {
+		else if (method == GET)
 			responseForGet();
-		} else if (method == DELETE) {
+		else if (method == DELETE)
 			responseForDelete();
-		} else {  //! this is for POST method, temporarily of course hhhh
+		else //! this is for POST method, temporarily of course hhhh
 			responseForPost();
-			// std::cout << GRN_CLR << "200 OK" << DEF_CLR << std::endl;
-			// std::string html = "<!DOCTYPE html><html><body><h1>Hello from the WebServer!</h1></body></html>\n";
-			// resp_buff_ = "HTTP/1.1 200 OK\r\n"
-			// 			"Content-Type: text/html\r\n"
-			// 			"Content-Length: " + std::to_string(html.size()) + "\r\n"
-			// 			"Connection: keep-alive\r\n"
-			// 			"\r\n" + html;
-		}
 	} else {
 		std::cout << RED_CLR <<  " request Error status code : " << status_code_ << DEF_CLR << std::endl;
 		handle_error(status_code_);

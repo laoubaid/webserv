@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/23 16:25:51 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/27 11:30:54 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,22 +19,13 @@ Client::Client(int clt_fd, const serverConf& conf, int ep_fd, sockaddr_in clt_ad
 	request_ = NULL;
 	response_ = NULL;
 	cgi_ = NULL;
-	timeout_= std::time(NULL);
+	req_timeout_= std::time(NULL);  //* send timeout
+	state_timout_ = 0;
 }
 
 Client::~Client()
 {
-	// std::cout << "Client destructor called!" << std::endl;
-	if (cgi_ && cgi_->get_cgi_pid() > 0) {
-        // Kill the CGI process if client disconnected
-        kill(cgi_->get_cgi_pid(), SIGTERM);
-        
-        // Wait a bit, then force kill if needed
-        sleep(1);
-        if (!cgi_->is_process_finished()) {
-            kill(cgi_->get_cgi_pid(), SIGKILL);
-        }
-    }
+	std::cout << "Client destructor called!" << std::endl;
 	delete request_;
 	delete response_;
 }
@@ -49,14 +40,26 @@ sockaddr_in Client::get_client_addr() {
 
 bool Client::check_timeout() {
 	std::time_t now = std::time(NULL);
+	int status_code = 0;
 
-	if (static_cast<size_t>(now - timeout_) > conf_.get_client_timeout())
+	if (state_timout_ == 0 && static_cast<size_t>(now - req_timeout_) > conf_.get_recv_timeout()) {
+		request_ = new Request(conf_, get_fd(), epoll_fd_, client_addr_);
+		status_code = 408;
+	} else if (state_timout_ == 1 && static_cast<size_t>(now - cgi_timeout_) > conf_.get_cgi_timeout()) {
+		status_code = 504;
+	} else if (state_timout_ == 2 && static_cast<size_t>(now - resp_timeout_) > conf_.get_send_timeout()) {
 		return true;
+	}
+	if (status_code) {
+		request_->setParsingCode(status_code);
+		request_->setReqState(RESP);
+		response_ = new HttpResponse(*request_, conf_);
+		state_timout_ = 2;
+	}
 	return false;
 }
 
 int Client::receive(int epoll_fd) {
-	// std::cout << "|\treceive request" << std::endl;
 	int client_fd = this->get_fd();
 	unsigned char buf[RECV_BUF];
 
@@ -71,9 +74,9 @@ int Client::receive(int epoll_fd) {
 		std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
 		return -1;
 	}
-	reset_timeout();
+	reset_req_timeout();
 
-	Uvec tmp_vec_buf(buf, nread); // Convert the buffer to Uvec
+	Uvec tmp_vec_buf(buf, nread); //* Convert the buffer to Uvec
 	Uvec delimiter((const unsigned char*)"\r\n\r\n", 4);
 	vec_buf_ += tmp_vec_buf;
 	if (!(request_ && request_->getReqState() == PEND)) {
@@ -85,7 +88,6 @@ int Client::receive(int epoll_fd) {
 }
 
 int Client::process_recv_data() {
-	// std::cout << "|\tprocess_recv_data called!" << std::endl;
 	if (!request_) {
 		try {
 			request_ = new Request(conf_, get_fd(), epoll_fd_, client_addr_);
@@ -96,8 +98,6 @@ int Client::process_recv_data() {
 		} catch (const std::exception &e) {
 			std::string error = e.what();
 			std::cerr << "Error creating HTTPRequestParser: " << error << std::endl;
-			if (error.find("CGI") != std::string::npos)
-				std::cout << "V A L I D\n";
 			// return -1; //TODO Handle error appropriately
 		}
 	}
@@ -114,33 +114,23 @@ int Client::process_recv_data() {
 		cgi_ = request_->getCgiObject();
 	}
 	if (request_ && request_->getReqState() == RESP) {
-		std::cout << "=========================================\n";
 		response_ = new HttpResponse(*request_, conf_);
+		state_timout_ = 2;
 		// log();
 	}
 	return (request_) ? request_->getReqState() : -1;
 }
 
 int Client::send_response() {
-	// std::cout << "|\t|\tSend response: " << this->get_fd() << std::endl;
-
 	resbuf_.clear();
 	resbuf_ = response_->generateResponse();
-	if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) == -1)
-		return 1;
-	std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
-	// std::cout << "\n<>\n" << resbuf_ << "\n</>\n" << std::endl;
-	resbuf_.clear();
-	reset_timeout();
-	if (response_ && response_->getRespState() == DONE) {
-		std::cout << "[INFO] CLT end of connection" << std::endl;
-		delete request_;
-		request_ = NULL;
-		delete response_;
-		response_ = NULL;
-		vec_buf_.clear();
-
-		return 1;
+	if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) != -1) {
+		std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
+		reset_resp_timeout();
+		if (response_->getRespState() == DONE) {
+			std::cout << "[INFO] CLT end of connection" << std::endl;
+			return 1;
+		}
 	}
 	return 0;
 }
@@ -149,7 +139,11 @@ void Client::set_cgi_obj(std::map <int, Client*> &cgi_pipes, int flag) {
 	int pipfd;
 
 	if (request_){
-		std::cout << "[INFO] CLT Set CGI object! " << std::endl;
+		if (state_timout_ == 0) {
+			std::cout << "[INFO] CLT Set CGI object! " << std::endl;
+			state_timout_ = 1;
+			reset_cgi_timeout();
+		}
 		for (int i = 0; i != 3; ++i) {
 			pipfd = request_->get_cgi_pipe(i);
 			if (pipfd != -1){
@@ -162,41 +156,42 @@ void Client::set_cgi_obj(std::map <int, Client*> &cgi_pipes, int flag) {
 				}
 			}
 		}
+		if (!flag && cgi_ && cgi_->get_cgi_pid() > 0) {
+			kill(cgi_->get_cgi_pid(), SIGTERM);
+			std::cout << "[INFO] CLT killing cgi child process\n";
+		}
 	}
 }
 
 int Client::cgi_pipe_io(int pipe_fd) {
 	std::cout << "[INFO] CLT cgi pipe I/O operation\n";
+	reset_cgi_timeout();
 	if (cgi_) {
-		int cgi_state = cgi_->get_cgi_state();
-
-		if (cgi_->check_process_status()) {
-			response_ = new HttpResponse(*request_, conf_);
-			request_->setReqState(RESP);
-			request_->setParsingCode((cgi_->get_cgi_exit_status() == 0) ? 200 : 502);
-			return 1;
-		}
-		if (cgi_state == END) {
-			response_ = new HttpResponse(*request_, conf_);
-			request_->setReqState(RESP);
-			request_->setParsingCode((cgi_->get_cgi_exit_status() == 0) ? 200 : 502);
-			return 1;
-		}
+		cgi_->check_process_status();
 		if (pipe_fd == cgi_->get_pipe(0)) {
 			return cgi_->write_body();
 		} else {
 			if (cgi_->read_output() && response_ == NULL) {
-				response_ = new HttpResponse(*request_, conf_);
 				request_->setReqState(RESP);
-				request_->setParsingCode((cgi_->get_cgi_exit_status() == 0) ? 200 : 502);
+				cgi_->check_process_status();
+				request_->setParsingCode((cgi_->get_cgi_exit_status() == 0) ? 200 : 500);
+				response_ = new HttpResponse(*request_, conf_);
 				return 1;
 			}
 		}
 		return 0;
 	}
-	response_ = new HttpResponse(*request_, conf_);
-	request_->setReqState(RESP);
-	request_->setParsingCode((cgi_->get_cgi_exit_status() == 0) ? 200 : 502);
+	return 1;
+}
+
+int Client::kill_cgi() {
+	std::cout << "[INFO] CLT cgi child process\n";
+	if (cgi_ && cgi_->get_cgi_pid()) {
+		if (cgi_->check_process_status())
+			return 1;
+		kill(cgi_->get_cgi_pid(), SIGKILL);
+		return 0;
+	}
 	return 1;
 }
 

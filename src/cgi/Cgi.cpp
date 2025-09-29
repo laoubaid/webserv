@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/23 16:17:39 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/29 09:42:31 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,18 @@ void	Cgi::set_path_info(const std::string &path)
 	path_info = path;
 }
 
+
+std::string toupperstring(const std::string& input) {
+	std::string res;
+
+	for (size_t i = 0; i < input.size(); ++i) {
+		res += toupper(input.at(i));
+		if (res[i] == '-')
+			res[i] = '_';
+	}
+	return res;
+}
+
 void	Cgi::set_env(void)
 {
 	std::cout << "setting up env vars\n";
@@ -101,10 +113,7 @@ void	Cgi::set_env(void)
 	int port = ntohs(_clt_addr.sin_port);
 
 	std::string	client_ip(ip_str);
-	std::string	server_port = std::to_string(port); //! server port or client port? for now client port is set
-	std::cout << "ip:port " << client_ip << ":" << server_port << std::endl;
-
-	// _req->get_location().get_root()
+	std::string	server_port = std::to_string(port);
 
 	env_vec.push_back(std::string("AUTH_TYPE=") + get_auth_type(*_req));
 	if (_req->getBodySize())
@@ -138,6 +147,20 @@ void	Cgi::set_env(void)
 	env_vec.push_back(std::string("SERVER_PORT=") + server_port);
 	env_vec.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
 	env_vec.push_back(std::string("SERVER_SOFTWARE=webserv/1.0.0"));
+
+	// const std::map<std::string, Uvec>&	getFields(void) const;
+	// bool				getFieldValue(const std::string& key, Uvec& value) const;
+
+	std::map<std::string, Uvec>::const_iterator it;
+	for (it = _req->getFields().begin(); it != _req->getFields().end(); ++it) {
+		std::string tmp = "HTTP_" + toupperstring(it->first);
+		if (tmp == "HTTP_CONTENT_TYPE" || tmp == "HTTP_CONTENT_TYPE")
+			continue;
+		// if (tmp == "HTTP_COOKIE")  //* testing cookies
+			// continue;
+		tmp += "=" + std::string(it->second.begin(), it->second.end());
+		env_vec.push_back(tmp);
+	}
 
 	// turn this vector to array of strings in the heap
 	try
@@ -209,6 +232,7 @@ std::string	Cgi::run(void)
 			exit (1); // invalid path
 		dup2(pipe_out[1], 1);
 		dup2(pipe_in[0], 0);
+		close(STDERR_FILENO);																			//* delete this so errors of cgi get printed!
 		close(pipe_out[0]);
 		close(pipe_in[1]);
 		execve(argv[0], argv, env);
@@ -222,24 +246,24 @@ std::string	Cgi::run(void)
 
 	if (_req->getBodySize()) {
 		_state = WRITE;
-		_in_file.open(_req->getBodyFilePath().c_str(), std::ios::binary);   //! close this file
+		_in_file.open(_req->getBodyFilePath().c_str(), std::ios::binary);
 		
 		// _write_in to epoll
 		struct epoll_event clt_event;
 		memset(&clt_event, 0, sizeof(clt_event));
 		clt_event.data.fd = _write_in;
-		clt_event.events = EPOLLOUT;  //* must check for both in and out at same time (subject requirements).
+		clt_event.events = EPOLLOUT;																	//* must check for both in and out at same time (subject requirements).
 		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_ADD, _write_in, &clt_event);
 		std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
 	} else {
 		_state = READ;
 
 		// _read_from to epoll
-		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _write_in, NULL);    //* deleting the write_in pipe end from epoll
+		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _write_in, NULL);									//* deleting the write_in pipe end from epoll
 		struct epoll_event clt_event;
 		memset(&clt_event, 0, sizeof(clt_event));
 		clt_event.data.fd = _read_from;
-		clt_event.events = EPOLLIN;  //* must check for both in and out at same time (subject requirements).
+		clt_event.events = EPOLLIN;																		//* must check for both in and out at same time (subject requirements).
 		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_ADD, _read_from, &clt_event);
 		std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
 
@@ -248,30 +272,9 @@ std::string	Cgi::run(void)
 			oss << "/tmp/outfile_" << this;
 			_out_file_path = oss.str();
 		}
-		_out_file.open(_out_file_path, std::ios::binary | std::ios::app);   //! close this as well
+		_out_file.open(_out_file_path, std::ios::binary | std::ios::app);
 	}
-	
-
-	// sleep(1);                      // ??????????????
-	// past body to cgi
-	
-
-	//?  comback later
-	// while (waitpid(child_pid, &status, WNOHANG) <= 0)
-	// {
-	// 	sleep(1);
-	// }
-	
-	// if (WIFEXITED(status)) {
-	// 	printf("Child exited normally with status %d\n", WEXITSTATUS(status));
-    // } else if (WIFSIGNALED(status)) {
-	// 	printf("Child terminated by signal %d\n", WTERMSIG(status));
-    // }
-
-	// waitpid(child_pid, &status, WNOHANG); // dont wait for child process but avoid zombies
-	// print_env();
 	return "";
-	
 }
 
 int		Cgi::get_pipe(int flag) {
@@ -286,7 +289,7 @@ int	Cgi::write_body()
 	if (_req->getBodySize())
 	{
 		if (!_in_file.is_open())
-			cgi_err("[CGI ERROR] file not open", 403, RESP);
+			cgi_err("[CGI ERROR] file not open while writing body", 403, RESP);
 		std::cout << "[INFO] CGI body found\n";
 		
 		std::vector<unsigned char>	buffer(CGI_BUFFER);
@@ -308,14 +311,14 @@ int	Cgi::write_body()
 		if (_in_file.eof())
 		{
 			_state = READ;
-			epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _write_in, NULL);    //* deleting the write_in pipe end from epoll
+			epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _write_in, NULL);								//* deleting the write_in pipe end from epoll
 			struct epoll_event clt_event;
 			memset(&clt_event, 0, sizeof(clt_event));
 			clt_event.data.fd = _read_from;
-			clt_event.events = EPOLLIN;  //* must check for both in and out at same time (subject requirements).
+			clt_event.events = EPOLLIN;																	//* must check for both in and out at same time (subject requirements).
 			epoll_ctl(_req->getEpollFd(), EPOLL_CTL_ADD, _read_from, &clt_event);
 			std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
-			close(_write_in);  //! close in destructor? i did
+			close(_write_in);
 			_write_in = -1;
 			std::cout << "[INFO] CGI file ends switching pipes in epoll\n";
 
@@ -324,7 +327,7 @@ int	Cgi::write_body()
 				oss << "/tmp/outfile_" << this;
 				_out_file_path = oss.str();
 			}
-			_out_file.open(_out_file_path, std::ios::binary | std::ios::app);   //! close this as well
+			_out_file.open(_out_file_path, std::ios::binary | std::ios::app);
 
 			return 1;
 		}
@@ -335,11 +338,11 @@ int	Cgi::write_body()
 
 int	Cgi::read_output()
 {
-	std::cout << "[INFO] CGI read output from pipe\n";
+	std::cout << "[INFO] CGI read output from pipe : " << _out_file_path << std::endl;
 	char	buff[CGI_BUFFER];
 
 	if (!_out_file.is_open())
-		cgi_err("[CGI ERROR] file not open", 500, RESP);
+		cgi_err("[CGI ERROR] file not open while reading output", 500, RESP);
 	ssize_t char_read = read(_read_from, buff, CGI_BUFFER);
 	if (char_read == -1)
 		cgi_err("[CGI ERROR] error during reading from pipe", 502, RESP);
@@ -347,8 +350,8 @@ int	Cgi::read_output()
 	{
 		std::cout << "[INFO] CGI scripts ended!\n";
 		_state = END;
-		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _read_from, NULL);    //* deleting the read_from pipe end from epoll
-		close(_read_from);  //! close this fd
+		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _read_from, NULL);									//* deleting the read_from pipe end from epoll
+		close(_read_from);
 		_read_from = -1;
 		_out_file.close();
 		return 1;
@@ -385,19 +388,10 @@ bool Cgi::check_process_status() {
         _state = END;
         return true;
     } else {
-        // Error occurred
-        perror("waitpid");
         _state = END;
         exit_status_ = -1;
         return true;
     }
-}
-
-bool Cgi::is_process_finished() {
-    if (_state == END) {
-        return true;
-    }
-    return check_process_status();
 }
 
 int Cgi::get_cgi_exit_status() {

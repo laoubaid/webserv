@@ -184,7 +184,7 @@ class CGITester:
             self.log_result(test_name, "FAIL", f"Request failed: {str(e)}")
             return False
     
-    def test_cgi_json_post(self, cgi_path: str = '/cgi-bin/json.py'):
+    def test_cgi_json_post(self, cgi_path: str = '/cgi-bin/json_test.py'):
         """Test JSON POST data handling in CGI"""
         test_name = "CGI JSON POST"
         try:
@@ -296,7 +296,7 @@ class CGITester:
             ('env', self.test_cgi_environment_variables, paths.get('env', '/cgi-bin/env.py')),
             ('get', self.test_cgi_get_parameters, paths.get('get', '/cgi-bin/params.py')),
             ('post', self.test_cgi_post_data, paths.get('post', '/cgi-bin/post.py')),
-            ('json', self.test_cgi_json_post, paths.get('json', '/cgi-bin/json.py')),
+            ('json', self.test_cgi_json_post, paths.get('json', '/cgi-bin/json_test.py')),
             ('error', self.test_cgi_error_handling, paths.get('error', '/cgi-bin/nonexistent.py')),
         ]
         

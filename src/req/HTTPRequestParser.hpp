@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/23 16:25:02 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/27 13:44:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ class Request
 		const std::string&	getBodyFilePath(void) const;
 
 		int					getEpollFd(void) const { return _epoll_fd; };
-		Cgi					*getCgiObject() { return _cgi; };  //! chang this
+		Cgi					*getCgiObject() { return _cgi; };
 
 		void				setParsingCode(int code);
 		void				setReqState(t_req_state state);

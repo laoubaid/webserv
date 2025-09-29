@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:34 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/23 16:05:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/27 11:33:14 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ class Cgi
 		int		read_output();
 
 		bool	check_process_status();
-		bool	is_process_finished();
 		int		get_cgi_exit_status();
 		int		get_cgi_pid();
 

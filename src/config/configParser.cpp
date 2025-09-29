@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/17 21:25:46 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/25 01:17:41 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,9 +223,13 @@ void Block::process_server(std::vector<serverConf>& servres) {
             srvr_cfg.set_index((*it_d).values);
         } else if ((*it_d).key == "autoindex") {
             srvr_cfg.set_index((*it_d).values);
-        } else if ((*it_d).key == "client_timeout") {
-            srvr_cfg.set_timeout((*it_d).values);
-        } else if ((*it_d).key == "return") {  // could be changed to redir
+        } else if ((*it_d).key == "recv_timeout") {
+            srvr_cfg.set_timeout((*it_d).values, 0);
+        } else if ((*it_d).key == "cgi_timeout") {
+            srvr_cfg.set_timeout((*it_d).values, 1);
+        } else if ((*it_d).key == "send_timeout") {
+            srvr_cfg.set_timeout((*it_d).values, 2);
+        } else if ((*it_d).key == "return") {  			//* could be changed to redir
             srvr_cfg.set_redirect((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);

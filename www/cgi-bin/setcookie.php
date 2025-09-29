@@ -1,0 +1,2 @@
+<?php
+setcookie("name","okok",[]);

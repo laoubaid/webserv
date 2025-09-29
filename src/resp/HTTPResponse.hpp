@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/23 17:24:46 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/09/25 01:56:15 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,9 @@
 # include <dirent.h>
 
 
-# define FILE_BUFFER_SIZE 4096
+// # define FILE_BUFFER_SIZE 4096
 // # define FILE_BUFFER_SIZE 8192
-// # define FILE_BUFFER_SIZE 16384
+# define FILE_BUFFER_SIZE 16384
 
 // create a static class HTTPResponse, so i dont need to create an instance of it
 // but i can use its methods to generate responses based on the status code
