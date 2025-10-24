@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/30 00:09:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/16 11:52:24 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "../include.hpp"
 # include "locationConf.hpp"
+#include <cstddef>
 
 // class locationConf;
 
@@ -57,6 +58,7 @@ class serverConf
 		bool		is_autoindex() const { return autoindex_; }
 		std::string	get_index() const { return index_; }
 		std::string	get_root() const { return root_; }
+		size_t		get_clt_body_max_size() const { return clt_body_max_size_; }
 		size_t		get_recv_timeout() const { return recv_timeout_; }
 		size_t		get_cgi_timeout() const { return cgi_timeout_; }
 		size_t		get_send_timeout() const { return send_timeout_; }

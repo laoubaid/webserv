@@ -6,7 +6,7 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/16 15:05:31 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/17 10:38:57 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,23 +28,6 @@ std::vector<Uvec>	ft_split(const Uvec &data, const Uvec &spliter)
 	return (vec);
 }
 
-// t_vec_uc	str_to_vec(const unsigned char *str, std::size_t len)
-// {
-// 	return (t_vec_uc(str, str + len));
-// }
-
-// bool	vec_eq_str(const t_vec_uc &vec, const unsigned char *str, std::size_t len)
-// {
-// 	t_vec_uc	vec_str;
-// 	vec_str.assign(str, str + len);
-// 	return (vec == vec_str);
-// }
-
-// bool	ucharInVec(const t_vec_uc &vec, unsigned char c)
-// {
-// 	return (std::find(vec.begin(), vec.end(), c) != vec.end());
-// }
-
 Uvec	ft_trim(Uvec vec)
 {
 	Uvec::iterator	start = vec.begin();
@@ -61,17 +44,6 @@ unsigned char toLowerChar(unsigned char c)
 {
     return static_cast<unsigned char>(std::tolower(static_cast<int>(c)));
 }
-
-// t_vec_uc createRange(unsigned char start, unsigned char end)
-// {
-//     t_vec_uc vec;
-//     vec.reserve(end - start + 1);
-//     for (int i = start; i <= end; ++i)
-// 	{
-//         vec.push_back(static_cast<unsigned char>(i));
-//     }
-//     return (vec);
-// }
 
 bool hexStringToUnsignedLong(const std::string& hexStr, unsigned long& result) {
     std::stringstream ss;
@@ -217,34 +189,3 @@ bool fileExists(const char* filename)
     return (stat(filename, &buffer) == 0);
 }
 
-// to be refactored
-// std::string resolve_path(const std::string& str)
-// {
-//     std::stringstream ss(str);
-//     std::string part;
-//     std::vector<std::string> stack;
-
-//     while (std::getline(ss, part, '/'))
-// 	{
-//         if (part.empty() || part == ".")
-//             continue;
-//         if (part == "..")
-// 		{
-//             if (!stack.empty())
-//                 stack.pop_back();
-//         }
-// 		else
-// 		{
-//             stack.push_back(part);
-//         }
-//     }
-
-//     std::string result;
-//     for (size_t i = 0; i < stack.size(); ++i)
-// 	{
-//         result += "/" + stack[i];
-//     }
-
-//     // return result.empty() ? ("./www/") : ("./www" + result);
-//     return result.empty() ? "/" : result;
-// }

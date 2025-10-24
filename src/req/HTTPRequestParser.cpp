@@ -6,12 +6,14 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/30 00:16:03 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/19 01:48:39 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include.hpp"
 #include "../config/serverConf.hpp"
+#include "httpParsingIncludes.hpp"
+#include <ostream>
 
 std::map<std::string, validatorFunc>	Request::stdFields;
 std::vector<std::string>				Request::invalidList;
@@ -62,9 +64,8 @@ Request::StaticContainersInitializer::StaticContainersInitializer(void)
 	QPAIR += OBSTEXT;
 }
 
-Request::Request(void)
-{
-}
+Request::Request(void) {}
+
 Request::~Request(void)
 {
 	if (_cgi)
@@ -81,10 +82,13 @@ int	Request::req_err(std::string throw_msg, int status_code, t_req_state state)
 {
 	_parsingCode = status_code;
 	_req_state = state;
+	if (_body_file_path.size())
+	{
+		std::cout << "[INFO] REQ removing created file for body \n";
+		std::remove(_body_file_path.c_str());
+	}
 	if (throw_msg.size())
 		throw std::runtime_error(throw_msg);
-	if (_body_file_path.size())
-		std::remove(_body_file_path.c_str());
 	return (1);
 }
 
@@ -138,7 +142,7 @@ void	Request::processStartLine(Uvec startLine)
 	else if (infos[0] == Uvec((const unsigned char*)"DELETE", 6))
 		_method = DELETE;
 	else
-		req_err("method not supported", 501, RESP);
+		req_err("method not supported", 405, RESP);
 	// target validity
 	if (validateTarget(infos[1]))
 	{
@@ -213,6 +217,11 @@ void	Request::processFields(std::vector<Uvec> lines)
 			req_err("bad header field: invalid header field value", 400, RESP);
 		addField(str_key, value);
 	}
+	try {
+		getValue(_fields, "host");
+	} catch (const std::exception& e) {
+		req_err("host header not found", 400, RESP);
+	}
 }
 
 void	Request::setup_body(const Uvec& raw_body)
@@ -235,9 +244,11 @@ void	Request::setup_body(const Uvec& raw_body)
 			const locationConf& tmp = *_loc;
 			std::string file_path = tmp.get_path();
 			if (tmp.is_upset()) {
-				int tmpidx = _target.path.rfind("/");
-				file_path = _target.path.substr(tmpidx + 1);
-				file_path = tmp.get_upstore() + "/" + file_path;
+				std::cout << "[DEBUG] looking for location path => " << tmp.get_path() << std::endl;
+				std::string::iterator	it = _target.path.begin() + tmp.get_path().size();
+				if (*it == '/')
+					it++;
+				file_path = tmp.get_upstore() + "/" + std::string(it, _target.path.end());
 			} else 
 				req_err("upload not set", 403, RESP); // ! what is the status code of this one???
 		
@@ -248,6 +259,7 @@ void	Request::setup_body(const Uvec& raw_body)
 				i_file.close();
 				req_err("uploading existing file", 409, RESP);
 			}
+			std::cout << "[DEBUG] upload file created at path " << file_path << std::endl;
 			_body_file_path = file_path;
 		}
 		_file.open(_body_file_path.c_str(), std::ios::binary | std::ios::app);
@@ -342,6 +354,10 @@ void	Request::addBody(Uvec raw_body)
 		else
 			req_err("body received is bigger than the content-length", 400, RESP);
 	}
+	if (_conf->get_clt_body_max_size() < _body_size){
+		std::cout << "max body found\n";
+		req_err("body size too large", 413, RESP);
+	}
 	if (_cgi && _req_state == RESP) {
 		if (_file.is_open())
 			_file.close();
@@ -356,14 +372,8 @@ _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL),
 }
 
 void Request::ParseRequest(Uvec httpRequest) {
-	// conf_ = &cfg;
-	// client_fd_ = fd_;
 	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
 	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
-	// parsingCode = 200;
-	// body_size = 0;
-	// req_state = PEND;
-	// cgi = NULL;
 	
 	// split with crlfcrlf to get 2 (headers and body)
 	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
@@ -377,20 +387,11 @@ void Request::ParseRequest(Uvec httpRequest) {
 	
 	std::vector<Uvec>	lines = ft_split(headers, CRLF);
 	
-	// for (std::vector<Uvec>::iterator it = lines.begin(); it < lines.end(); it++)
-	// {
-	// 	std::cout << "vec: ";
-	// 	(*it).print();
-	// }
 	
 	if (lines.size() < 2) // the least that should be there are three lines (start-line, host header field at least, empty line)
 		req_err("start line or mandatory header not found", 400, RESP);
 	
 	processStartLine(lines[0]);
-	// if (parsingCode == 400) {
-	// 	req_state = RESP;
-	// 	return ;
-	// }
 	
 	// field line parsing:
 	processFields(lines);

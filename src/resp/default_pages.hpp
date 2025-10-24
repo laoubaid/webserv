@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 17:11:44 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/30 00:23:56 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/16 22:04:28 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@
 
 # define ELRG_413_ "HTTP/1.1 413 Entity Too Large\r\n" \
 			"Content-Type: text/html\r\n" \
-			"Content-Length: 73\r\n" \
+			"Content-Length: 72\r\n" \
 			"Connection: close\r\n\r\n" \
 			"<!DOCTYPE html><html><body><h1>413 Payload Too Large</h1></body></html>\n";
 
