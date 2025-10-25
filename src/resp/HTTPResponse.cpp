@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/25 11:45:14 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/25 17:43:38 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -280,6 +280,7 @@ void HttpResponse::responseForPost() {
 					html;
 
 	}
+	resp_stat_ = DONE;
 }
 
 bool    HttpResponse::check_redirection(const locationConf& cfg) {
