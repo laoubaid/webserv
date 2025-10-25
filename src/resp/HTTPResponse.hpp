@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/25 01:56:15 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/25 11:40:34 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ class HttpResponse {
 		const locationConf	location_;
 		t_resp_state		resp_stat_;
 		int					status_code_;
-
+		int					err_depth;
 		
 	public:
 		static std::map<int, std::string> status_lines;

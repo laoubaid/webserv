@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/30 00:25:15 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/25 11:45:14 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,8 +173,9 @@ bool	HttpResponse::read_file_continu() {
 }
 
 void	HttpResponse::handle_error(int err_code) {
+	err_depth++;
 	std::string path = conf_.get_err_page(err_code);
-	if (!path.empty()) {
+	if (!path.empty() && err_depth == 1) {
 		std::cout << "[INFO] RESP error page found in the config" << std::endl;
 		path = conf_.get_root() + "/" + path;
 		path = resolve_path(path);
@@ -188,34 +189,10 @@ void	HttpResponse::handle_error(int err_code) {
         resp_buff_ = error_pages[err_code];
     }
 	resp_stat_ = DONE;
+	err_depth = 0;
 }
 
-// bool	HttpResponse::handle_cgi() {
-// 	if (location_.has_cgi()) {
-// 		std::size_t pos = uri_.rfind('.');
-// 		if (pos != std::string::npos) {
-// 			std::string extension = uri_.substr(pos);
-// 			std::cout << "\t|\tExtension: " << extension << std::endl;
-// 			if (location_.valid_cgi_ext(extension)) {
-// 				// std::cout << "\t|\t|\tvalid cgi extention! : ";
-// 				// std::cout << location_.get_cgi_path(extension) << std::endl;
-// 				//? now we need to run the cgi /bin-path uri e.g:  /bin/python3  /home/user/webserv/www/cgi-bin/test.py 
-// 				//* create a cgi object init with location
-// 				Cgi test(location_, uri_);
-// 				//* run the cgi to begin with
-// 				test.run(request_, extension);
-// 				//? after this we should give it input until it ends then take output
-// 			}
-// 			// return 0;        // this should decied wither i do server static files or not
-// 		} else {
-// 			std::cout << "No extension found" << std::endl;
-// 		}
-// 	}
-// 	return 1;
-// }
-
 void HttpResponse::process_path() {
-	// uri_ = location_.get_root() + uri_;
 	std::string target_path = location_.get_root() + uri_;
 	target_path = resolve_path(target_path);
 
@@ -223,7 +200,6 @@ void HttpResponse::process_path() {
 	if (!access(target_path.c_str(), F_OK)) {
 		if (!access(target_path.c_str(), R_OK)) {
 			if (is_directory(target_path)) {
-				// std::cout << "Directory + GET → serve index, else autoindex if on, else 403\n"; // delme
 				if (location_.is_index()) {
 					uri_ += "/" + location_.get_index();
 					process_path();
@@ -274,27 +250,18 @@ void HttpResponse::responseForDelete() {
 	}
 }
 
-
-// 200 OK → when the POST returns content (like a confirmation page).
-// 201 Created → when the POST creates a new resource; usually with a Location header pointing to it.
-// 204 No Content → when the POST is successful but there’s nothing to return in the body.
-
 void HttpResponse::responseForPost() {
 	if (status_code_ == 201) {
-		// Created → include Location header if resource URL is known
 		resp_buff_ = "HTTP/1.1 201 Created\r\n"
 					 "Content-Type: text/html\r\n"
 					 "Content-Length: 0\r\n"
 					 "Connection: close\r\n"
-					 // "Location: /new/resource/url\r\n"  // add if relevant
 					 "\r\n";
 	} else if (status_code_ == 204) {
-		// No Content → explicitly empty body
 		resp_buff_ = "HTTP/1.1 204 No Content\r\n"
 					 "Connection: close\r\n"
 					 "\r\n";
 	} else {
-		// Default: 200 OK with body
 		std::string html =
 			"<!DOCTYPE html>\r\n"
 			"<html>\r\n"
@@ -319,7 +286,6 @@ bool    HttpResponse::check_redirection(const locationConf& cfg) {
 	const std::pair<int, std::string>& redir = cfg.get_redirect();
 	
 	if (redir.first != 0) {
-		// std::cout << "redirection detected!\n";
 		resp_buff_ = status_lines.at(redir.first);
 		resp_buff_ += "Location: " + redir.second + "\r\n";
 		resp_buff_ += "Content-Length: 0\r\n\r\n";
@@ -446,7 +412,8 @@ HttpResponse::HttpResponse(Request& request, const serverConf& conf)
 	  conf_(conf),
 	  uri_(request_.getTarget().path),
 	  location_(request_.get_location()),
-	  resp_stat_(STRT) {
+	  resp_stat_(STRT),
+	  err_depth(0) {
 	//* response constracteur!
 	std::cout << "response constracter" << std::endl;
 	status_code_ = request_.getParsingCode();
