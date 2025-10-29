@@ -6,10 +6,11 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/19 01:48:39 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/29 01:34:37 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "HTTPRequestParser.hpp"
 #include "../include.hpp"
 #include "../config/serverConf.hpp"
 #include "httpParsingIncludes.hpp"
@@ -224,6 +225,40 @@ void	Request::processFields(std::vector<Uvec> lines)
 	}
 }
 
+void	Request::setup_file()
+{
+	if (_cgi)
+		_body_file_path = "/tmp/webserv_cgi_body_" + std::to_string(_client_fd);
+	else
+	{
+		const locationConf& tmp = *_loc;
+		std::string file_path = tmp.get_path();
+		if (tmp.is_upset()) {
+			std::cout << "[DEBUG] looking for location path => " << tmp.get_path() << std::endl;
+			std::string::iterator	it = _target.path.begin() + tmp.get_path().size();
+			if (*it == '/')
+				it++;
+			file_path = tmp.get_upstore() + "/" + std::string(it, _target.path.end());
+		} else 
+			req_err("upload not set", 403, RESP); // ! what is the status code of this one???
+	
+		std::cout << "[INFO] REQ : " << file_path << std::endl;
+		if (*(file_path.end() -1) == '/')
+			req_err("invalid file name", 400, RESP);
+		std::ifstream	i_file(file_path.c_str());
+		if (i_file.good()) // i_ already exists
+		{
+			i_file.close();
+			req_err("uploading existing file", 409, RESP);
+		}
+		std::cout << "[DEBUG] upload file created at path " << file_path << std::endl;
+		_body_file_path = file_path;
+	}
+	_file.open(_body_file_path.c_str(), std::ios::binary | std::ios::app);
+	if (!_file.is_open()) // directory doesn't exist
+		req_err("file can't be created", 403, RESP);
+}
+
 void	Request::setup_body(const Uvec& raw_body)
 {
 	Uvec	transfer_encoding, content_length;
@@ -236,36 +271,7 @@ void	Request::setup_body(const Uvec& raw_body)
 		req_err("both transfer-encoding and content-length found", 400, RESP);
 	// set up file
 	if (_method == POST)
-	{
-		if (_cgi)
-			_body_file_path = "/tmp/webserv_cgi_body_" + std::to_string(_client_fd);
-		else
-		{
-			const locationConf& tmp = *_loc;
-			std::string file_path = tmp.get_path();
-			if (tmp.is_upset()) {
-				std::cout << "[DEBUG] looking for location path => " << tmp.get_path() << std::endl;
-				std::string::iterator	it = _target.path.begin() + tmp.get_path().size();
-				if (*it == '/')
-					it++;
-				file_path = tmp.get_upstore() + "/" + std::string(it, _target.path.end());
-			} else 
-				req_err("upload not set", 403, RESP); // ! what is the status code of this one???
-		
-			std::cout << "[INFO] REQ : " << file_path << std::endl; 
-			std::ifstream	i_file(file_path.c_str());
-			if (i_file.good()) // i_ already exists
-			{
-				i_file.close();
-				req_err("uploading existing file", 409, RESP);
-			}
-			std::cout << "[DEBUG] upload file created at path " << file_path << std::endl;
-			_body_file_path = file_path;
-		}
-		_file.open(_body_file_path.c_str(), std::ios::binary | std::ios::app);
-		if (!_file.is_open()) // directory doesn't exist
-			req_err("file can't be created", 403, RESP);
-	}
+		setup_file();
 	if (transfer_encoding_found)
 	{
 		std::vector<Uvec>	transfer_encoding_list = ft_split(transfer_encoding, Uvec((const unsigned char *)",", 1));
@@ -280,7 +286,7 @@ void	Request::setup_body(const Uvec& raw_body)
 			}
 		}
 		if (chunked)
-			chunked = true;
+			_chunked = true;
 		else
 			req_err("body with transfer-encoding but no chunked", 400, RESP);
 	}
@@ -310,21 +316,67 @@ void	Request::setup_body(const Uvec& raw_body)
 	}
 }
 
+std::pair<unsigned long, Uvec>	Request::process_chunked_body()
+{
+	Uvec			body_size_vec;
+	Uvec			body;
+	unsigned long	body_size = 0;
+
+	Uvec::iterator	it = _tmp_chuncked_body.find(Request::CRLF);
+	if (it == _tmp_chuncked_body.end())
+		return (std::pair<unsigned long, Uvec>(body_size, body));
+	body_size_vec = Uvec(_tmp_chuncked_body.begin(), it);
+	if (!validateHexDigit(body_size_vec))
+		throw std::runtime_error("unvalid body size (NaN)");
+	hexStringToUnsignedLong(std::string(body_size_vec.begin(), body_size_vec.end()), body_size);
+	std::cout << "[DEBUG] at processing chunked body\n";
+	std::cout << "body size is: " << body_size << std::endl;
+	if (body_size <= static_cast<unsigned long>(_tmp_chuncked_body.end() - it -4))
+	{
+		if (*(it +2 + body_size) != '\r' || *(it +2 + body_size +1) != '\n')
+			throw std::runtime_error("body doesn't end with \\r\\n");
+		body = Uvec(it +2, it +2 + body_size);
+		Uvec	newTmp = Uvec(it + 2 + body_size +2, _tmp_chuncked_body.end());
+		_tmp_chuncked_body.clear();
+		_tmp_chuncked_body = newTmp;
+		if (body_size) // if the body size isn't 0 then we still expecting chunks of the body
+			_req_state = PEND;
+		else
+			_req_state = RESP;
+	}
+	else {
+		body_size = 0;
+		
+	}
+	
+	//	std::cout << "[debug] processing chunked body\n";
+	//	std::cout << "body size is: " << body_size_vec << std::endl;
+	//	std::cout << "body is: " << body << std::endl;
+	//	std::cout << "body 	std::cout << "body size is converted to decimals and it's value is: " << body_size << std::endl;
+	//	std::cout << "body 	std::cout << "body received size is " << body.size() << std::endl;
+	// std::cout << "body size: " << body.size() << ", num: " << body_size << std::endl;
+	//if (body_size != body.size())
+	//	throw std::runtime_error("body size doesn't match body received");
+	return (std::pair<unsigned long, Uvec>(body_size, body));
+}
+
 void	Request::processTransferEncoding(const Uvec& raw_body)
 {
 	try
 	{
-		std::pair<unsigned long, Uvec> processed = process_chunked_body(raw_body); // this function needs review
-		// add to file
+		_tmp_chuncked_body += raw_body;
+		unsigned long	loop = 1;
 		std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
-		if (processed.first)
-			file.write(reinterpret_cast<char *>(&processed.second[0]), processed.second.size());
+		while (loop)
+		{
+			std::pair<unsigned long, Uvec> processed = process_chunked_body(); // this function needs review
+																			   // add to file
+			if (processed.first)
+				file.write(reinterpret_cast<char *>(&processed.second[0]), processed.second.size());
+			_body_size += processed.first;
+			loop  = processed.first;
+		}
 		file.close();
-		_body_size += processed.first;
-		if (processed.first) // if the body size isn't 0 then we still expecting chunks of the body
-			_req_state = PEND;
-		else
-			_req_state = RESP;
 	}
 	catch(const std::exception& e)
 	{
@@ -334,6 +386,8 @@ void	Request::processTransferEncoding(const Uvec& raw_body)
 
 void	Request::addBody(Uvec raw_body)
 {
+//	std::cout << "[DEBUG] processing the following body:\n";
+//	std::cout << raw_body;
 	if (_chunked)
 	{
 		processTransferEncoding(raw_body);
@@ -397,6 +451,18 @@ void Request::ParseRequest(Uvec httpRequest) {
 	processFields(lines);
 
 	setup_body(rawBody);
+
+	std::cout << "[DEBUG] body is sat up for the first time, and it is ";
+	if (_chunked)
+		std::cout << "chunked\n";
+	else
+		std::cout << "not chunked\n";
+	
+	std::cout << "[DEBUG] printing headers:\n";
+	for(std::map<std::string, Uvec>::iterator it = _fields.begin(); it != _fields.end(); it++)
+	{
+		std::cout << "[" << (*it).first << "] => " << (*it).second << std::endl;
+	}
 
 	if (rawBody.size())
 		addBody(rawBody);

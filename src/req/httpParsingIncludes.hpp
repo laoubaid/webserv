@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:35:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/17 10:40:38 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/28 22:51:34 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,7 @@ bool	has_shebang(std::string script_path);
 char	*ft_strdup(const std::string& src);
 std::string	get_ext(const std::string& path);
 bool fileExists(const char* filename);
+bool hexStringToUnsignedLong(const std::string& hexStr, unsigned long& result);
 
 //vec matchers
 bool	pctEncodedMatch(const Uvec &vec, Uvec::const_iterator &it);

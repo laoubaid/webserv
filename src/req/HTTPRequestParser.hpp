@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/30 00:16:07 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 23:58:38 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Request
 		std::size_t							_content_length;
 		std::size_t							_body_size;
 		std::string							_body_file_path;
+		Uvec								_tmp_chuncked_body;
 		std::ofstream						_file;
 		t_req_state							_req_state;
 		Cgi									*_cgi;
@@ -56,8 +57,10 @@ class Request
 		void								processFields(std::vector<Uvec> lines);
 		void								addField(std::string key, Uvec value);
 		int									req_err(std::string throw_msg, int status_code, t_req_state req_state);
+		void								setup_file();
 		void								setup_body(const Uvec& raw_body);
 		void								processTransferEncoding(const Uvec& raw_body);
+		std::pair<unsigned long, Uvec>		process_chunked_body();
 		void								is_cgi();
 	public:
 		// vectors for nomalized characters
