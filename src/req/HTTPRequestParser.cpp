@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/29 01:34:37 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:56:02 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -408,7 +408,7 @@ void	Request::addBody(Uvec raw_body)
 		else
 			req_err("body received is bigger than the content-length", 400, RESP);
 	}
-	if (_conf->get_clt_body_max_size() < _body_size){
+	if (_loc->get_clt_body_max_size() < _body_size){
 		std::cout << "max body found\n";
 		req_err("body size too large", 413, RESP);
 	}
