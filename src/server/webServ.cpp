@@ -6,11 +6,13 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/27 11:18:01 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 19:07:34 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webServ.hpp"
+
+extern bool stopFlag;
 
 webServ::webServ() {}
 
@@ -177,6 +179,8 @@ void webServ::run() {
 			}
 		}
 		check_timeouts();
+		if (stopFlag)
+			return ;
 	}
 }
 

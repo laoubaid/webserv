@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/29 17:31:55 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 19:07:44 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,18 @@
 #include "server/webServ.hpp"
 #include "config/configParser.hpp"
 
+bool stopFlag = false;
+
+void signalHandler(int signal) {
+    if (signal == SIGINT) {
+        stopFlag = true;
+        std::cout << "\nSIGINT received! Stopping..." << std::endl;
+    }
+}
 
 int main(int ac, char **av)
 {
+	signal(SIGINT, signalHandler);
 	if (ac != 2) {
 		std::cerr << "[!] invalid number of arguments!\nUsage:\n\t./webserv <config file>" << std::endl;
 		return 1;

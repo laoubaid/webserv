@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/14 10:34:24 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 18:59:51 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 # include <sstream>
 # include <fstream>
 # include <ctime>
+# include <csignal>
 
 # define DEF_CLR "\033[0m"
 # define BLK_CLR "\033[30m"
@@ -62,6 +63,8 @@ typedef struct	s_conf2
 }				t_conf2;
 
 std::string	resolve_path(const std::string& str);
+
+void signalHandler(int signal);
 
 # include "req/httpParsingIncludes.hpp"
 # include "req/HTTPRequestParser.hpp"

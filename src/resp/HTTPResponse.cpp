@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/25 17:43:38 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 10:03:04 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,8 +179,10 @@ void	HttpResponse::handle_error(int err_code) {
 		std::cout << "[INFO] RESP error page found in the config" << std::endl;
 		path = conf_.get_root() + "/" + path;
 		path = resolve_path(path);
-		if (serveStaticContent(path, err_code))
+		if (serveStaticContent(path, err_code)) {
+			err_depth = 0;
 			return ;
+		}
 	}
 	std::cout << "[INFO] RESP handle error numero : " << err_code << std::endl;
 

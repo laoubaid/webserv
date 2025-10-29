@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/29 23:29:48 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 10:10:56 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ bool Client::check_timeout() {
 	if (status_code) {
 		request_->setParsingCode(status_code);
 		request_->setReqState(RESP);
+		std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
 		response_ = new HttpResponse(*request_, conf_);
 		state_timout_ = 2;
 	}
@@ -116,7 +117,9 @@ int Client::process_recv_data() {
 		cgi_ = request_->getCgiObject();
 	}
 	if (request_ && request_->getReqState() == RESP) {
-		response_ = new HttpResponse(*request_, conf_);
+		std::cout << "[INFO] CLT create a new response" << std::endl;
+		if (!response_)
+			response_ = new HttpResponse(*request_, conf_);
 		state_timout_ = 2;
 		// log();
 	}
@@ -127,7 +130,7 @@ int Client::send_response() {
 	resbuf_.clear();
 	resbuf_ = response_->generateResponse();
 	if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) != -1) {
-		// std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
+		std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
 		reset_resp_timeout();
 		if (response_->getRespState() == DONE) {
 			std::cout << "[INFO] CLT end of connection" << std::endl;

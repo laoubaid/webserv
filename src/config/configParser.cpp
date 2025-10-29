@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/30 00:00:00 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 10:51:59 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,6 +192,8 @@ void Block::process_location(serverConf& srvr_cfg) {
             lct_cfg.set_auto_index((*it_d).values);
         } else if ((*it_d).key == "upload_store") {
             lct_cfg.set_up_store((*it_d).values);
+        } else if ((*it_d).key == "client_max_body_size") {
+            lct_cfg.set_clt_max_body_size((*it_d).values);
         } else if ((*it_d).key == "CGI") {
             lct_cfg.set_cgi((*it_d).values);
         } else {

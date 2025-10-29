@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/30 00:25:54 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 10:52:34 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ locationConf::locationConf(std::string& str, serverConf& cfg) {
     has_methods_ = false;
     has_redirect_ = false;
     has_cgi_ = false;
+	clt_body_max_size_ = cfg.get_clt_body_max_size();
     if (redirect_.first)
         has_redirect_ = true;
     if (cfg.is_index()) {
@@ -53,6 +54,46 @@ void locationConf::set_methods(std::vector<std::string>& values) {
             throw std::runtime_error("forbidden methode " + values[i]);
         }
     }
+}
+
+void locationConf::set_clt_max_body_size(std::vector<std::string>& values) {
+	if (values.size() != 1)
+		throw std::runtime_error("invalid client_max_body_size parameter!");
+
+	std::string& raw = values[0];
+	if (raw.empty())
+		throw std::runtime_error("invalid client_max_body_size parameter!");
+
+	char last_char = raw[raw.size() - 1];
+	int multiplier = 1;
+	std::string number_part = raw;
+
+	if (last_char < '0' || last_char > '9') {
+		number_part = raw.substr(0, raw.size() - 1);
+		switch (last_char) {
+			case 'K': case 'k':
+				multiplier = 1024;
+				break;
+			case 'M': case 'm':
+				multiplier = 1024 * 1024;
+				break;
+			case 'G': case 'g':
+				multiplier = 1024 * 1024 * 1024;
+				break;
+			default:
+				throw std::runtime_error(std::string("client_max_body_size unknown size suffix: ") + last_char);
+		}
+	}
+	for (size_t i = 0; i < number_part.size(); ++i) {
+		if (!std::isdigit(number_part[i]))
+			throw std::runtime_error("invalid number in client_max_body_size: " + number_part);
+	}
+	int size = std::atoi(number_part.c_str());
+	if (size <= 0)
+		throw std::runtime_error("invalid size value!");
+
+	size *= multiplier;
+	clt_body_max_size_ = static_cast<size_t>(size);
 }
 
 void locationConf::set_redirect(std::vector<std::string>& values) {

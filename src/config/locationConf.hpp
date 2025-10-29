@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:41 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/09 11:45:43 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/28 10:57:19 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class locationConf
 	private:
 		std::string							path_;          // error if not set
 		unsigned int						methods_;       // default GET, POST, DELETE
+		size_t                              clt_body_max_size_; // default fall to server block
 		bool								has_methods_;   // default false
 		std::pair<int, std::string> 		redirect_;      // could not exist fall to server block
 		bool								autoindex_;     // fall to server block
@@ -46,6 +47,7 @@ class locationConf
 		~locationConf();
 
 		void set_methods(std::vector<std::string>& values);
+		void set_clt_max_body_size(std::vector<std::string>& values);
 		void set_redirect(std::vector<std::string>& values);
 		void set_root(std::vector<std::string>& values);
 		void set_index(std::vector<std::string>& values);
@@ -57,6 +59,7 @@ class locationConf
 		bool								is_post_allowed() { return methods_ & POST_BIT; }
 		bool								is_delete_allowed() { return methods_ & DELETE_BIT; }
 		unsigned int						get_methods() const { return methods_; }
+		size_t								get_clt_body_max_size() const { return clt_body_max_size_; }
 		bool								is_upset() const { return is_upset_; }
 		const std::string&					get_upstore() const { return up_store_; }
 		bool								has_redirect() const { return has_redirect_; }

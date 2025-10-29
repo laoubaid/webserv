@@ -11,4 +11,4 @@ logs
 www/large_files/
 delme*
 
-conf/
+conf/*
