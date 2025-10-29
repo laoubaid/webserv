@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/28 19:07:34 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 17:28:40 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ int webServ::handle_clients(epoll_event clt_evt) {
 				return 0;
 			}
 			if (clt_evt.events & EPOLLIN) {
-				// std::cout << "[EPOLLIN] event detected! > CLIENT: " << clt_evt.data.fd << std::endl;
+				std::cout << "[EPOLLIN] event detected! > CLIENT: " << clt_evt.data.fd << std::endl;
 				stat_ = (*it).second->receive(epoll_fd_);
 
 				if (stat_ == -1) {

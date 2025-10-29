@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/29 10:10:56 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 18:51:56 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ Client::~Client()
 	std::cout << "Client destructor called!" << std::endl;
 	delete request_;
 	delete response_;
+	delete cgi_;
 }
 
 int Client::get_fd_client() {
@@ -44,6 +45,12 @@ bool Client::check_timeout() {
 
 	// std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
 	if (state_timout_ == 0 && static_cast<size_t>(now - req_timeout_) > conf_.get_recv_timeout()) {
+		if (request_ && request_->getBodyFilePath().size())
+		{
+			std::cout << "[INFO] REQ removing created file for body \n";
+			std::remove(request_->getBodyFilePath().c_str());
+		}
+		delete request_;
 		request_ = new Request(conf_, get_fd(), epoll_fd_, client_addr_);
 		status_code = 408;
 	} else if (state_timout_ == 1 && static_cast<size_t>(now - cgi_timeout_) > conf_.get_cgi_timeout()) {
@@ -56,6 +63,7 @@ bool Client::check_timeout() {
 		request_->setParsingCode(status_code);
 		request_->setReqState(RESP);
 		std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
+		delete response_;
 		response_ = new HttpResponse(*request_, conf_);
 		state_timout_ = 2;
 	}
@@ -77,6 +85,7 @@ int Client::receive(int epoll_fd) {
 		std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
 		return -1;
 	}
+	std::cout << "[INFO] CLT reseting request timeout" << std::endl;
 	reset_req_timeout();
 
 	Uvec tmp_vec_buf(buf, nread); //* Convert the buffer to Uvec
@@ -91,6 +100,7 @@ int Client::receive(int epoll_fd) {
 }
 
 int Client::process_recv_data() {
+	std::cout << "[INFO] CLT processing received data!" << std::endl;
 	if (!request_) {
 		try {
 			request_ = new Request(conf_, get_fd(), epoll_fd_, client_addr_);

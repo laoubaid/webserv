@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/29 16:54:36 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 18:27:21 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ Server::Server(const serverConf& cfg, sockaddr_in addr) : Socket(addr), addr_(ad
 }
 
 Server::~Server() {
+	std::cout << "Server destructor called!" << std::endl;
 	for (std::map<int, Client*>::iterator it = client_sockets.begin(); it != client_sockets.end(); ++it)
 		delete it->second;
 	client_sockets.clear();

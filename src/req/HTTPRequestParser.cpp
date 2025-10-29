@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/29 13:56:02 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 18:31:38 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -422,6 +422,7 @@ void	Request::addBody(Uvec raw_body)
 Request::Request(const serverConf& cfg, int fd_, int ep_fd, sockaddr_in clt_addr) :
 _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL), _conf(&cfg), _client_fd(fd_), _epoll_fd(ep_fd), _clt_addr(clt_addr)
 {
+	std::cout << "Request constracteur called!" << std::endl;
 	_loc = &_conf->identifie_location("/");
 }
 
@@ -458,11 +459,11 @@ void Request::ParseRequest(Uvec httpRequest) {
 	else
 		std::cout << "not chunked\n";
 	
-	std::cout << "[DEBUG] printing headers:\n";
-	for(std::map<std::string, Uvec>::iterator it = _fields.begin(); it != _fields.end(); it++)
-	{
-		std::cout << "[" << (*it).first << "] => " << (*it).second << std::endl;
-	}
+	// std::cout << "[DEBUG] printing headers:\n";
+	// for(std::map<std::string, Uvec>::iterator it = _fields.begin(); it != _fields.end(); it++)
+	// {
+	// 	std::cout << "[" << (*it).first << "] => " << (*it).second << std::endl;
+	// }
 
 	if (rawBody.size())
 		addBody(rawBody);
