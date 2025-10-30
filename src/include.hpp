@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/28 18:59:51 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:18:26 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,8 +66,8 @@ std::string	resolve_path(const std::string& str);
 
 void signalHandler(int signal);
 
-# include "req/httpParsingIncludes.hpp"
-# include "req/HTTPRequestParser.hpp"
+# include "req/requestIncludes.hpp"
+# include "req/Request.hpp"
 # include "cgi/Cgi.hpp"
 
 #endif

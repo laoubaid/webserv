@@ -6,12 +6,12 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 21:38:37 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/17 10:37:33 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:24:24 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "httpParsingIncludes.hpp"
-#include "HTTPRequestParser.hpp"
+#include "requestIncludes.hpp"
+#include "Request.hpp"
 
 bool	pctEncodedMatch(const Uvec &vec, Uvec::const_iterator &it)
 {

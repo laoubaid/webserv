@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/25 11:40:34 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:20:16 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define HTTPRESPONSE_HPP
 
 # include "../include.hpp"
-# include "../req/HTTPRequestParser.hpp"
+# include "../req/Request.hpp"
 # include "../config/serverConf.hpp"
 # include "default_pages.hpp"
 

@@ -6,12 +6,12 @@
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:53:41 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/17 10:36:35 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:24:49 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "httpParsingIncludes.hpp"
-#include "HTTPRequestParser.hpp"
+#include "requestIncludes.hpp"
+#include "Request.hpp"
 
 bool	validateTarget(const Uvec &vec)
 {

@@ -6,15 +6,15 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 16:49:36 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:19:53 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef _CLIENT_SOCKET_HPP_
 #define _CLIENT_SOCKET_HPP_
 
-#include "../req/HTTPRequestParser.hpp"
-#include "../req/httpParsingIncludes.hpp"
+#include "../req/Request.hpp"
+#include "../req/requestIncludes.hpp"
 #include "../resp/HTTPResponse.hpp"
 #include "../config/serverConf.hpp"
 #include "../include.hpp"

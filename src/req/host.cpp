@@ -6,12 +6,12 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/19 17:25:56 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 16:45:36 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:23:51 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "httpParsingIncludes.hpp"
-#include "HTTPRequestParser.hpp"
+#include "requestIncludes.hpp"
+#include "Request.hpp"
 
 bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
 {

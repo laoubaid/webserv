@@ -12,3 +12,5 @@ www/large_files/
 delme*
 
 conf/*
+tests/
+www/

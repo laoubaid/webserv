@@ -6,11 +6,11 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/29 23:42:33 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 16:47:35 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:25:05 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "httpParsingIncludes.hpp"
+#include "requestIncludes.hpp"
 
 void	printvec(const Uvec &vec, int printable)
 {

@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HTTPRequestParserTools.cpp                         :+:      :+:    :+:   */
+/*   requestTools.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/28 23:24:53 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/30 21:22:20 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HTTPRequestParser.hpp"
+#include "Request.hpp"
 
 // to distinguish either the spliter is at the end or not, I will add an empty string to the array if it is at the end
 std::vector<Uvec>	ft_split(const Uvec &data, const Uvec &spliter)
