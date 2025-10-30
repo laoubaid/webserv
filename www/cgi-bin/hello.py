@@ -1,29 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# import time
+import time
 
 # Required CGI header
 
 
 
-# print ("Status: 200 ok")
-# print ("Content-Type: text/plain\n")
+print ("Status: 200 OK")
+# time.sleep(11)
+print ("Content-Type: text/plain\n")
 
 # Sleep for 5 seconds
-# time.sleep(5)
+# time.sleep(60)
+# exit(1)
 
 # Print response
-# print ("Hello!")
-#!/usr/bin/env python3
-import sys
-
-# HTTP header for CGI
-print("Content-Type: text/plain")
-print()
-
-# Read stdin line-by-line, stop when a line contains "END"
-for line in sys.stdin:
-    if "END" in line:
-        break
-    sys.stdout.write(line)
-
+print ("hello from cgi exit1.py\n")

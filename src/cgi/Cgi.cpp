@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 00:58:47 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 02:16:03 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ Cgi::~Cgi(void)
 	if (_write_in != -1)
 		close(_read_from);
 
-	// std::cout << "[INFO] CGI removing the tmp file for output \n";
+	std::cout << "[INFO] CGI removing the tmp file for output \n";
 	std::remove(_out_file_path.c_str());
 }
 
@@ -103,7 +103,7 @@ std::string toupperstring(const std::string& input) {
 
 void	Cgi::set_env(void)
 {
-	// std::cout << "[INFO] CGI setting up env vars\n";
+	std::cout << "[INFO] CGI setting up env vars\n";
 	std::vector<std::string>	env_vec;
 
 	// values that are hardcoded and needs to be changed
@@ -151,7 +151,7 @@ void	Cgi::set_env(void)
 	std::map<std::string, Uvec>::const_iterator it;
 	for (it = _req->getFields().begin(); it != _req->getFields().end(); ++it) {
 		std::string tmp = "HTTP_" + toupperstring(it->first);
-		if (tmp == "HTTP_CONTENT_TYPE" || tmp == "HTTP_CONTENT_LENGTH")
+		if (tmp == "HTTP_CONTENT_TYPE")// || tmp == "HTTP_CONTENT_LENGTH")
 			continue;
 		// if (tmp == "HTTP_COOKIE")  //* testing cookies
 			// continue;
@@ -205,7 +205,7 @@ std::string	Cgi::run(void)
 {
 	_req->setReqState(CGI);
 
-	// std::cout << "[INFO] -- RUNNING CGI --" << std::endl;
+	std::cout << "[INFO] -- RUNNING CGI --" << std::endl;
 
 	// should throw exception in case the file doesn't exist or can't be run
 	std::string file = root + script_name;
@@ -282,17 +282,17 @@ int		Cgi::get_pipe(int flag) {
 
 int	Cgi::write_body()
 {
-	// std::cout << "[INFO] CGI write body in pipe\n";
+	std::cout << "[INFO] CGI write body in pipe\n";
 	if (_req->getBodySize())
 	{
 		if (!_in_file.is_open())
 			cgi_err("[CGI ERROR] file not open while writing body", 403, RESP);
-		// std::cout << "[INFO] CGI body found\n";
+		std::cout << "[INFO] CGI body found\n";
 		
 		std::vector<unsigned char>	buffer(CGI_BUFFER);
 		if (_in_file.read(reinterpret_cast<char*>(&buffer[0]), buffer.size()) || _in_file.gcount() > 0)
 		{
-			// std::cout << "[INFO] CGI writing this buffer: ";
+			std::cout << "[INFO] CGI writing this buffer: ";
 			for (std::vector<unsigned char>::iterator it = buffer.begin(); it < buffer.end(); it++) {
 				std::cout << *it;
 			}
@@ -317,7 +317,7 @@ int	Cgi::write_body()
 			std::cout << CONN_CLR <<"\n$ New Pipe created! fd: " << _write_in << DEF_CLR << std::endl;
 			close(_write_in);
 			_write_in = -1;
-			// std::cout << "[INFO] CGI file ends switching pipes in epoll\n";
+			std::cout << "[INFO] CGI file ends switching pipes in epoll\n";
 
 			{
 				std::ostringstream oss;
@@ -335,7 +335,7 @@ int	Cgi::write_body()
 
 int	Cgi::read_output()
 {
-	// std::cout << "[INFO] CGI read output from pipe : " << _out_file_path << std::endl;
+	std::cout << "[INFO] CGI read output from pipe : " << _out_file_path << std::endl;
 	char	buff[CGI_BUFFER];
 
 	if (!_out_file.is_open())
@@ -345,7 +345,7 @@ int	Cgi::read_output()
 		cgi_err("[CGI ERROR] error during reading from pipe", 502, RESP);
 	if (char_read == 0)
 	{
-		// std::cout << "[INFO] CGI scripts ended!\n";
+		std::cout << "[INFO] CGI scripts ended!\n";
 		_state = END;
 		epoll_ctl(_req->getEpollFd(), EPOLL_CTL_DEL, _read_from, NULL);									//* deleting the read_from pipe end from epoll
 		close(_read_from);
@@ -355,7 +355,6 @@ int	Cgi::read_output()
 	}
 	// buff read should be sent to client unless when 'status' is changed for response first line 'HTTP/1.1 200 OK' for exmple
 	std::string str(buff, char_read); // build directly from buffer and length
-	// std::cout << "\n-\n" << str << "\n-"<< std::endl;
 	_out_file.write(str.c_str(), char_read);
 	return 0;
 }
@@ -367,7 +366,7 @@ bool Cgi::check_process_status() {
     
     int status;
     pid_t result = waitpid(child_pid, &status, WNOHANG);
-	// std::cout << "[INFO] CGI calling waitpid and gets: " << result << std::endl;
+	std::cout << "[INFO] CGI calling waitpid and gets: " << result << std::endl;
     
     if (result == 0) {
         // Process is still running
@@ -376,11 +375,11 @@ bool Cgi::check_process_status() {
         // Process has terminated
         if (WIFEXITED(status)) {
             exit_status_ = WEXITSTATUS(status);
-            // std::cout << "[INFO] CGI process exited with status: " << exit_status_ << std::endl;
+            std::cout << "[INFO] CGI process exited with status: " << exit_status_ << std::endl;
         } else if (WIFSIGNALED(status)) {
             int signal = WTERMSIG(status);
             exit_status_ = -signal; // Negative to indicate signal termination
-            // std::cout << "[INFO] CGI process terminated by signal: " << signal << std::endl;
+            std::cout << "[INFO] CGI process terminated by signal: " << signal << std::endl;
         }
         _state = END;
         return true;
@@ -406,7 +405,7 @@ std::string Cgi::get_outfile_path() {
 // to be deleted
 void	Cgi::print_env(void)
 {
-	// std::cout << "[INFO] CGI printing env...\n";
+	std::cout << "[INFO] CGI printing env...\n";
 	for (std::size_t i = 0; env[i]; i++)
 	{
 		std::cout << env[i] << std::endl;

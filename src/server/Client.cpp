@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/29 23:39:13 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 02:12:02 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Client::Client(int clt_fd, const serverConf& conf, int ep_fd, sockaddr_in clt_adr) : Socket(clt_fd), conf_(conf), client_addr_(clt_adr)
 {
-	// std::cout << "[INFO] CLT Client constracteur called!" << std::endl;
+	std::cout << "[INFO] CLT Client constracteur called!" << std::endl;
 	epoll_fd_ = ep_fd;
 	request_ = NULL;
 	response_ = NULL;
@@ -25,7 +25,7 @@ Client::Client(int clt_fd, const serverConf& conf, int ep_fd, sockaddr_in clt_ad
 
 Client::~Client()
 {
-	// std::cout << "[INFO] CLT Client destructor called!" << std::endl;
+	std::cout << "[INFO] CLT Client destructor called!" << std::endl;
 	delete request_;
 	delete response_;
 	// delete cgi_;
@@ -43,11 +43,11 @@ bool Client::check_timeout() {
 	std::time_t now = std::time(NULL);
 	int status_code = 0;
 
-	// // std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
+	// std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
 	if (state_timout_ == 0 && static_cast<size_t>(now - req_timeout_) > conf_.get_recv_timeout()) {
 		if (request_ && request_->getBodyFilePath().size())
 		{
-			// std::cout << "[INFO] REQ removing created file for body \n";
+			std::cout << "[INFO] REQ removing created file for body \n";
 			std::remove(request_->getBodyFilePath().c_str());
 		}
 		delete request_;
@@ -56,13 +56,13 @@ bool Client::check_timeout() {
 	} else if (state_timout_ == 1 && static_cast<size_t>(now - cgi_timeout_) > conf_.get_cgi_timeout()) {
 		status_code = 504;
 	} else if (state_timout_ == 2 && static_cast<size_t>(now - resp_timeout_) > conf_.get_send_timeout()) {
-		// // std::cout << "[INFO] CLT response timeout: " << resp_timeout_ << std::endl;  // for response
+		// std::cout << "[INFO] CLT response timeout: " << resp_timeout_ << std::endl;  // for response
 		return true;
 	}
 	if (status_code) {
 		request_->setParsingCode(status_code);
 		request_->setReqState(RESP);
-		// std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
+		std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
 		delete response_;
 		response_ = new HttpResponse(*request_, conf_);
 		state_timout_ = 2;
@@ -85,7 +85,7 @@ int Client::receive(int epoll_fd) {
 		std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
 		return -1;
 	}
-	// std::cout << "[INFO] CLT reseting request timeout" << std::endl;
+	std::cout << "[INFO] CLT reseting request timeout" << std::endl;
 	reset_req_timeout();
 
 	Uvec tmp_vec_buf(buf, nread); //* Convert the buffer to Uvec
@@ -100,7 +100,7 @@ int Client::receive(int epoll_fd) {
 }
 
 int Client::process_recv_data() {
-	// std::cout << "[INFO] CLT processing received data!" << std::endl;
+	std::cout << "[INFO] CLT processing received data!" << std::endl;
 	if (!request_) {
 		try {
 			request_ = new Request(conf_, get_fd(), epoll_fd_, client_addr_);
@@ -127,7 +127,7 @@ int Client::process_recv_data() {
 		cgi_ = request_->getCgiObject();
 	}
 	if (request_ && request_->getReqState() == RESP) {
-		// std::cout << "[INFO] CLT create a new response" << std::endl;
+		std::cout << "[INFO] CLT create a new response" << std::endl;
 		if (!response_)
 			response_ = new HttpResponse(*request_, conf_);
 		state_timout_ = 2;
@@ -140,10 +140,10 @@ int Client::send_response() {
 	resbuf_.clear();
 	resbuf_ = response_->generateResponse();
 	if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) != -1) {
-		// std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
+		std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
 		reset_resp_timeout();
 		if (response_->getRespState() == DONE) {
-			// std::cout << "[INFO] CLT end of connection" << std::endl;
+			std::cout << "[INFO] CLT end of connection" << std::endl;
 			return 1;
 		}
 	}
@@ -155,7 +155,7 @@ void Client::set_cgi_obj(std::map <int, Client*> &cgi_pipes, int flag) {
 
 	if (request_){
 		if (state_timout_ == 0) {
-			// std::cout << "[INFO] CLT Set CGI object! " << std::endl;
+			std::cout << "[INFO] CLT Set CGI object! " << std::endl;
 			state_timout_ = 1;
 			reset_cgi_timeout();
 		}
@@ -163,23 +163,23 @@ void Client::set_cgi_obj(std::map <int, Client*> &cgi_pipes, int flag) {
 			pipfd = request_->get_cgi_pipe(i);
 			if (pipfd != -1){
 				if (cgi_pipes.find(pipfd) == cgi_pipes.end() && flag) {
-					// std::cout << "[INFO] CLT the object has been Added cgi_fd: " << pipfd << std::endl;
+					std::cout << "[INFO] CLT the object has been Added cgi_fd: " << pipfd << std::endl;
 					cgi_pipes[pipfd] = this;
 				} else if (cgi_pipes.find(pipfd) != cgi_pipes.end() && !flag) {
-					// std::cout << "[INFO] CLT the object has been Removed cgi_fd: " << pipfd << std::endl;
+					std::cout << "[INFO] CLT the object has been Removed cgi_fd: " << pipfd << std::endl;
 					cgi_pipes.erase(pipfd);
 				}
 			}
 		}
 		if (!flag && cgi_ && cgi_->get_cgi_pid() > 0) {
 			kill(cgi_->get_cgi_pid(), SIGTERM);
-			// std::cout << "[INFO] CLT killing cgi child process\n";
+			std::cout << "[INFO] CLT killing cgi child process\n";
 		}
 	}
 }
 
 int Client::cgi_pipe_io(int pipe_fd) {
-	// std::cout << "[INFO] CLT cgi pipe I/O operation\n";
+	std::cout << "[INFO] CLT cgi pipe I/O operation\n";
 	reset_cgi_timeout();
 	if (cgi_) {
 		if (pipe_fd == cgi_->get_pipe(0)) {
@@ -199,7 +199,7 @@ int Client::cgi_pipe_io(int pipe_fd) {
 }
 
 int Client::kill_cgi() {
-	// std::cout << "[INFO] CLT cgi child process\n";
+	std::cout << "[INFO] CLT cgi child process\n";
 	if (cgi_ && cgi_->get_cgi_pid()) {
 		if (cgi_->check_process_status())
 			return 1;

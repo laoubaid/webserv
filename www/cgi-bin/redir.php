@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
-header("Status: 302 Found");
-header("Location: /index.html");
-header("Content-Type: text/html");
+print("Status: 302 Found\n");
+print("Location: /index.html\n");
+print("Content-Type: text/html\n");
 echo "<html><body>Redirecting...</body></html>";
 ?>
