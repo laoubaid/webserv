@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/29 18:31:38 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 23:50:13 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ Request::~Request(void)
 	if (_cgi)
 	{
 		delete _cgi;
-		std::cout << "[INFO] REQ removing the tmp file for body \n";
+		// std::cout << "[INFO] REQ removing the tmp file for body \n";
 		std::remove(_body_file_path.c_str());
 	}
 	if (_file.is_open())
@@ -85,7 +85,7 @@ int	Request::req_err(std::string throw_msg, int status_code, t_req_state state)
 	_req_state = state;
 	if (_body_file_path.size())
 	{
-		std::cout << "[INFO] REQ removing created file for body \n";
+		// std::cout << "[INFO] REQ removing created file for body \n";
 		std::remove(_body_file_path.c_str());
 	}
 	if (throw_msg.size())
@@ -104,7 +104,7 @@ void	Request::is_cgi()
 	
 	if (_loc->has_cgi())
 	{
-		std::cout << "[INFO] REQ location has cgi\n";
+		// std::cout << "[INFO] REQ location has cgi\n";
 		std::string::iterator	a = _target.path.begin() + _loc->get_path().size();
 		if (*a == '/')
 			a++;
@@ -116,7 +116,7 @@ void	Request::is_cgi()
 			std::string	ext = std::string(a + pos, b);
 			if (_loc->valid_cgi_ext(ext)) // extension found
 			{
-				std::cout << "[INFO] REQ cgi ext found\n";
+				// std::cout << "[INFO] REQ cgi ext found\n";
 				_cgi = new Cgi(this, _loc->get_cgi_path(ext), _clt_addr);
 				_cgi->set_script_name(std::string(_target.path.begin(), b));
 				if (b != _target.path.end())
@@ -234,7 +234,7 @@ void	Request::setup_file()
 		const locationConf& tmp = *_loc;
 		std::string file_path = tmp.get_path();
 		if (tmp.is_upset()) {
-			std::cout << "[DEBUG] looking for location path => " << tmp.get_path() << std::endl;
+			// std::cout << "[INFO] looking for location path => " << tmp.get_path() << std::endl;
 			std::string::iterator	it = _target.path.begin() + tmp.get_path().size();
 			if (*it == '/')
 				it++;
@@ -242,7 +242,7 @@ void	Request::setup_file()
 		} else 
 			req_err("upload not set", 403, RESP); // ! what is the status code of this one???
 	
-		std::cout << "[INFO] REQ : " << file_path << std::endl;
+		// std::cout << "[INFO] REQ : " << file_path << std::endl;
 		if (*(file_path.end() -1) == '/')
 			req_err("invalid file name", 400, RESP);
 		std::ifstream	i_file(file_path.c_str());
@@ -251,7 +251,7 @@ void	Request::setup_file()
 			i_file.close();
 			req_err("uploading existing file", 409, RESP);
 		}
-		std::cout << "[DEBUG] upload file created at path " << file_path << std::endl;
+		// std::cout << "[INFO] upload file created at path " << file_path << std::endl;
 		_body_file_path = file_path;
 	}
 	_file.open(_body_file_path.c_str(), std::ios::binary | std::ios::app);
@@ -329,7 +329,7 @@ std::pair<unsigned long, Uvec>	Request::process_chunked_body()
 	if (!validateHexDigit(body_size_vec))
 		throw std::runtime_error("unvalid body size (NaN)");
 	hexStringToUnsignedLong(std::string(body_size_vec.begin(), body_size_vec.end()), body_size);
-	std::cout << "[DEBUG] at processing chunked body\n";
+	// std::cout << "[INFO] at processing chunked body\n";
 	std::cout << "body size is: " << body_size << std::endl;
 	if (body_size <= static_cast<unsigned long>(_tmp_chuncked_body.end() - it -4))
 	{
@@ -349,7 +349,7 @@ std::pair<unsigned long, Uvec>	Request::process_chunked_body()
 		
 	}
 	
-	//	std::cout << "[debug] processing chunked body\n";
+	//	// std::cout << "[INFO] processing chunked body\n";
 	//	std::cout << "body size is: " << body_size_vec << std::endl;
 	//	std::cout << "body is: " << body << std::endl;
 	//	std::cout << "body 	std::cout << "body size is converted to decimals and it's value is: " << body_size << std::endl;
@@ -386,7 +386,7 @@ void	Request::processTransferEncoding(const Uvec& raw_body)
 
 void	Request::addBody(Uvec raw_body)
 {
-//	std::cout << "[DEBUG] processing the following body:\n";
+//	// std::cout << "[INFO] processing the following body:\n";
 //	std::cout << raw_body;
 	if (_chunked)
 	{
@@ -422,13 +422,13 @@ void	Request::addBody(Uvec raw_body)
 Request::Request(const serverConf& cfg, int fd_, int ep_fd, sockaddr_in clt_addr) :
 _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL), _conf(&cfg), _client_fd(fd_), _epoll_fd(ep_fd), _clt_addr(clt_addr)
 {
-	std::cout << "Request constracteur called!" << std::endl;
+	// std::cout << "[INFO] REQ Request constracteur called!" << std::endl;
 	_loc = &_conf->identifie_location("/");
 }
 
 void Request::ParseRequest(Uvec httpRequest) {
-	std::cout << "Precessing request: " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
-	std::cout << "____________________________________________________________________________" << std::endl << std::endl;
+	// std::cout << "[INFO] REQ : " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
+	// std::cout << "____________________________________________________________________________" << std::endl << std::endl;
 	
 	// split with crlfcrlf to get 2 (headers and body)
 	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
@@ -453,11 +453,11 @@ void Request::ParseRequest(Uvec httpRequest) {
 
 	setup_body(rawBody);
 
-	std::cout << "[DEBUG] body is sat up for the first time, and it is ";
-	if (_chunked)
-		std::cout << "chunked\n";
-	else
-		std::cout << "not chunked\n";
+	// std::cout << "[INFO] body is sat up for the first time, and it is ";
+	// if (_chunked)
+	// 	std::cout << "chunked\n";
+	// else
+	// 	std::cout << "not chunked\n";
 	
 	// std::cout << "[DEBUG] printing headers:\n";
 	// for(std::map<std::string, Uvec>::iterator it = _fields.begin(); it != _fields.end(); it++)

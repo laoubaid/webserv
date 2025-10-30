@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/29 17:28:40 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 23:49:12 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ int webServ::handle_clients(epoll_event clt_evt) {
 				return 0;
 			}
 			if (clt_evt.events & EPOLLIN) {
-				std::cout << "[EPOLLIN] event detected! > CLIENT: " << clt_evt.data.fd << std::endl;
+				// std::cout << "[EPOLLIN] event detected! > CLIENT: " << clt_evt.data.fd << std::endl;
 				stat_ = (*it).second->receive(epoll_fd_);
 
 				if (stat_ == -1) {
@@ -125,7 +125,7 @@ int webServ::handle_cgis(epoll_event event) {
 
 	it = cgi_pipes.find(pipe_fd);
 	if (it != cgi_pipes.end()) {
-		std::cout << "[INFO] WS EPOLL event detected! > PIPE: " << event.data.fd << std::endl;
+		// std::cout << "[INFO] WS EPOLL event detected! > PIPE: " << event.data.fd << std::endl;
 		if ((*it).second->cgi_pipe_io(pipe_fd))
 			return pipe_fd;
 	}
@@ -154,7 +154,7 @@ void webServ::run() {
 			else {
 				int pipe_fd = handle_cgis(eventQueue[i]);
 				if (pipe_fd) {
-					std::cout << "[INFO] WS adding pipe to the <toBeKilled> vector\n";
+					// std::cout << "[INFO] WS adding pipe to the <toBeKilled> vector\n";
 					toBeKilled.push_back(pipe_fd);
 				}
 			}
@@ -185,7 +185,7 @@ void webServ::run() {
 }
 
 void webServ::check_timeouts() {
-	// std::cout << "[INFO] WS checking timouts ...\n";
+	// // std::cout << "[INFO] WS checking timouts ...\n";
 	std::map <int, Server*>::iterator it;
 
 	for (it = srvr_skts_.begin(); it != srvr_skts_.end(); ++it) {

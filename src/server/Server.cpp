@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/29 18:27:21 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 23:33:59 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ void Server::check_timeout() {
 
 	while (it != client_sockets.end()) {
 		if (it->second->check_timeout()) {
-			std::cout << "[INFO] SVR timeouted client " << std::endl;
+			// std::cout << "[INFO] SVR timeouted client " << std::endl;
 		} else {
 			++it;
 		}

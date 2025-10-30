@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/29 10:03:04 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/29 23:46:53 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
 }
 
 bool HttpResponse::serveStaticContent(const std::string& path, int code) {
-	std::cout << "[INFO] RESP serving static file path: " << path << std::endl;
+	// std::cout << "[INFO] RESP serving static file path: " << path << std::endl;
 	file_.open(path, std::ios::in | std::ios::binary);
 	if (!file_.is_open()) {
 		handle_error(403);
@@ -121,7 +121,7 @@ bool HttpResponse::list_directory() {
 	std::string direname;
 	DIR* dir = opendir(target_path.c_str());
 
-	std::cout << "[INFO] RESP target_path in list directory : " << target_path << std::endl;
+	// std::cout << "[INFO] RESP target_path in list directory : " << target_path << std::endl;
 	resp_buff_.clear();
 	if (dir == NULL) {
 		handle_error(403);
@@ -166,7 +166,7 @@ bool	HttpResponse::read_file_continu() {
 	resp_buff_ = std::string(buffer, file_.gcount());
 	if (file_.eof()) {
 		resp_stat_ = DONE;
-		std::cout << "[INFO] RESP Done reading resource file\n";
+		// std::cout << "[INFO] RESP Done reading resource file\n";
 		file_.close();
 	}
 	return true;
@@ -176,7 +176,7 @@ void	HttpResponse::handle_error(int err_code) {
 	err_depth++;
 	std::string path = conf_.get_err_page(err_code);
 	if (!path.empty() && err_depth == 1) {
-		std::cout << "[INFO] RESP error page found in the config" << std::endl;
+		// std::cout << "[INFO] RESP error page found in the config" << std::endl;
 		path = conf_.get_root() + "/" + path;
 		path = resolve_path(path);
 		if (serveStaticContent(path, err_code)) {
@@ -184,10 +184,10 @@ void	HttpResponse::handle_error(int err_code) {
 			return ;
 		}
 	}
-	std::cout << "[INFO] RESP handle error numero : " << err_code << std::endl;
+	// std::cout << "[INFO] RESP handle error numero : " << err_code << std::endl;
 
     if (error_pages.count(err_code)) {
-		std::cout << "[INFO] RESP found the error pages default" << std::endl;
+		// std::cout << "[INFO] RESP found the error pages default" << std::endl;
         resp_buff_ = error_pages[err_code];
     }
 	resp_stat_ = DONE;
@@ -198,7 +198,7 @@ void HttpResponse::process_path() {
 	std::string target_path = location_.get_root() + uri_;
 	target_path = resolve_path(target_path);
 
-	std::cout << "[INFO] RESP the file to look for : " << target_path << std::endl;
+	// std::cout << "[INFO] RESP the file to look for : " << target_path << std::endl;
 	if (!access(target_path.c_str(), F_OK)) {
 		if (!access(target_path.c_str(), R_OK)) {
 			if (is_directory(target_path)) {
@@ -299,7 +299,7 @@ bool    HttpResponse::check_redirection(const locationConf& cfg) {
 }
 
 void HttpResponse::cgi_response() {
-	std::cout << "[INFO] RESP cgi response\n";
+	// std::cout << "[INFO] RESP cgi response\n";
 	Cgi *cgi_ = request_.getCgiObject();
 
 	if (resp_stat_ == LOAD) {
@@ -307,25 +307,20 @@ void HttpResponse::cgi_response() {
 		return ;
 	}
 	
-	std::string filename = cgi_->get_outfile_path(); // Assuming this method exists
-	// std::ifstream file(filename.c_str());
+	std::string filename = cgi_->get_outfile_path();
 	file_.open(filename.c_str());
 	
 	if (!file_.is_open()) {
 		handle_error(403);
 		std::cout << RED_CLR << "cat open this file: " << filename << DEF_CLR << std::endl;
-		// Handle file_ open error
 		return;
 	}
-	
-	// Parse headers first
+
 	std::string line;
 	bool headers_complete = false;
 	std::vector<std::string> headers;
 	
-	// Read and parse headers
 	while (std::getline(file_, line) && !headers_complete) {
-		// Remove carriage return if present (for Windows/network compatibility)
 		if (!line.empty() && line[line.length() - 1] == '\r') {
 			line.erase(line.length() - 1);
 		}
@@ -333,13 +328,11 @@ void HttpResponse::cgi_response() {
 			headers_complete = true;
 			break;
 		}
-		// Validate and store header
 		if (line.find(':') != std::string::npos) {
 			headers.push_back(line);
 		}
 	}
 
-	// Send status line first (HTTP/1.1 200 OK or check for Status header)
 	bool status_sent = false;
 	for (std::vector<std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
 		std::string header = *it;
@@ -352,7 +345,7 @@ void HttpResponse::cgi_response() {
 			}
 		} else {
 			handle_error(502);
-			return ; // handle malformed headers
+			return ;
 		}
 
 		if (header.find("status:", 0, 7) == 0) {
@@ -387,7 +380,7 @@ void HttpResponse::cgi_response() {
 }
 
 const std::string HttpResponse::generateResponse() {
-	std::cout << GRN_CLR << "Generating response ... " << DEF_CLR << std::endl;
+	// std::cout << GRN_CLR << "[INFO] RESP Generating response ... " << DEF_CLR << std::endl;
 
 	resp_buff_.clear();
 	if (status_code_ / 100 == 2) {
@@ -418,7 +411,7 @@ HttpResponse::HttpResponse(Request& request, const serverConf& conf)
 	  resp_stat_(STRT),
 	  err_depth(0) {
 	//* response constracteur!
-	std::cout << "response constracter" << std::endl;
+	// std::cout << "[INFO] RESP response constracter" << std::endl;
 	status_code_ = request_.getParsingCode();
 }
 
