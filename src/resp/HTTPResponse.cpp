@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 02:12:02 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
 }
 
 bool HttpResponse::serveStaticContent(const std::string& path, int code) {
-	std::cout << "[INFO] RESP serving static file path: " << path << std::endl;
+	// std::cout << "[INFO] RESP serving static file path: " << path << std::endl;
 	file_.open(path, std::ios::in | std::ios::binary);
 	if (!file_.is_open()) {
 		handle_error(403);
@@ -121,7 +121,7 @@ bool HttpResponse::list_directory() {
 	std::string direname;
 	DIR* dir = opendir(target_path.c_str());
 
-	std::cout << "[INFO] RESP target_path in list directory : " << target_path << std::endl;
+	// std::cout << "[INFO] RESP target_path in list directory : " << target_path << std::endl;
 	resp_buff_.clear();
 	if (dir == NULL) {
 		handle_error(403);
@@ -166,7 +166,7 @@ bool	HttpResponse::read_file_continu() {
 	resp_buff_ = std::string(buffer, file_.gcount());
 	if (file_.eof()) {
 		resp_stat_ = DONE;
-		std::cout << "[INFO] RESP Done reading resource file\n";
+		// std::cout << "[INFO] RESP Done reading resource file\n";
 		file_.close();
 	}
 	return true;
@@ -176,7 +176,7 @@ void	HttpResponse::handle_error(int err_code) {
 	err_depth++;
 	std::string path = conf_.get_err_page(err_code);
 	if (!path.empty() && err_depth == 1) {
-		std::cout << "[INFO] RESP error page found in the config" << std::endl;
+		// std::cout << "[INFO] RESP error page found in the config" << std::endl;
 		path = conf_.get_root() + "/" + path;
 		path = resolve_path(path);
 		if (serveStaticContent(path, err_code)) {
@@ -184,10 +184,10 @@ void	HttpResponse::handle_error(int err_code) {
 			return ;
 		}
 	}
-	std::cout << "[INFO] RESP handle error numero : " << err_code << std::endl;
+	// std::cout << "[INFO] RESP handle error numero : " << err_code << std::endl;
 
     if (error_pages.count(err_code)) {
-		std::cout << "[INFO] RESP found the error pages default" << std::endl;
+		// std::cout << "[INFO] RESP found the error pages default" << std::endl;
         resp_buff_ = error_pages[err_code];
     }
 	resp_stat_ = DONE;
@@ -198,7 +198,7 @@ void HttpResponse::process_path() {
 	std::string target_path = location_.get_root() + uri_;
 	target_path = resolve_path(target_path);
 
-	std::cout << "[INFO] RESP the file to look for : " << target_path << std::endl;
+	// std::cout << "[INFO] RESP the file to look for : " << target_path << std::endl;
 	if (!access(target_path.c_str(), F_OK)) {
 		if (!access(target_path.c_str(), R_OK)) {
 			if (is_directory(target_path)) {
@@ -309,10 +309,10 @@ void HttpResponse::cgi_response() {
 	std::string filename = cgi_->get_outfile_path();
 	file_.open(filename.c_str());
 	
-	std::cout << "[INFO] RESP cgi response\n";
+	// std::cout << "[INFO] RESP cgi response\n";
 	if (!file_.is_open()) {
 		handle_error(403);
-		std::cout << RED_CLR << "cat open this file: " << filename << DEF_CLR << std::endl;
+		// std::cout << RED_CLR << "cat open this file: " << filename << DEF_CLR << std::endl;
 		return;
 	}
 
@@ -402,7 +402,7 @@ const std::string HttpResponse::generateResponse() {
 		else
 			responseForPost();
 	} else {
-		std::cout << RED_CLR <<  " request Error status code : " << status_code_ << DEF_CLR << std::endl;
+		// std::cout << RED_CLR <<  " request Error status code : " << status_code_ << DEF_CLR << std::endl;
 		handle_error(status_code_);
 	}
 	return resp_buff_;
@@ -416,7 +416,7 @@ HttpResponse::HttpResponse(Request& request, const serverConf& conf)
 	  resp_stat_(STRT),
 	  err_depth(0) {
 	//* response constracteur!
-	std::cout << "[INFO] RESP response constracter" << std::endl;
+	// std::cout << "[INFO] RESP response constracter" << std::endl;
 	status_code_ = request_.getParsingCode();
 }
 

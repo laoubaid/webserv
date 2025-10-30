@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/27 11:33:32 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 16:49:36 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,7 @@ class Client : Socket
 		~Client();
 		int receive(int epoll_fd);
 
-		int process_recv_data();//Uvec &vec_buf);//, uint32_t event);
-		void print_whatever(std::string whatever);
+		int process_recv_data();
 
 		int send_response();
 
@@ -83,8 +82,6 @@ class Client : Socket
 		void	reset_resp_timeout() { resp_timeout_ = std::time(NULL);}
 
 		int		kill_cgi();
-
-		void log() const;
 
 };
 

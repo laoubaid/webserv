@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   host.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/19 17:25:56 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/08/19 23:52:30 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/30 16:45:36 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,6 @@ bool	countLeftSide(const Uvec &vec, Uvec::const_iterator &i, int &left, int &ls3
 		while (i +1 < vec.end() && *i == ':' && *(i+1) != ':')
 		{
 			i++;
-			// std::cout << str.substr(i) << "left: " << left << std::endl;
 			if (IPv4addressMatch(vec, i))
 			{
 				// std::cout << "match\n";

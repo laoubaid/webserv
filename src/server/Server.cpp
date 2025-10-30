@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 02:12:02 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 
 Server::Server(const serverConf& cfg, sockaddr_in addr) : Socket(addr), addr_(addr), conf_(cfg)
 {
-	std::cout << "Server constracteur called!" << std::endl;
+	// std::cout << "[INFO] Server constracteur called!" << std::endl;
 	int reuse = 1;
 	if (setsockopt(get_fd(), SOL_SOCKET, SO_REUSEADDR, (void *)&reuse, sizeof(reuse)) < 0)
 		throw std::runtime_error("failed to set socket option to reuse address!");
 }
 
 Server::~Server() {
-	std::cout << "Server destructor called!" << std::endl;
+	// std::cout << "[INFO] Server destructor called!" << std::endl;
 	for (std::map<int, Client*>::iterator it = client_sockets.begin(); it != client_sockets.end(); ++it)
 		delete it->second;
 	client_sockets.clear();
@@ -42,7 +42,7 @@ int	Server::accept_connections(int epoll_fd) {
 		clt_event.data.fd = client_fd;
 		clt_event.events = EPOLLIN | EPOLLOUT;
 		epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &clt_event);
-		std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
+		// std::cout << CONN_CLR <<"\n$ New client connected! fd: " << client_fd << DEF_CLR << std::endl;
 
 		client_addr.sin_port = addr_.sin_port;
 		client_sockets[client_fd] = new Client(client_fd, conf_, epoll_fd, client_addr);
@@ -76,7 +76,7 @@ void Server::check_timeout() {
 
 	while (it != client_sockets.end()) {
 		if (it->second->check_timeout()) {
-			std::cout << "[INFO] SVR timeouted client " << std::endl;
+			// std::cout << "[INFO] SVR timeouted client " << std::endl;
 		} else {
 			++it;
 		}

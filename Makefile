@@ -6,7 +6,7 @@ CC = clang++ -g3
 # CC = clang++ -g3 -fsanitize=address
 
 CFLAGS = -Wall -Wextra
-# CFLAGS = -Wall -Wextra -Werror -g3
+CFLAGS = -Wall -Wextra -Werror
 
 OBJ_DIR = obj/
 

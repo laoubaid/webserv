@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Uvec.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 22:41:10 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/04 10:30:04 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/30 16:50:46 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,14 +84,12 @@ Uvec::const_iterator	Uvec::end(void) const
 
 Uvec&	Uvec::operator+(const Uvec &other)
 {
-	// std::cout << "plus op called\n";
 	_vec->insert(_vec->end(), other._vec->begin(), other._vec->end());
 	return (*this);
 }
 
 Uvec&	Uvec::operator+=(const Uvec &other)
 {
-	// std::cout << "plus eq op called\n";
 	_vec->insert(_vec->end(), other._vec->begin(), other._vec->end());
 	return (*this);
 }
