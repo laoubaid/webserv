@@ -128,38 +128,55 @@ WebServ uses Nginx-style configuration files. Configuration files are located in
 
 ```nginx
 server {
-    listen 8080;
-    server_name localhost;
-    root ./www;
-    index index.html;
-    
-    error_page 404 /err_pages/404.html;
-    error_page 500 /err_pages/500.html;
-    
-    client_max_body_size 10M;
-    
-    location / {
-        allowed_methods GET POST;
-        autoindex on;
-    }
-    
-    location /cgi-bin {
-        allowed_methods GET POST;
-        cgi_pass .py /usr/bin/python3;
-        cgi_pass .php /usr/bin/php;
-    }
-    
-    location /uploads {
-        allowed_methods POST DELETE;
-        upload_store ./www/up;
-    }
+	# Listen addresses
+	listen 127.0.0.1:8080;
+	# listen 0.0.0.0:8080; # bind on all interfaces
+
+	# Default error pages
+	error_page 400 /err_pages/400.html; # relative path to root
+	# ...
+
+	client_max_body_size 106M;
+	send_timeout	3;  # time in seconds
+	cgi_timeout		3;
+	recv_timeout	3;
+	root ./www;
+
+	location / {
+		index		index.html;
+		methods		GET;
+		autoindex	off;
+	}
+
+	location /large_files {
+		root /path/to/override/root;
+		autoindex	on;
+		methods		GET;
+	}
+
+	location /up {
+		autoindex		on;
+		methods			POST GET;
+		upload_store	/path/to/upload;
+	}
+
+	location /cgi-bin {
+		autoindex on;
+		CGI .py /usr/bin/python3;
+		CGI .php /usr/bin/php-cgi;
+		CGI .cgi /bin/bash;
+	}
+
+	location /redirs {
+		return 301 https://youtu.be/dQw4w9WgXcQ?si=Faj1lWWybcBb6y3d;
+	}
 }
+
 ```
 
 ### Configuration Directives
 
-- **listen**: Port number to bind
-- **server_name**: Virtual host name
+- **listen**: IP and Port number to bind
 - **root**: Document root directory
 - **index**: Default index file
 - **error_page**: Custom error page mappings
@@ -169,12 +186,15 @@ server {
 - **cgi_pass**: CGI interpreter mappings
 - **upload_store**: Directory for file uploads
 - **return**: Redirect rules
+- **send_timeout**: set response timeout
+- **cgi_timeout**: set cgi process timeout
+- **recv_timeout**: set response timeout
+
 
 ### Available Configurations
 
-- `default.conf` - Production-ready default configuration
+- `default.conf` - Production-almost-ready default configuration
 - `example.conf` - Comprehensive configuration example
-- `test.conf` - Testing configuration with multiple servers
 
 ## 🔌 CGI Support
 
@@ -185,6 +205,7 @@ The server supports Common Gateway Interface (CGI/1.1) for dynamic content gener
 - **Python** (`.py`) - Located in `./www/cgi-bin/`
 - **PHP** (`.php`) - Located in `./www/cgi-bin/`
 - **Shell Scripts** (`.cgi`) - Located in `./www/cgi-bin/`
+- **Etc** - You can test whatever adjust the interpretur in config file
 
 ### CGI Scripts Examples
 
@@ -196,19 +217,6 @@ Available test scripts in `./www/cgi-bin/`:
 - `upload.php` - File upload handler
 - `cookie.py` - Cookie demonstration
 - `json.py` - JSON response example
-
-### CGI Environment Variables
-
-The server sets standard CGI environment variables:
-- `REQUEST_METHOD`
-- `QUERY_STRING`
-- `CONTENT_TYPE`
-- `CONTENT_LENGTH`
-- `PATH_INFO`
-- `SCRIPT_NAME`
-- `SERVER_PROTOCOL`
-- `REMOTE_ADDR`
-- `HTTP_*` (all request headers)
 
 ## 📁 Project Structure
 
@@ -230,7 +238,7 @@ webserv/
 ├── www/              # Document root
 │   ├── cgi-bin/      # CGI scripts
 │   ├── err_pages/    # Error pages
-│   ├── up/           # Upload directory
+│   ├── uploads/      # Upload directory
 │   └── *.html        # Static pages
 ├── imgs/             # Documentation diagrams
 ├── obj/              # Build artifacts (generated)
@@ -296,7 +304,7 @@ make log
 - The server runs in the background when started with `make run`
 - PID is stored in `.webserv.pid` for process management
 - Default configuration file: `./conf/default.conf`
-- Default port: 8080
+- Default listen: localhost:8080
 - Maximum connections handled by `poll()` limit
 
 ## 🤝 Contributing
@@ -305,11 +313,7 @@ This is an educational project implementing HTTP/1.1 server basics. Contribution
 
 ## 📄 License
 
-[Add your license information here]
-
-## 🙏 Acknowledgments
-
-Built as part of the 42 curriculum web server project, implementing core concepts from RFC 2616 (HTTP/1.1) and RFC 3875 (CGI/1.1).
+This project is part of the 42 Network curriculum. It is released for educational purposes and may be freely used for learning and testing.
 
 ---
 
