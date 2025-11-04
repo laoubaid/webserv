@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/15 15:47:55 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 02:35:16 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ int webServ::setup_epoll() {
 int webServ::setup_servers() {
 	Server *	svtmp;
 
+	// std::cout << "[INFO] WS setup servers" << std::endl;
 	for (size_t i = 0; i < srv_cfgs.size(); ++i) {
 		const std::vector<sockaddr_in> listens = srv_cfgs[i].get_addrs();
 		for (size_t j = 0; j < listens.size(); ++j) {
@@ -79,7 +80,7 @@ int	webServ::handle_connections(int fd) {
 
 	it = srvr_skts_.find(fd);
 	if (it != srvr_skts_.end())
-		return (*it).second->accept_connections(epoll_fd_);								//* it returns the number of accepted clients
+		return (*it).second->accept_connections(epoll_fd_);
 	return 0;
 }
 
@@ -185,7 +186,6 @@ void webServ::run() {
 }
 
 void webServ::check_timeouts() {
-	// // std::cout << "[INFO] WS checking timouts ...\n";
 	std::map <int, Server*>::iterator it;
 
 	for (it = srvr_skts_.begin(); it != srvr_skts_.end(); ++it) {

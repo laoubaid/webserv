@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:49:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/29 01:02:11 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 00:51:36 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,71 +24,53 @@
 # define ERR_END_LIN "unexpected end of line"
 
 class Directive {
-    public:
-        std::string key;
-        std::vector<std::string> values;
+	public:
+		std::string key;
+		std::vector<std::string> values;
 
-        Directive() {};
-        Directive(const std::string& k) : key(k) {}
-        Directive(const std::vector<std::string> args) : key(args[0]) {
-            for (size_t i = 1; i < args.size(); ++i) {
-                values.push_back(args[i]);
-            }
-        }
+		Directive() {};
+		Directive(const std::string& k) : key(k) {}
+		Directive(const std::vector<std::string> args) : key(args[0]) {
+			for (size_t i = 1; i < args.size(); ++i) {
+				values.push_back(args[i]);
+			}
+		}
 };
 
 class Block {
-    private:
-        int                     state;
-        std::vector<Directive>  directives;
-        std::vector<Block>      blocks;
-        std::string name;
-        std::string error_message;
-        std::string argument;
-    public:
+	private:
+		int                     state;
+		std::vector<Directive>  directives;
+		std::vector<Block>      blocks;
+		std::string name;
+		std::string error_message;
+		std::string argument;
 
-        // Block() {};
-        Block() : state(1) {};
-        Block(std::vector<std::string> args) : state(1) {
-            name = args[0];
-            argument = args.size() > 1 ? args[1] : "";
-        }
-        Block(const std::string& n) : name(n) {}
+		static std::vector<serverConf>* servers;
+	public:
 
-        bool    isopen() {
-            return state;
-        }
-        void    close() {
-            state = 0;
-        }
-        void    add_block(Block& obj) {
-            blocks.push_back(obj);
-        }
-        void    add_direc(Directive obj) {
-            directives.push_back(obj);
-        }
-        Block&    last_block() {
-            return blocks.back();
-        }
-        size_t  blocks_size() {
-            return blocks.size();
-        }
+		Block() : state(1) {};
+		Block(std::vector<std::string> args) : state(1) {
+			name = args[0];
+			argument = args.size() > 1 ? args[1] : "";
+		}
+		Block(const std::string& n) : name(n) {}
+		bool    isopen() { return state; }
+		void    close() { state = 0; }
+		void    add_block(Block& obj) { blocks.push_back(obj); }
+		void    add_direc(Directive obj) { directives.push_back(obj); }
+		Block&	last_block() { return blocks.back(); }
+		size_t  blocks_size() { return blocks.size(); }
+		const std::string& get_name() { return name; }
 
-        const std::string& get_name() {
-            return name;
-        }
+		void process_server(std::vector<serverConf>& servres);
+		void process_location(serverConf& conf);
 
-        void process_server(std::vector<serverConf>& servres);
-        void process_location(serverConf& conf);
-
-        std::vector<serverConf>* parser();
-        Block syntax_error(const std::string& message);
-
-        void printTree(int idt) const;
-
+		void parser();
+		std::vector<serverConf>*	get_servers() { return servers; }
+		Block syntax_error(const std::string& message);
 };
 
 Block   get_config(std::string filename);
-
 
 #endif

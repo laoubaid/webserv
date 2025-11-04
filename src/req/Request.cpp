@@ -6,14 +6,14 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:03 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 21:23:18 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 03:04:31 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 #include "../include.hpp"
 #include "../config/serverConf.hpp"
-#include "requestIncludes.hpp"
+#include "httpParsingIncludes.hpp"
 #include <ostream>
 
 std::map<std::string, validatorFunc>	Request::stdFields;
@@ -95,13 +95,7 @@ int	Request::req_err(std::string throw_msg, int status_code, t_req_state state)
 
 void	Request::is_cgi()
 {
-	///////////////////// hard coded /////////////////////////////
-	//	cgi_dir = "/cgi-dir/";                                  //
-	//	extensions = {"cgi", "py", "php"};                      //
-	//////////////////////////////////////////////////////////////
-	// std::string		location = _loc->get_path(); //   /cgi-dir/scriptname.php/
 
-	
 	if (_loc->has_cgi())
 	{
 		// std::cout << "[INFO] REQ location has cgi\n";
@@ -180,7 +174,6 @@ void	Request::addField(std::string key, Uvec value)
 	{
 		if (std::find(invalidList.begin(), invalidList.end(), key) != invalidList.end())
 			req_err("header field doesn't qualify as a list", 400, RESP);
-			// return (badRequest("header field doesn't qualify as a list"));
 		else
 		{
 			Uvec	sep((const unsigned char*)" , ", 3);
@@ -227,10 +220,11 @@ void	Request::processFields(std::vector<Uvec> lines)
 
 void	Request::setup_file()
 {
-	if (_cgi)
-		_body_file_path = "/tmp/webserv_cgi_body_" + std::to_string(_client_fd);
-	else
-	{
+	if (_cgi) {
+		std::stringstream ss;
+		ss << "/tmp/webserv_cgi_body_" << _client_fd;
+		_body_file_path = ss.str();
+	} else {
 		const locationConf& tmp = *_loc;
 		std::string file_path = tmp.get_path();
 		if (tmp.is_upset()) {
@@ -240,7 +234,7 @@ void	Request::setup_file()
 				it++;
 			file_path = tmp.get_upstore() + "/" + std::string(it, _target.path.end());
 		} else 
-			req_err("upload not set", 403, RESP); // ! what is the status code of this one???
+			req_err("upload not set", 403, RESP);
 	
 		// std::cout << "[INFO] REQ : " << file_path << std::endl;
 		if (*(file_path.end() -1) == '/')
@@ -269,7 +263,7 @@ void	Request::setup_body(const Uvec& raw_body)
 		req_err("method doesn't accept body", 400, RESP);
 	if (transfer_encoding_found && content_length_found)
 		req_err("both transfer-encoding and content-length found", 400, RESP);
-	// set up file
+
 	if (_method == POST)
 		setup_file();
 	if (transfer_encoding_found)
@@ -347,15 +341,7 @@ std::pair<unsigned long, Uvec>	Request::process_chunked_body()
 		body_size = 0;
 		
 	}
-	
-	//	// std::cout << "[INFO] processing chunked body\n";
-	//	// std::cout << "body size is: " << body_size_vec << std::endl;
-	//	// std::cout << "body is: " << body << std::endl;
-	//	// std::cout << "body 	// std::cout << "body size is converted to decimals and it's value is: " << body_size << std::endl;
-	//	// std::cout << "body 	// std::cout << "body received size is " << body.size() << std::endl;
-	// std::cout << "body size: " << body.size() << ", num: " << body_size << std::endl;
-	//if (body_size != body.size())
-	//	throw std::runtime_error("body size doesn't match body received");
+
 	return (std::pair<unsigned long, Uvec>(body_size, body));
 }
 
@@ -368,8 +354,7 @@ void	Request::processTransferEncoding(const Uvec& raw_body)
 		std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
 		while (loop)
 		{
-			std::pair<unsigned long, Uvec> processed = process_chunked_body(); // this function needs review
-																			   // add to file
+			std::pair<unsigned long, Uvec> processed = process_chunked_body();
 			if (processed.first)
 				file.write(reinterpret_cast<char *>(&processed.second[0]), processed.second.size());
 			_body_size += processed.first;
@@ -385,16 +370,12 @@ void	Request::processTransferEncoding(const Uvec& raw_body)
 
 void	Request::addBody(Uvec raw_body)
 {
-//	// std::cout << "[INFO] processing the following body:\n";
-//	// std::cout << raw_body;
 	if (_chunked)
 	{
 		processTransferEncoding(raw_body);
 	}
 	else
 	{
-		// add to file
-		// std::ofstream	file(_body_file_path.c_str(), std::ios::binary | std::ios::app);
 		if (!_file.is_open())
 			req_err("file closed unexpectedly", 403, RESP);
 		if (raw_body.size())
@@ -405,7 +386,7 @@ void	Request::addBody(Uvec raw_body)
 		else if (_content_length == _body_size)
 			_req_state = RESP;
 		else
-			req_err("body received is bigger than the content-length", 400, RESP);
+			req_err("body received is bigger than the content-length", 413, RESP);
 	}
 	if (_loc->get_clt_body_max_size() < _body_size) {
 		req_err("body size too large", 413, RESP);
@@ -427,8 +408,7 @@ _parsingCode(200), _chunked(false), _body_size(0), _req_state(PEND), _cgi(NULL),
 void Request::ParseRequest(Uvec httpRequest) {
 	// std::cout << "[INFO] REQ : " << std::string(httpRequest.begin(), httpRequest.end()) << std::endl;
 	// std::cout << "____________________________________________________________________________" << std::endl << std::endl;
-	
-	// split with crlfcrlf to get 2 (headers and body)
+
 	Uvec	DCRLF((const unsigned char *)"\r\n\r\n", 4);
 	Uvec::iterator	pos = httpRequest.find(DCRLF);
 
@@ -450,18 +430,6 @@ void Request::ParseRequest(Uvec httpRequest) {
 	processFields(lines);
 
 	setup_body(rawBody);
-
-	// std::cout << "[INFO] body is sat up for the first time, and it is ";
-	// if (_chunked)
-	// 	// std::cout << "chunked\n";
-	// else
-	// 	// std::cout << "not chunked\n";
-	
-	// std::cout << "[DEBUG] printing headers:\n";
-	// for(std::map<std::string, Uvec>::iterator it = _fields.begin(); it != _fields.end(); it++)
-	// {
-	// 	// std::cout << "[" << (*it).first << "] => " << (*it).second << std::endl;
-	// }
 
 	if (rawBody.size())
 		addBody(rawBody);

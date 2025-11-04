@@ -1,5 +1,0 @@
-
-This is some random text to fill the raw data file.
-You can add more lines as needed.
-1234567890
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.

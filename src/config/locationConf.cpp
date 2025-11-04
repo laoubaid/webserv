@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 12:00:47 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/28 10:52:34 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 02:23:52 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,12 +108,17 @@ void locationConf::set_redirect(std::vector<std::string>& values) {
     redirect_.second = values[1];
     has_redirect_ = true;
 }
-
+std::string get_absolute_path(const std::string& relative_path);
 void locationConf::set_root(std::vector<std::string>& values) {
-    if (values.size() != 1)
-        throw std::runtime_error("invalid root paramter!");
-    
-    root_ = resolve_path(values[0]);
+	if (values.size() != 1)
+		throw std::runtime_error("invalid root paramter!");
+
+	if (values[0].length() >= 2 && values[0][0] == '.' && values[0][1] == '/') {
+		root_ = "./" + resolve_path(values[0]);
+	} else {
+		root_ = resolve_path(values[0]);
+	}
+	root_ = get_absolute_path(root_);
 }
 
 void locationConf::set_index(std::vector<std::string>& values) {

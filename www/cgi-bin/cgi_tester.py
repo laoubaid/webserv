@@ -21,8 +21,6 @@ for file in script_dir.iterdir():
             'name': file.name,
             'path': file.name,
             'extension': file.suffix,
-            'size': stat.st_size,
-            'executable': os.access(file, os.X_OK)
         })
 
 # Sort by name
@@ -269,14 +267,6 @@ print("""<!DOCTYPE html>
                     <div class="stat-number">""" + str(len(cgi_files)) + """</div>
                     <div class="stat-label">Total Scripts</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">""" + str(sum(1 for f in cgi_files if f['executable'])) + """</div>
-                    <div class="stat-label">Executable</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">""" + str(len(set(f['extension'] for f in cgi_files))) + """</div>
-                    <div class="stat-label">File Types</div>
-                </div>
             </div>
         </div>
 """)
@@ -295,27 +285,12 @@ if cgi_files:
         elif ext == '.cgi':
             icon_class = 'icon-cgi'
             icon_text = 'CGI'
-        elif ext == '.pl':
-            icon_class = 'icon-pl'
-            icon_text = 'PL'
         elif ext == '.sh':
             icon_class = 'icon-sh'
             icon_text = 'SH'
         else:
             icon_class = 'icon-cgi'
             icon_text = ext[1:].upper()
-        
-        # Format file size
-        size = file['size']
-        if size < 1024:
-            size_str = f"{size} B"
-        elif size < 1024 * 1024:
-            size_str = f"{size / 1024:.1f} KB"
-        else:
-            size_str = f"{size / (1024 * 1024):.1f} MB"
-        
-        executable_badge = 'badge-executable' if file['executable'] else 'badge-not-executable'
-        executable_text = '✓ Executable' if file['executable'] else '✗ Not Executable'
         
         # Generate card
         print(f"""
@@ -324,13 +299,9 @@ if cgi_files:
                     <div class="file-icon {icon_class}">{icon_text}</div>
                     <div class="card-title">
                         <div class="file-name">{file['name']}</div>
-                        <div class="file-ext">{file['extension']} script</div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="file-info">
-                        <span class="info-badge">{size_str}</span>
-                    </div>
                     <a href="{base_url}/{file['path']}" class="run-btn">▶ Run Script</a>
                 </div>
             </div>

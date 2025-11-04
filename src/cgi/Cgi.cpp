@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:31 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 03:05:55 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ Cgi::~Cgi(void)
 	// std::cout << "[INFO] CGI cgi destructor called\n";
 	if (_write_in != -1)
 		close(_write_in);
-	if (_write_in != -1)
+	if (_read_from != -1)
 		close(_read_from);
 
 	// std::cout << "[INFO] CGI removing the tmp file for output \n";
@@ -111,7 +111,7 @@ void	Cgi::set_env(void)
 	int port = ntohs(_clt_addr.sin_port);
 
 	std::string	client_ip(ip_str);
-	std::string	server_port = std::to_string(port);
+	std::string	server_port = toString(port);
 
 	env_vec.push_back(std::string("AUTH_TYPE=") + get_auth_type(*_req));
 	if (_req->getBodySize())
@@ -176,12 +176,15 @@ void	Cgi::set_env(void)
 void	Cgi::set_argv(void)
 {
 	// std::string	cgi_root_location = "/home/kamal/projects/42cursus-webserv/www"; // should be replace with cgi-bin location in config file
-	std::string	script_path = root + script_name;
+	std::string	script_path;
+	// if (root[0] == '.')
+	// 	script_path = get_absolute_path(root + script_name);
+	// else
+		script_path = root + script_name;
 
 	try
 	{
 		argv = new char*[3];
-		
 		argv[0] = ft_strdup(_interpreter);
 		argv[1] = ft_strdup(script_path);
 		argv[2] = NULL;
@@ -224,7 +227,7 @@ std::string	Cgi::run(void)
 	{
 		std::string	execution_dir = root + _req->get_location().get_path();
 		if (chdir(execution_dir.c_str()) == -1)
-			exit (1); // invalid path
+			exit(1);
 		dup2(pipe_out[1], 1);
 		dup2(pipe_in[0], 0);
 		close(STDERR_FILENO);																			//* delete this so errors of cgi get printed!
@@ -267,7 +270,7 @@ std::string	Cgi::run(void)
 			oss << "/tmp/outfile_" << this;
 			_out_file_path = oss.str();
 		}
-		_out_file.open(_out_file_path, std::ios::binary | std::ios::app);
+		_out_file.open(_out_file_path.c_str(), std::ios::binary | std::ios::app);
 	}
 	return "";
 }
@@ -290,16 +293,12 @@ int	Cgi::write_body()
 		std::vector<unsigned char>	buffer(CGI_BUFFER);
 		if (_in_file.read(reinterpret_cast<char*>(&buffer[0]), buffer.size()) || _in_file.gcount() > 0)
 		{
-			// std::cout << "[INFO] CGI writing this buffer: ";
-			// for (std::vector<unsigned char>::iterator it = buffer.begin(); it < buffer.end(); it++) {
-			// 	// std::cout << *it;
-			// }
-			
 			std::size_t	char_read = _in_file.gcount();
 			if (char_read > 0)
 			{
-				if (write(_write_in, buffer.data(), char_read) == -1)
-					cgi_err("[CGI ERROR] script terminated unexpectedly", 502, RESP);
+				ssize_t bytes = write(_write_in, buffer.data(), char_read);
+				if (bytes <= 0)
+					cgi_err("[CGI ERROR] script terminated unexpectedly", 500, RESP);
 			}
 		}
 		if (_in_file.eof())
@@ -323,7 +322,7 @@ int	Cgi::write_body()
 				oss << "/tmp/outfile_" << this;
 				_out_file_path = oss.str();
 			}
-			_out_file.open(_out_file_path, std::ios::binary | std::ios::app);
+			_out_file.open(_out_file_path.c_str(), std::ios::binary | std::ios::app);
 
 			return 1;
 		}
@@ -351,7 +350,8 @@ int	Cgi::read_output()
 			close(_read_from);
 			_read_from = -1;
 		}
-		_out_file.close();
+		if (_out_file.is_open())
+			_out_file.close();
 		return 1;
 	}
 	// buff read should be sent to client unless when 'status' is changed for response first line 'HTTP/1.1 200 OK' for exmple
@@ -373,7 +373,6 @@ bool Cgi::check_process_status() {
         // Process is still running
         return false;
     } else if (result == child_pid) {
-        // Process has terminated
         if (WIFEXITED(status)) {
             exit_status_ = WEXITSTATUS(status);
             // std::cout << "[INFO] CGI process exited with status: " << exit_status_ << std::endl;
@@ -401,15 +400,4 @@ int Cgi::get_cgi_pid() {
 
 std::string Cgi::get_outfile_path() {
 	return _out_file_path;
-}
-
-// to be deleted
-void	Cgi::print_env(void)
-{
-	// std::cout << "[INFO] CGI printing env...\n";
-	for (std::size_t i = 0; env[i]; i++)
-	{
-		// std::cout << env[i] << std::endl;
-	}
-	// std::cout << "\n\n\n";
 }

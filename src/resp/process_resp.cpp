@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 15:23:45 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/08/28 17:07:40 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 02:14:51 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ std::string url_decode(const std::string& str) {
         if (str[i] == '%' && i + 2 < str.length()) {
             hex[0] = str[i + 1];
             hex[1] = str[i + 2];
-            result += static_cast<char>(std::strtol(hex, nullptr, 16));
+            result += static_cast<char>(std::strtol(hex, NULL, 16));
             i += 2;
         } else if (str[i] == '+') {
             result += ' ';

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Request.hpp                                        :+:      :+:    :+:   */
+/*   Request.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 23:00:07 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 21:19:01 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/28 23:58:38 by kez-zoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define HTTPREQUESTPARSER_HPP
 
 # include "../include.hpp"
-# include "requestIncludes.hpp"
+# include "httpParsingIncludes.hpp"
 
 class Cgi;
 class serverConf;
@@ -77,7 +77,6 @@ class Request
 		static Uvec	QPAIR;
 
 		Request(void);
-		// Request(Uvec httpRequest, const serverConf& cfg, int fd_, int ep_fd);
 		Request( const serverConf& cfg, int fd_, int ep_fd, sockaddr_in clt_addr);
 		void ParseRequest(Uvec httpRequest);
 		~Request(void);

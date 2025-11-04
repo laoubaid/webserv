@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 12:50:12 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 21:18:26 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 10:01:52 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,10 +41,7 @@
 # define CONN_CLR "\033[30;42m"
 
 
-# define HEADER_MAX_SIZE 1024
-
-// # include "./config/serverConf.hpp"
-// # include "./config/locationConf.hpp"
+# define HEADER_MAX_SIZE 2048
 
 typedef struct	s_conf
 {
@@ -66,7 +63,14 @@ std::string	resolve_path(const std::string& str);
 
 void signalHandler(int signal);
 
-# include "req/requestIncludes.hpp"
+template <typename T>
+std::string toString(T value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
+# include "req/httpParsingIncludes.hpp"
 # include "req/Request.hpp"
 # include "cgi/Cgi.hpp"
 

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:19:18 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 03:02:54 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,25 +66,26 @@ HttpResponse::~HttpResponse() {
 }
 
 const std::string& HttpResponse::getMimeType(const std::string& path) {
-	static const std::map<std::string, std::string> mime_types = {
-		{".html", "text/html"},
-		{".htm",  "text/html"},
-		{".css",  "text/css"},
-		{".js",   "application/javascript"},
-		{".json", "application/json"},
-		{".png",  "image/png"},
-		{".jpg",  "image/jpeg"},
-		{".jpeg", "image/jpeg"},
-		{".gif",  "image/gif"},
-		{".ico",  "image/x-icon"},
-		{".txt",  "text/plain"},
-		{".pdf",  "application/pdf"},
-		{".svg",  "image/svg+xml"}
-	};
+	static std::map<std::string, std::string> mime_types;
+	
+	if (mime_types.empty()) {
+		mime_types[".html"] = "text/html";
+		mime_types[".htm"]  = "text/html";
+		mime_types[".css"]  = "text/css";
+		mime_types[".js"]   = "application/javascript";
+		mime_types[".json"] = "application/json";
+		mime_types[".png"]  = "image/png";
+		mime_types[".jpg"]  = "image/jpeg";
+		mime_types[".jpeg"] = "image/jpeg";
+		mime_types[".gif"]  = "image/gif";
+		mime_types[".ico"]  = "image/x-icon";
+		mime_types[".txt"]  = "text/plain";
+		mime_types[".pdf"]  = "application/pdf";
+		mime_types[".svg"]  = "image/svg+xml";
+	}
 
 	static const std::string default_type = "application/octet-stream";
 
-	
 	size_t idx = path.rfind("/");
 	std::string tmp;
 	if (idx != std::string::npos) {
@@ -103,13 +104,13 @@ const std::string& HttpResponse::getMimeType(const std::string& path) {
 
 bool HttpResponse::serveStaticContent(const std::string& path, int code) {
 	// std::cout << "[INFO] RESP serving static file path: " << path << std::endl;
-	file_.open(path, std::ios::in | std::ios::binary);
+	file_.open(path.c_str(), std::ios::in | std::ios::binary);
 	if (!file_.is_open()) {
 		handle_error(403);
 		return false;
 	}
 	resp_buff_ = status_lines.at(code);
-	resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + std::to_string(get_file_size(file_)) + "\r\n\r\n";
+	resp_buff_ += "Content-Type: " + HttpResponse::getMimeType(path) + "\r\n" "Content-Length: " + toString(get_file_size(file_)) + "\r\n\r\n";
 	resp_stat_ = LOAD;
 	request_.setMethod(GET);
 	status_code_ = 200;
@@ -148,7 +149,7 @@ bool HttpResponse::list_directory() {
 	body += "</ul>\n</body>\n</html>\n";
 	resp_buff_ = status_lines[200];
 	resp_buff_ += "Content-Type: text/html\r\n"
-		"Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+		"Content-Length: " + toString(body.size()) + "\r\n\r\n" + body;
 
 	closedir(dir);
 	resp_stat_ = DONE;
@@ -156,7 +157,6 @@ bool HttpResponse::list_directory() {
 }
 
 bool	HttpResponse::read_file_continu() {
-	// Open the file only once in the class member 
 	if (!file_.is_open() || resp_stat_ == DONE) {
 		return false;
 	}
@@ -276,7 +276,7 @@ void HttpResponse::responseForPost() {
 
 		resp_buff_ = "HTTP/1.1 200 OK\r\n"
 					"Content-Type: text/html; charset=UTF-8\r\n"
-					"Content-Length: " + std::to_string(html.size()) + "\r\n"
+					"Content-Length: " + toString(html.size()) + "\r\n"
 					"Connection: keep-alive\r\n"
 					"\r\n" +
 					html;
@@ -312,12 +312,13 @@ void HttpResponse::cgi_response() {
 	// std::cout << "[INFO] RESP cgi response\n";
 	if (!file_.is_open()) {
 		handle_error(403);
-		// std::cout << RED_CLR << "cat open this file: " << filename << DEF_CLR << std::endl;
-		return;
+		return ;
 	}
 
 	std::string line;
 	bool headers_complete = false;
+	bool status_sent = false;
+	bool has_content_type = false;
 	std::vector<std::string> headers;
 	
 	while (std::getline(file_, line) && !headers_complete) {
@@ -326,22 +327,19 @@ void HttpResponse::cgi_response() {
 		}
 		if (line.empty()) {
 			headers_complete = true;
-			break;
+			break ;
 		}
 		if (line.find(':') != std::string::npos) {
 			headers.push_back(line);
 		}
 	}
 
-	bool status_sent = false;
 	for (std::vector<std::string>::iterator it = headers.begin(); it != headers.end(); ) {  // No ++it here!
 		if (it->empty()) {
 			++it;
 			continue; 
 		}
 		std::string header = *it;
-		
-		// Check for CGI Status header
 		size_t colon_pos = header.find(':');
 		if (colon_pos != std::string::npos) {
 			for (size_t i = 0; i < colon_pos; ++i) {
@@ -351,32 +349,43 @@ void HttpResponse::cgi_response() {
 			handle_error(502);
 			return ;
 		}
-
+		if (header.find("content-type:", 0, 13) == 0)
+			has_content_type = true;
 		if (header.find("status:", 0, 7) == 0) {
+			// std::cout << "[INFO] RESP status line is present" << std::endl;
 			if (colon_pos != std::string::npos && colon_pos + 1 < header.length()) {
 				std::string status_value = header.substr(colon_pos + 1);
-				// Trim leading whitespace
 				size_t start = status_value.find_first_not_of(" \t");
 				if (start != std::string::npos) {
 					status_value = status_value.substr(start);
 				}
-				std::string status_line = "HTTP/1.1 " + status_value + "\r\n";
-				resp_buff_ = status_line;
-				status_sent = true;
+				size_t end = status_value.find_first_of("\r\n");
+				if (end != std::string::npos) {
+					status_value = status_value.substr(0, end);
+				}
+				if (status_value.length() >= 5 && std::isdigit(status_value[0]) && 
+					std::isdigit(status_value[1]) && std::isdigit(status_value[2]) && status_value[3] == ' ')
+				{
+					// std::cout << "[INFO] RESP status line is valid" << std::endl;
+					std::string status_line = "HTTP/1.1 " + status_value + "\r\n";
+					resp_buff_ = status_line;
+					status_sent = true;
+				} else {
+					handle_error(502);
+					return ;
+				}
 			}
 			it = headers.erase(it);
-		} else {
-			++it;
-		}
+		} else { ++it; }
 	}
-	
-	// If no status header found, send default 200 OK
+	if (!has_content_type) {
+		handle_error(502);
+		return;
+	}
 	if (!status_sent) {
 		std::string default_status = "HTTP/1.1 200 OK\r\n";
 		resp_buff_ = default_status;
 	}
-	
-	// Send all other headers
 	for (std::vector<std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
 		resp_buff_ += (*it) + "\r\n";
 	}
@@ -415,7 +424,6 @@ HttpResponse::HttpResponse(Request& request, const serverConf& conf)
 	  location_(request_.get_location()),
 	  resp_stat_(STRT),
 	  err_depth(0) {
-	//* response constracteur!
 	// std::cout << "[INFO] RESP response constracter" << std::endl;
 	status_code_ = request_.getParsingCode();
 }

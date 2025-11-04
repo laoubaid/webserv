@@ -6,11 +6,21 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:03:10 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/09/30 00:26:08 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 02:25:10 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "serverConf.hpp"
+
+std::string get_absolute_path(const std::string& relative_path) {
+    char resolved[100];
+
+    if (realpath(relative_path.c_str(), resolved) == NULL) {
+        perror("realpath");
+        return relative_path;
+    }
+    return std::string(resolved);
+}
 
 serverConf::serverConf(/* args */) : clt_body_max_size_(-1) {
 	clt_body_max_size_ = 1024 * 1024;
@@ -19,6 +29,7 @@ serverConf::serverConf(/* args */) : clt_body_max_size_(-1) {
 	cgi_timeout_ = 5;
 	autoindex_ = false;
 	root_ = "./www/";
+	root_ = get_absolute_path(root_);
 	is_indexed_ = false;
 	redirect_ = std::make_pair(0, "");
 }
@@ -145,8 +156,13 @@ void serverConf::set_clt_max_body_size(std::vector<std::string>& values) {
 void serverConf::set_root(std::vector<std::string>& values) {
 	if (values.size() != 1)
 		throw std::runtime_error("invalid root paramter!");
-	
-	root_ = resolve_path(values[0]) + "/";
+
+	if (values[0].length() >= 2 && values[0][0] == '.' && values[0][1] == '/') {
+		root_ = "./" + resolve_path(values[0]) + "/";
+	} else {
+		root_ = resolve_path(values[0]) + "/";
+	}
+	root_ = get_absolute_path(root_) + "/";
 }
 
 void serverConf::set_index(std::vector<std::string>& values) {

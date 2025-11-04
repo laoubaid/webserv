@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 19:01:04 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 02:25:49 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void	Server::add_to_epoll(int epoll_fd) {
 }
 
 int	Server::launch() {
-	if (bind() == 0 && listen(SOMAXCONN) == 0) {									//! info about bind and listen
+	if (bind() == 0 && listen(SOMAXCONN) == 0) {
 		std::cout << GRN_CLR << "Server_" << get_fd() << " is listening on port " << ntohs(get_sockeaddr().sin_port) << DEF_CLR << std::endl;
 		return 0;
 	}

@@ -1,11 +1,6 @@
 
-# Compiler and flags
-CC = clang++
-CC = clang++ -g3 
-# CC = clang++ -g3 -std=c++98 
-# CC = clang++ -g3 -fsanitize=address
+CC = c++ -std=c++98
 
-CFLAGS = -Wall -Wextra
 CFLAGS = -Wall -Wextra -Werror
 
 OBJ_DIR = obj/
@@ -13,17 +8,15 @@ OBJ_DIR = obj/
 # Source files
 SRC = src/main.cpp src/server/Socket.cpp src/server/webServ.cpp \
 		src/server/Server.cpp src/server/Client.cpp \
-		src/req/Request.cpp src/req/requestTools.cpp src/req/host.cpp\
-		src/req/strMatchers.cpp src/req/strValidators.cpp src/req/test_fields.cpp \
+		src/req/Request.cpp src/req/RequestTools.cpp src/req/host.cpp\
+		src/req/strMatchers.cpp src/req/strValidators.cpp \
 		src/uvec/Uvec.cpp src/config/configParser.cpp \
 		src/config/serverConf.cpp src/config/locationConf.cpp \
 		src/resp/HTTPResponse.cpp src/resp/process_resp.cpp \
 		src/cgi/Cgi.cpp
 
-# OBJ = $(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRC))
 OBJ = $(patsubst src/%.cpp, $(OBJ_DIR)%.o, $(SRC))
 
-# Target executable
 NAME = webserv
 EXEC := ./$(NAME)
 
@@ -32,11 +25,9 @@ GREEN       := \033[0;32m
 RED         := \033[0;31m
 RESET       := \033[0m
 
-# execution variables and flages
 PID_FILE    := .webserv.pid
 CONFIG_FILE ?= ./conf/default.conf
-VALGRIND_FLAGS ?=
-LEAK_KIND = --show-leak-kinds=
+LOGS_FILE	?= error.log
 
 
 
@@ -50,20 +41,21 @@ $(NAME): $(OBJ)
 # Compile source files into object files
 
 $(OBJ_DIR):
-	mkdir -p $(OBJ_DIR) $(OBJ_DIR)server $(OBJ_DIR)req \
+	@ mkdir -p $(OBJ_DIR) $(OBJ_DIR)server $(OBJ_DIR)req \
 	$(OBJ_DIR)uvec $(OBJ_DIR)config $(OBJ_DIR)resp $(OBJ_DIR)cgi
 
 $(OBJ_DIR)%.o: src/%.cpp
-	# mkdir -p $(OBJ_DIR)
+	@ mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up build files
 clean:
-	rm -rf $(OBJ)
+	@rm -rf $(OBJ)
 
 fclean: clean
-	rm -rf $(OBJ_DIR)
-	rm -rf $(NAME)
+	@rm -rf $(OBJ_DIR)
+	@rm -rf $(NAME)
+	@rm -rf $(LOGS_FILE)
 
 re: fclean all
 
@@ -71,7 +63,7 @@ run: all
 	@if [ -f $(PID_FILE) ]; then \
 		echo "$(RED)Server already running (PID file exists)$(RESET)"; \
 	else \
-		nohup $(EXEC) $(CONFIG_FILE) >/dev/null 2>logs & \
+		nohup $(EXEC) $(CONFIG_FILE) >/dev/null 2>$(LOGS_FILE) & \
 		PID=$$!; \
 		sleep 1; \
 		kill -0 $$PID 2>/dev/null; \
@@ -81,7 +73,7 @@ run: all
 			echo "$(GREEN)Starting webserv...$(RESET)"; \
 		else \
 			echo "$(RED)Failed to start webserv$(RESET)"; \
-			cat logs; \
+			cat $(LOGS_FILE); \
 		fi \
 	fi
 
@@ -96,19 +88,20 @@ stop:
 
 restart: stop run
 
-crun:
-	@clear
-	@$(MAKE) -s run
-	# -s silent in the recursive call to make
+status:
+	@if pgrep -x "$(NAME)" > /dev/null; then \
+		echo "\033[0;32mwebserv is running\033[0m"; \
+	else \
+		echo "\033[0;31mwebserv not running\033[0m"; \
+	fi
 
-valgrind: all
-	valgrind $(VALGRIND_FLAGS) $(EXEC) $(CONFIG_FILE)
-
-leaks: all
-	valgrind --leak-check=full $(LEAK_KIND) $(EXEC) $(CONFIG_FILE)
+log:
+	@if [ -f $(LOGS_FILE) ]; then \
+		cat $(LOGS_FILE); \
+	fi
 
 # Phony targets
-.PHONY: all clean fclean re OBJ_STP run crun stop valgrind leaks
+.PHONY: all clean fclean re run stop status log
 
-.SECONDARY: OBJ_STP $(OBJ)
+.SECONDARY: $(OBJ)
 

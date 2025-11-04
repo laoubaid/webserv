@@ -1,18 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   requestTools.cpp                                   :+:      :+:    :+:   */
+/*   RequestTools.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/13 20:28:30 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 21:22:20 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 09:59:54 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-// to distinguish either the spliter is at the end or not, I will add an empty string to the array if it is at the end
 std::vector<Uvec>	ft_split(const Uvec &data, const Uvec &spliter)
 {
 	std::vector<Uvec>	vec;
@@ -47,38 +46,27 @@ unsigned char toLowerChar(unsigned char c)
 
 bool hexStringToUnsignedLong(const std::string& hexStr, unsigned long& result) {
     std::stringstream ss;
-    ss << std::hex << hexStr; // Insert hex string into stringstream, set base to hex
-
-    // Attempt to extract the unsigned long
+    ss << std::hex << hexStr;
     ss >> result;
 
-    // Check for errors:
-    // 1. If the entire string was consumed and conversion was successful
-    // 2. If no conversion error flags are set (badbit, failbit)
     if (!ss.fail() && ss.eof()) {
         return true;
     } else {
-        // Conversion failed (e.g., non-hex characters, empty string, overflow)
-        ss.clear(); // Clear error flags if you intend to reuse the stream
+        ss.clear();
         return false;
     }
 }
 
 bool stringToUnsignedLong(const std::string& str, unsigned long& result) {
     std::stringstream ss;
-    ss << str; // Insert hex string into stringstream, set base to hex
+    ss << str;
 
-    // Attempt to extract the unsigned long
     ss >> result;
 
-    // Check for errors:
-    // 1. If the entire string was consumed and conversion was successful
-    // 2. If no conversion error flags are set (badbit, failbit)
     if (!ss.fail() && ss.eof()) {
         return true;
     } else {
-        // Conversion failed (e.g., non-hex characters, empty string, overflow)
-        ss.clear(); // Clear error flags if you intend to reuse the stream
+        ss.clear();
         return false;
     }
 }
@@ -125,22 +113,6 @@ std::string	decode_url(const std::string& url)
 			result += *it;
 	}
 	return (result);
-}
-
-bool	has_shebang(std::string script_path)
-{
-	std::ifstream	file(script_path);
-
-	if (file.is_open())
-	{
-		char c1, c2;
-		file.get(c1);
-		file.get(c2);
-		if (c1 == '#' && c2 == '!')
-			return (true);
-	}
-	file.close();
-	return (false);
 }
 
 char	*ft_strdup(const std::string& src)

@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:22:40 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 16:51:37 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 00:53:38 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,11 @@ int main(int ac, char **av)
 	}
 
 	std::vector<serverConf>* servers = NULL;
+	Block root;
 	try {
-		servers = get_config(av[1]).parser();
+		root = get_config(av[1]);
+		root.parser();
+		servers = root.get_servers();
 		std::cout << "\033[32mConfiguration file parsed successfully!\033[0m" << std::endl;
 		webServ WS(*servers);
 	
@@ -44,6 +47,7 @@ int main(int ac, char **av)
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		std::cout << "cleaning..." << std::endl;
+		servers = root.get_servers();
 		delete servers;
 		return 2;
 	}

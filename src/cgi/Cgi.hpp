@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 18:59:34 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/09/27 11:33:14 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 03:06:16 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,9 +70,6 @@ class Cgi
 		std::string get_outfile_path();
 
 		std::string	run(void);
-
-		// to be deleted
-		void	print_env(void);
 };
 
 #endif

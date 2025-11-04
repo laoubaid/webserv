@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:48:38 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 16:50:11 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 00:58:49 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,10 +45,11 @@
 
 
 Block   syntax(std::ifstream &config, std::vector<std::string> args);
+std::vector<serverConf>* Block::servers = NULL;
 
 void rtrim(std::string &s) {
-    while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back()))) {
-        s.pop_back();
+    while (!s.empty() && isspace(static_cast<unsigned char>(s[s.length() - 1]))) {
+        s.erase(s.length() - 1);
     }
 }
 
@@ -231,7 +232,7 @@ void Block::process_server(std::vector<serverConf>& servres) {
             srvr_cfg.set_timeout((*it_d).values, 1);
         } else if ((*it_d).key == "send_timeout") {
             srvr_cfg.set_timeout((*it_d).values, 2);
-        } else if ((*it_d).key == "return") {  			//* could be changed to redir
+        } else if ((*it_d).key == "return") {
             srvr_cfg.set_redirect((*it_d).values);
         } else {
             throw std::runtime_error("unknown directive! " + (*it_d).key);
@@ -273,8 +274,12 @@ void Block::process_server(std::vector<serverConf>& servres) {
     servres.push_back(srvr_cfg);
 }
 
-std::vector<serverConf>* Block::parser() {
-    std::vector<serverConf>* servers = new std::vector<serverConf>();
+void	Block::parser() {
+
+	if (servers == NULL)
+        servers = new std::vector<serverConf>();
+	else 
+		return ;
 
     if (directives.size())
         throw std::runtime_error("directives not allowed on config root!");
@@ -284,50 +289,22 @@ std::vector<serverConf>* Block::parser() {
         }
         (*it).process_server(*servers);
     }
-    return servers;
-}
-
-
-void Block::printTree(int tab) const {
-    std::cout << std::string(tab * 4, ' ') << "Block: " << name;
-    if (!argument.empty()) {
-        std::cout << " Argument: " << argument;
-    }
-    if (!error_message.empty()) {
-        std::cout << " Error: " << error_message;
-    }
-    std::cout << std::endl;
-
-    for (const auto& directive : directives) {
-        std::cout << std::string((tab + 1) * 4, ' ') << "Directive: " << directive.key;
-        for (const auto& value : directive.values) {
-            std::cout << " Value: " << value;
-        }
-        std::cout << std::endl;
-    }
-
-    for (const auto& subBlock : blocks) {
-        subBlock.printTree(tab + 1);
-    }
-
 }
 
 Block get_config(std::string filename) {
 
     std::ifstream config;
 
-    // filename = "./conf/" + filename;  // hardcoded path?
     config.open(filename.c_str());
     if (!config.is_open()) {
         throw std::runtime_error("webserv: failed to open config file!");
     }
 
-    std::vector<std::string> vector = {"root"};
+	std::vector<std::string> vector;
+	vector.push_back("root");
     Block rootBlock = syntax(config, vector);
     if (rootBlock.get_name() == "Error")
         throw std::runtime_error("Error!");
     config.close();
-    // std::cout << std::endl;
-    // rootBlock.printTree(0);
     return rootBlock;
 }

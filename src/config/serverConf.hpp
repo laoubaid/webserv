@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 11:02:59 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/16 11:52:24 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 09:53:21 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,6 @@
 # include "../include.hpp"
 # include "locationConf.hpp"
 #include <cstddef>
-
-// class locationConf;
 
 class serverConf
 {

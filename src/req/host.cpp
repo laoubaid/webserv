@@ -6,11 +6,11 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/19 17:25:56 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 21:23:51 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 03:05:21 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "requestIncludes.hpp"
+#include "httpParsingIncludes.hpp"
 #include "Request.hpp"
 
 bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
@@ -24,7 +24,6 @@ bool	decOctetMatch(const Uvec &vec, Uvec::const_iterator &it)
 	int	num = std::atoi(std::string(it, it +i).c_str());
 	if ((num <= 9 && i > 1) || (num <= 99 && i > 2) || num > 255)
 		return (false);
-	// std::cout << "num: " << num << ", and " << (num > 255) << std::endl;
 	it += i;
 	return (true);
 }
@@ -35,7 +34,6 @@ bool	IPv4addressMatch(const Uvec &vec, Uvec::const_iterator &it)
 
 	if (!decOctetMatch(vec, i))
 	{
-		// std::cout << "invalid octet\n";
 		return (false);
 	}
 	for (int j = 0; j < 3; j++)
@@ -84,14 +82,12 @@ bool	countLeftSide(const Uvec &vec, Uvec::const_iterator &i, int &left, int &ls3
 {
 	if (h16Match(vec, i))
 	{
-		// std::cout << "enter\n";
 		left++;
 		while (i +1 < vec.end() && *i == ':' && *(i+1) != ':')
 		{
 			i++;
 			if (IPv4addressMatch(vec, i))
 			{
-				// std::cout << "match\n";
 				ls32++;
 				break;
 			}
@@ -107,7 +103,6 @@ bool	countLeftSide(const Uvec &vec, Uvec::const_iterator &i, int &left, int &ls3
 
 bool	countRightSide(const Uvec &vec, Uvec::const_iterator &i, int &right, int &ls32)
 {
-	// if (!ls32 && dcolon)
 	if (!ls32)
 	{
 		if (IPv4addressMatch(vec, i))
@@ -161,7 +156,6 @@ bool	IPv6addressMatch(const Uvec &vec, Uvec::const_iterator &it)
 		ls32++;
 		right -= 2;
 	}
-	// std::cout << "left: " << left << ", dcolon: " << dcolon << ", right: " << right << ", ls32:" << ls32 << std::endl;
 	if (
 		(!left && !dcolon && right == 6 && ls32) ||
 		(!left && dcolon && right == 5 && ls32) ||
@@ -185,8 +179,6 @@ bool	IPvFutureMatch(const Uvec &vec, Uvec::const_iterator &it)
 	Uvec::const_iterator	i = it;
 	int							j = 0;
 	
-	// vec.print();
-	// std::cout << "size: "<< vec.size() << ", compaire: " << (vec.end() - i) << " here\n";
 	if (i == vec.end() || (*i != 'v' && *i != 'V'))
 		return (false);
 	i++;
@@ -240,7 +232,6 @@ bool	regNameMatch(const Uvec &vec, Uvec::const_iterator &it)
 			i++;
 		else if (!pctEncodedMatch(vec, i))
 			break ;
-		// std::cout << "some checked out\n";
 	}
 	it = i;
 	return (true);

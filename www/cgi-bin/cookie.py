@@ -33,6 +33,7 @@ def main():
         print(f"Set-Cookie: user_token={new_token}; Path=/; Max-Age=30\r")
         print("Status: 302 Found\r")
         print(f"Location: {os.environ.get('SCRIPT_NAME', '/cgi-bin/cookie.py')}\r")
+        print("Content-Type: text/html\r")
         print("\r")
         return
     

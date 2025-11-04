@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 19:02:26 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 21:20:16 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 09:52:27 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,16 +20,9 @@
 
 # include <sys/stat.h>
 # include <sys/types.h>
-// # include <sys/syscall.h>
 # include <dirent.h>
 
-
-// # define FILE_BUFFER_SIZE 4096
-// # define FILE_BUFFER_SIZE 8192
 # define FILE_BUFFER_SIZE 16384
-
-// create a static class HTTPResponse, so i dont need to create an instance of it
-// but i can use its methods to generate responses based on the status code
 
 typedef enum e_resp_state {
 	STRT,
@@ -67,7 +60,6 @@ class HttpResponse {
 		void						handle_error(int err_code);
 
 		void						process_path();
-		// bool						handle_cgi();
 		bool						serveStaticContent(const std::string& path, int code);
 		bool						list_directory();
 

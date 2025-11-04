@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:27:54 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 20:54:04 by laoubaid         ###   ########.fr       */
+/*   Updated: 2025/11/01 02:59:58 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ Client::Client(int clt_fd, const serverConf& conf, int ep_fd, sockaddr_in clt_ad
 	request_ = NULL;
 	response_ = NULL;
 	cgi_ = NULL;
-	req_timeout_= std::time(NULL);  //* send timeout
+	req_timeout_= std::time(NULL);
 	state_timout_ = 0;
 }
 
@@ -28,7 +28,6 @@ Client::~Client()
 	// std::cout << "[INFO] CLT Client destructor called!" << std::endl;
 	delete request_;
 	delete response_;
-	// delete cgi_;
 }
 
 int Client::get_fd_client() {
@@ -43,7 +42,6 @@ bool Client::check_timeout() {
 	std::time_t now = std::time(NULL);
 	int status_code = 0;
 
-	// // std::cout << "[INFO] CLT timout check state: " << state_timout_ << std::endl;
 	if (state_timout_ == 0 && static_cast<size_t>(now - req_timeout_) > conf_.get_recv_timeout()) {
 		if (request_ && request_->getBodyFilePath().size())
 		{
@@ -77,18 +75,13 @@ int Client::receive(int epoll_fd) {
 	int nread = recv(client_fd, buf, RECV_BUF - 1, 0);
 	
 	if (nread <= 0) {
-		// if (nread == 0)
-		// 	std::cout << "Client disconnected! (recv() == 0)" << std::endl;
-		// else
-		// 	perror("recv() failed");
+		if (nread == -1)
+			perror("recv() failed");
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		// std::cout << DISC_CLR << "\n$ Client disconnected! (epoll IN) fd: " << client_fd << DEF_CLR << std::endl;
 		return -1;
 	}
-	// std::cout << "[INFO] CLT reseting request timeout" << std::endl;
-	reset_req_timeout();
-
-	Uvec tmp_vec_buf(buf, nread); //* Convert the buffer to Uvec
+	Uvec tmp_vec_buf(buf, nread);
 	Uvec delimiter((const unsigned char*)"\r\n\r\n", 4);
 	vec_buf_ += tmp_vec_buf;
 	if (!(request_ && request_->getReqState() == PEND)) {
@@ -110,8 +103,6 @@ int Client::process_recv_data() {
 
 		} catch (const std::exception &e) {
 			std::string error = e.what();
-			std::cerr << "Error creating HTTPRequestParser: " << error << std::endl;
-			// return -1; //TODO Handle error appropriately
 		}
 	}
 	else if (request_ && request_->getReqState() == PEND) {
@@ -119,8 +110,7 @@ int Client::process_recv_data() {
 			request_->addBody(vec_buf_);
 			vec_buf_.clear();
 		} catch (const std::exception &e) {
-			std::cerr << "Error adding to body: " << e.what() << std::endl;
-			// return -1; //TODO Handle error appropriately
+			std::string error = e.what();
 		}
 	}
 	if (request_ && request_->getReqState() == CGI) {
@@ -131,7 +121,6 @@ int Client::process_recv_data() {
 		if (!response_)
 			response_ = new HttpResponse(*request_, conf_);
 		state_timout_ = 2;
-		// log();
 	}
 	return (request_) ? request_->getReqState() : -1;
 }
@@ -139,13 +128,18 @@ int Client::process_recv_data() {
 int Client::send_response() {
 	resbuf_.clear();
 	resbuf_ = response_->generateResponse();
-	if (send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL) != -1) {
-		// std::cout << "[INFO] CLT data sent seccuessfuly!" << std::endl;
+	ssize_t	sent = send(this->get_fd(), resbuf_.c_str(), resbuf_.size(), MSG_NOSIGNAL);
+	if (sent > 0) {
 		reset_resp_timeout();
 		if (response_->getRespState() == DONE) {
 			// std::cout << "[INFO] CLT end of connection" << std::endl;
 			return 1;
 		}
+	} else if (sent == 0) {
+		return 1;
+	} else {
+		std::cerr << "[ERROR] send() failed!"<< std::endl;
+		return 1;
 	}
 	return 0;
 }
@@ -180,7 +174,6 @@ void Client::set_cgi_obj(std::map <int, Client*> &cgi_pipes, int flag) {
 
 int Client::cgi_pipe_io(int pipe_fd) {
 	// std::cout << "[INFO] CLT cgi pipe I/O operation\n";
-	reset_cgi_timeout();
 	if (cgi_) {
 		if (pipe_fd == cgi_->get_pipe(0)) {
 			return cgi_->write_body();

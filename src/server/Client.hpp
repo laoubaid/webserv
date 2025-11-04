@@ -6,7 +6,7 @@
 /*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 14:33:58 by laoubaid          #+#    #+#             */
-/*   Updated: 2025/10/30 21:19:53 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/10/31 16:23:07 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #define _CLIENT_SOCKET_HPP_
 
 #include "../req/Request.hpp"
-#include "../req/requestIncludes.hpp"
+#include "../req/httpParsingIncludes.hpp"
 #include "../resp/HTTPResponse.hpp"
 #include "../config/serverConf.hpp"
 #include "../include.hpp"
@@ -22,9 +22,7 @@
 
 # include "../cgi/Cgi.hpp"
 
-# define RECV_BUF 4096
-// # define RECV_BUF 128
-// # define RECV_BUF 64
+# define RECV_BUF 8192
 
 class Client : Socket
 {

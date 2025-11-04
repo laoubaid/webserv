@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   strValidators.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kez-zoub <kez-zoub@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: laoubaid <laoubaid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:53:41 by kez-zoub          #+#    #+#             */
-/*   Updated: 2025/10/30 21:24:49 by kez-zoub         ###   ########.fr       */
+/*   Updated: 2025/11/01 09:58:22 by laoubaid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "requestIncludes.hpp"
+#include "httpParsingIncludes.hpp"
 #include "Request.hpp"
 
 bool	validateTarget(const Uvec &vec)
@@ -140,51 +140,6 @@ bool	validateHost(const Uvec &vec)
 		it++;
 		portMatch(vec, it);
 	}
-	if (it != vec.end())
-		return (false);
-	return (true);
-}
-
-//to be deleted
-bool	testIPv6address(const Uvec &vec)
-{
-	Uvec::const_iterator	it = vec.begin();
-
-	if (!IPv6addressMatch(vec, it))
-		return (false);
-	if (it != vec.end())
-		return (false);
-	return (true);
-}
-
-bool	testIPvFuture(const Uvec &vec)
-{
-	Uvec::const_iterator	it = vec.begin();
-
-	if (!IPvFutureMatch(vec, it))
-		return (false);
-	if (it != vec.end())
-		return (false);
-	return (true);
-}
-
-bool	testIPv4address(const Uvec &vec)
-{
-	Uvec::const_iterator	it = vec.begin();
-
-	if (!IPv4addressMatch(vec, it))
-		return (false);
-	if (it != vec.end())
-		return (false);
-	return (true);
-}
-
-bool	testregName(const Uvec &vec)
-{
-	Uvec::const_iterator	it = vec.begin();
-
-	if (!regNameMatch(vec, it))
-		return (false);
 	if (it != vec.end())
 		return (false);
 	return (true);
