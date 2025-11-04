@@ -4,7 +4,7 @@ A lightweight HTTP/1.1 web server implementation written in C++98, featuring non
 
 ## Class Structure
 
-![UML Class Diagram](./imgs/uml_class_diagram.png)
+![Testing Page](./imgs/page.png)
 
 ## 📋 Table of Contents
 
@@ -31,6 +31,11 @@ A lightweight HTTP/1.1 web server implementation written in C++98, featuring non
 - **Request Timeout Handling**: Automatic cleanup of stale connections
 
 ## 🏗️ Architecture
+
+### Class Structure
+
+![UML Class Diagram](./imgs/uml_class_diagram.png)
+
 ### Core Architecture (main loop using epoll)
 
 ![WebServ Core Architecture](./imgs/webserv_core.png)
