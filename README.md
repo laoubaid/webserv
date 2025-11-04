@@ -2,7 +2,9 @@
 
 A lightweight HTTP/1.1 web server implementation written in C++98, featuring non-blocking I/O, CGI support, and comprehensive configuration options.
 
-![WebServ Core Architecture](./imgs/webserv_core.png)
+## Class Structure
+
+![UML Class Diagram](./imgs/uml_class_diagram.png)
 
 ## 📋 Table of Contents
 
@@ -29,6 +31,9 @@ A lightweight HTTP/1.1 web server implementation written in C++98, featuring non
 - **Request Timeout Handling**: Automatic cleanup of stale connections
 
 ## 🏗️ Architecture
+### Core Architecture (main loop using epoll)
+
+![WebServ Core Architecture](./imgs/webserv_core.png)
 
 ### Request Processing Flow
 
@@ -51,10 +56,6 @@ The CGI handler:
 3. Sets up environment variables (REQUEST_METHOD, QUERY_STRING, etc.)
 4. Pipes data between server and CGI script
 5. Captures output and constructs HTTP response
-
-### Class Structure
-
-![UML Class Diagram](./imgs/uml_class_diagram.png)
 
 ## 🔧 Requirements
 
